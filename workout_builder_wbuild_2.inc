@@ -189,7 +189,7 @@ function workout_builder_wbuild_page_two($form, &$form_state){
 
   $form['back'] = array(
     '#type' => 'submit',
-    '#value' => t('Strength'),
+    '#value' => t('Back to Strength'),
     '#submit' => array('workout_builder_wbuild_page_two_back'),
     '#limit_validation_errors' => array(),
   );
@@ -235,7 +235,7 @@ function workout_builder_wbuild_remove_condition($form, &$form_state){
   $form_state['rebuild'] = TRUE;
 }
 
-function workout_builder_wbuild_page_two_back(){
+function workout_builder_wbuild_page_two_back($form, &$form_state){
   $form_state['values'] = $form_state['page_values'][1];
   $form_state['page_num'] = 1;
   $form_state['rebuild'] = TRUE;
