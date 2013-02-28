@@ -1,0 +1,248 @@
+<?php
+
+function workout_builder_wbuilder($form, &$form_state){
+
+  $form['#tree'] = TRUE;
+
+  $form['description'] = array(
+    '#type' => 'item',
+    '#title' => t('Strength Portion'),
+  );
+
+  if(!empty($form_state['page_num']) && $form_state['page_num'] == 2){
+    return workout_builder_wbuild_page_two($form, $form_state);
+  }
+
+  if(!empty($form_state['page_values'][1])){
+    $form_state['values'] = $form_state['page_values'][1];
+  }
+
+  $form_state['page_num'] = 1;
+
+  if(empty($form_state['num_strength'])){
+    $form_state['num_strength'] = 1;
+  }  
+
+  for($i = 1; $i <= $form_state['num_strength']; $i++){
+    $form['strength_exercises'][$i] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Strength Exercise #@num', array('@num' => $i)),
+      '#collapsible' => TRUE,
+      '#collapsed' => FALSE,
+    );
+
+    $form['strength_exercises'][$i]['set'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Number of Sets'),
+      '#description' => t('Enter number of sets'),
+      '#size' => 2,
+      '#maxlength' => 2,
+    );
+
+    $form['strength_exercises'][$i]['reps'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Number of Reps'),
+      '#description' => t('Enter number of reps per set'),
+      '#size' => 3,
+      '#maxlength' => 3,
+    );
+
+    $form['strength_exercises'][$i]['lift'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Movement'),
+      '#description' => t('Enter the movement'),
+      '#size' => 20,
+      '#maxlength' => 40,
+    );
+
+    $form['strength_exercises'][$i]['weight'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Weight/Percentage'),
+      '#description' => t('Enter prescribed weight/percentage of max'),
+      '#size' => 3,
+      '#maxlength' => 5,
+    );
+  }
+
+  $form['strength_exercises']['clock'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Clock'),
+    '#description' => t('Enter timing in minutes'),
+    '#size' => 5,
+    '#maxlength' => 10,
+  );
+
+  $form['add_strength'] = array(
+    '#type' => 'submit',
+    '#value' => t('Add another movement'),
+    '#submit' => array('workout_builder_wbuild_add_strength'),
+  );
+
+  if($form_state['num_strength'] > 1){
+    $form['remove_strength'] = array(
+      '#type' => 'submit',
+      '#value' => t('Remove last strength movement'),
+      '#submit' => array('workout_builder_wbuild_remove_strength'),
+      '#limit_validate_errors' => array(),
+    );
+  }
+
+  $form['next'] = array(
+    '#type' => 'submit',
+    '#value' => 'Add Conditioning',
+    '#submit' => array('workout_builder_wbuild_next_submit'),
+    '#validate' => array('workout_builder_wbuild_next_validate'),
+  );
+
+  return $form;
+}
+
+function workout_builder_wbuild_add_strength($form, &$form_state){
+  $form_state['num_strength']++;
+  for($i = 1; $i < $form_state['num_strength']; $i++){
+//    $form_state['complete form']['strength_exercises'][$i]['#collapsed'] = TRUE;
+  }
+//  drupal_set_message('<pre>' . check_plain(print_r($form_state, TRUE)) . '</pre>');
+  $form_state['rebuild'] = TRUE;
+}
+
+function workout_builder_wbuild_remove_strength($form, &$form_state){
+  if($form_state['num_strength'] > 1){
+    $form_state['num_strength']--;
+  }
+  $form_state['rebuild'] = TRUE;
+}
+
+function workout_builder_wbuild_next_submit($form, &$form_state){
+  $form_state['page_values'][1] = $form_state['values'];
+
+  if(!empty($form_state['page_values'][2])){
+    $form_state['values'] = $form_state['page_values'][2];
+  }
+
+  $form_state['page_num'] = 2;
+  $form_state['rebuild'] = TRUE;
+}
+
+function workout_builder_wbuild_next_validate($form, &$form_state){
+  // Do nothing for now
+}
+
+function workout_builder_wbuild_page_two($form, &$form_state){
+  $form['description'] = array(
+    '#type' => 'item',
+    '#title' => t('Conditioning Portion'),
+  );
+
+  if(empty($form_state['num_condition'])){
+    $form_state['num_condition'] = 1;
+  }  
+
+  $form['condition_exercises']['duration'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Duration'),
+    '#description' => t('Enter timing in minutes'),
+    '#size' => 5,
+    '#maxlength' => 10,
+  );
+
+  for($i = 1; $i <= $form_state['num_condition']; $i++){
+    $form['condition_exercises'][$i] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Conditioning Exercise #@num', array('@num' => $i)),
+      '#collapsible' => TRUE,
+      '#collapsed' => FALSE,
+    );
+
+    $form['condition_exercises'][$i]['reps'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Number of Reps'),
+      '#description' => t('Enter number of reps per set'),
+      '#size' => 3,
+      '#maxlength' => 3,
+    );
+
+    $form['condition_exercises'][$i]['movement'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Movement'),
+      '#description' => t('Enter the movement'),
+      '#size' => 20,
+      '#maxlength' => 40,
+    );
+
+    $form['condition_exercises'][$i]['weight'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Weight/Percentage'),
+      '#description' => t('Enter prescribed weight'),
+      '#size' => 3,
+      '#maxlength' => 5,
+    );
+  }
+
+  $form['condition_exercises']['cutoff'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Time Cutoff'),
+    '#description' => t('Minutes'),
+    '#size' => 5,
+    '#maxlength' => 10,
+  );
+
+  $form['back'] = array(
+    '#type' => 'submit',
+    '#value' => t('Strength'),
+    '#submit' => array('workout_builder_wbuild_page_two_back'),
+    '#limit_validation_errors' => array(),
+  );
+
+  $form['add_condition'] = array(
+    '#type' => 'submit',
+    '#value' => t('Add another movement'),
+    '#submit' => array('workout_builder_wbuild_add_condition'),
+  );
+
+  if($form_state['num_condition'] > 1){
+    $form['remove_condition'] = array(
+      '#type' => 'submit',
+      '#value' => t('Remove last movement'),
+      '#submit' => array('workout_builder_wbuild_remove_condition'),
+      '#limit_validate_errors' => array(),
+    );
+  }
+ 
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Build Workout'),
+    '#submit' => array('workout_builder_wbuild_page_two_submit'),
+  );
+
+  return $form;
+}
+
+function workout_builder_wbuild_add_condition($form, &$form_state){
+  $form_state['num_condition']++;
+  $form_state['rebuild'] = TRUE;
+}
+
+function workout_builder_wbuild_remove_condition($form, &$form_state){
+  if($form_state['num_condition'] > 1){
+    $form_state['num_condition']--;
+  }
+
+  $form_state['page_values'][2] = $form_state['values'];
+  
+
+  $form_state['page_num'] = 2;
+  $form_state['rebuild'] = TRUE;
+}
+
+function workout_builder_wbuild_page_two_back(){
+  $form_state['values'] = $form_state['page_values'][1];
+  $form_state['page_num'] = 1;
+  $form_state['rebuild'] = TRUE;
+}
+
+function workout_builder_wbuild_page_two_submit($form, &$form_state){
+  // do nothing for now
+}
+
+

@@ -1,0 +1,5 @@
+name = Workout Builder
+description = Form that allows someone to define a workout
+package = WOD Modules
+core = 7.x
+
