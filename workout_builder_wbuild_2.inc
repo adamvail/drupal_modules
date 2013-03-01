@@ -2,6 +2,8 @@
 
 function workout_builder_wbuilder($form, &$form_state){
 
+  global $user;
+
   $form['#tree'] = TRUE;
 
   $form['description'] = array(
@@ -98,6 +100,7 @@ function workout_builder_wbuilder($form, &$form_state){
       '#description' => t('Enter prescribed weight for men'),
       '#size' => 3,
       '#maxlength' => 5,
+      '#access' => in_array('coach', array_values($user->roles)),
       '#states' => array(
         'visible' => array(
           ':input[name="strength_exercises[' . $i . '][weight][style]"]' => array('value' => 'weight'),
@@ -111,6 +114,20 @@ function workout_builder_wbuilder($form, &$form_state){
       '#description' => t('Enter prescribed weight for women'),
       '#size' => 3,
       '#maxlength' => 5,
+      '#access' => in_array('coach', array_values($user->roles)),
+      '#states' => array(
+        'visible' => array(
+          ':input[name="strength_exercises[' . $i . '][weight][style]"]' => array('value' => 'weight'),
+        ),
+      ),
+    );
+
+    $form['strength_exercises'][$i]['weight']['self_prescribed'] = array(
+      '#type' => 'textfield',
+      '#description' => t('Enter prescribed weight.'),
+      '#size' => 3,
+      '#maxlength' => 5,
+      '#access' => in_array('athlete', array_values($user->roles)),
       '#states' => array(
         'visible' => array(
           ':input[name="strength_exercises[' . $i . '][weight][style]"]' => array('value' => 'weight'),
@@ -176,6 +193,8 @@ function workout_builder_wbuild_next_validate($form, &$form_state){
 }
 
 function workout_builder_wbuild_page_two($form, &$form_state){
+  global $user;
+
   $form['description'] = array(
     '#type' => 'item',
     '#title' => t('Conditioning Portion'),
@@ -313,6 +332,7 @@ function workout_builder_wbuild_page_two($form, &$form_state){
       '#description' => t('Enter prescribed weight for men'),
       '#size' => 3,
       '#maxlength' => 5,
+      '#access' => in_array('coach', array_values($user->roles)),
       '#states' => array(
         'visible' => array(
           ':input[name="condition_exercises[' . $i . '][weight][style]"]' => array('value' => 'weight'),
@@ -326,6 +346,20 @@ function workout_builder_wbuild_page_two($form, &$form_state){
       '#description' => t('Enter prescribed weight for women'),
       '#size' => 3,
       '#maxlength' => 5,
+      '#access' => in_array('coach', array_values($user->roles)),
+      '#states' => array(
+        'visible' => array(
+          ':input[name="condition_exercises[' . $i . '][weight][style]"]' => array('value' => 'weight'),
+        ),
+      ),
+    );
+ 
+    $form['condition_exercises'][$i]['weight']['self_prescribed'] = array(
+      '#type' => 'textfield',
+      '#description' => t('Enter prescribed weight'),
+      '#size' => 3,
+      '#maxlength' => 5,
+      '#access' => in_array('athlete', array_values($user->roles)),
       '#states' => array(
         'visible' => array(
           ':input[name="condition_exercises[' . $i . '][weight][style]"]' => array('value' => 'weight'),
