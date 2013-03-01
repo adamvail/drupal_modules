@@ -42,7 +42,7 @@ function workout_builder_wbuilder($form, &$form_state){
     $form['strength_exercises'][$i]['reps'] = array(
       '#type' => 'textfield',
       '#title' => t('Number of Reps'),
-      '#description' => t('Enter number of reps per set'),
+      '#description' => t('Enter number of reps per set. (or MAX for max reps)'),
       '#size' => 3,
       '#maxlength' => 3,
     );
@@ -63,8 +63,12 @@ function workout_builder_wbuilder($form, &$form_state){
     );
 
     $form['strength_exercises'][$i]['weight']['style'] = array(
-      '#type' => 'checkboxes',
-      '#options' => drupal_map_assoc(array(t('Percentage'), t('Weight'))),
+      '#type' => 'radios',
+//      '#options' => drupal_map_assoc(array(t('Percentage'), t('Weight'))),
+      '#options' => array(
+        'percentage' => t('Percentage'),
+        'weight' => t('Weight'),
+      ),
       '#title' => t('Prescribe a percentage of max or a specific weight?'),
     );
 
@@ -75,23 +79,36 @@ function workout_builder_wbuilder($form, &$form_state){
       '#maxlength' => 5,
       '#states' => array(
         'visible' => array(
-          ':input[name="strength_exercises[' . $i . '][weight][style][Percentage]"]' => array('checked' => TRUE),
+          ':input[name="strength_exercises[' . $i . '][weight][style]"]' => array('value' => 'percentage'),
         ),
       ),
     );
 
-    $form['strength_exercises'][$i]['weight']['pounds'] = array(
+    $form['strength_exercises'][$i]['weight']['men'] = array(
       '#type' => 'textfield',
-      '#description' => t('Enter prescribed specific weight'),
+      '#title' => t('Men'),
+      '#description' => t('Enter prescribed weight for men'),
       '#size' => 3,
       '#maxlength' => 5,
       '#states' => array(
         'visible' => array(
-          ':input[name="strength_exercises[' . $i . '][weight][style][Weight]"]' => array('checked' => TRUE),
+          ':input[name="strength_exercises[' . $i . '][weight][style]"]' => array('value' => 'weight'),
         ),
       ),
     );
 
+    $form['strength_exercises'][$i]['weight']['women'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Women'),
+      '#description' => t('Enter prescribed weight for women'),
+      '#size' => 3,
+      '#maxlength' => 5,
+      '#states' => array(
+        'visible' => array(
+          ':input[name="strength_exercises[' . $i . '][weight][style]"]' => array('value' => 'weight'),
+        ),
+      ),
+    );
   }
 
   $form['strength_exercises']['clock'] = array(
@@ -187,7 +204,7 @@ function workout_builder_wbuild_page_two($form, &$form_state){
     $form['condition_exercises'][$i]['reps'] = array(
       '#type' => 'textfield',
       '#title' => t('Number of Reps'),
-      '#description' => t('Enter number of reps per set'),
+      '#description' => t('Enter number of reps per set. (or MAX for max reps)'),
       '#size' => 3,
       '#maxlength' => 3,
     );
@@ -208,8 +225,11 @@ function workout_builder_wbuild_page_two($form, &$form_state){
     );
 
     $form['condition_exercises'][$i]['weight']['style'] = array(
-      '#type' => 'checkboxes',
-      '#options' => drupal_map_assoc(array(t('Percentage'), t('Weight'))),
+      '#type' => 'radios',
+      '#options' => array(
+        'percentage' => t('Percentage'),
+        'weight' => t('Weight'),
+      ),
       '#title' => t('Prescribe a percentage of max or a specific weight?'),
     );
 
@@ -220,19 +240,33 @@ function workout_builder_wbuild_page_two($form, &$form_state){
       '#maxlength' => 5,
       '#states' => array(
         'visible' => array(
-          ':input[name="condition_exercises[' . $i . '][weight][style][Percentage]"]' => array('checked' => TRUE),
+          ':input[name="condition_exercises[' . $i . '][weight][style]"]' => array('value' => 'percentage'),
         ),
       ),
     );
 
-    $form['condition_exercises'][$i]['weight']['pounds'] = array(
+    $form['condition_exercises'][$i]['weight']['men'] = array(
       '#type' => 'textfield',
-      '#description' => t('Enter prescribed specific weight'),
+      '#title' => t('Men'),
+      '#description' => t('Enter prescribed weight for men'),
       '#size' => 3,
       '#maxlength' => 5,
       '#states' => array(
         'visible' => array(
-          ':input[name="condition_exercises[' . $i . '][weight][style][Weight]"]' => array('checked' => TRUE),
+          ':input[name="condition_exercises[' . $i . '][weight][style]"]' => array('value' => 'weight'),
+        ),
+      ),
+    );
+
+    $form['condition_exercises'][$i]['weight']['women'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Women'),
+      '#description' => t('Enter prescribed weight for women'),
+      '#size' => 3,
+      '#maxlength' => 5,
+      '#states' => array(
+        'visible' => array(
+          ':input[name="condition_exercises[' . $i . '][weight][style]"]' => array('value' => 'weight'),
         ),
       ),
     );
