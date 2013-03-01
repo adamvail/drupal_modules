@@ -56,12 +56,42 @@ function workout_builder_wbuilder($form, &$form_state){
     );
 
     $form['strength_exercises'][$i]['weight'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Weight'),
+      '#collapsible' => TRUE,
+      '#collapsed' => FALSE,
+    );
+
+    $form['strength_exercises'][$i]['weight']['style'] = array(
+      '#type' => 'checkboxes',
+      '#options' => drupal_map_assoc(array(t('Percentage'), t('Weight'))),
+      '#title' => t('Prescribe a percentage of max or a specific weight?'),
+    );
+
+    $form['strength_exercises'][$i]['weight']['percentage'] = array(
       '#type' => 'textfield',
-      '#title' => t('Weight/Percentage'),
-      '#description' => t('Enter prescribed weight/percentage of max'),
+      '#description' => t('Enter prescribed percentage of max'),
       '#size' => 3,
       '#maxlength' => 5,
+      '#states' => array(
+        'visible' => array(
+          ':input[name="strength_exercises[' . $i . '][weight][style][Percentage]"]' => array('checked' => TRUE),
+        ),
+      ),
     );
+
+    $form['strength_exercises'][$i]['weight']['pounds'] = array(
+      '#type' => 'textfield',
+      '#description' => t('Enter prescribed specific weight'),
+      '#size' => 3,
+      '#maxlength' => 5,
+      '#states' => array(
+        'visible' => array(
+          ':input[name="strength_exercises[' . $i . '][weight][style][Weight]"]' => array('checked' => TRUE),
+        ),
+      ),
+    );
+
   }
 
   $form['strength_exercises']['clock'] = array(
@@ -171,11 +201,40 @@ function workout_builder_wbuild_page_two($form, &$form_state){
     );
 
     $form['condition_exercises'][$i]['weight'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Weight'),
+      '#collapsible' => TRUE,
+      '#collapsed' => FALSE,
+    );
+
+    $form['condition_exercises'][$i]['weight']['style'] = array(
+      '#type' => 'checkboxes',
+      '#options' => drupal_map_assoc(array(t('Percentage'), t('Weight'))),
+      '#title' => t('Prescribe a percentage of max or a specific weight?'),
+    );
+
+    $form['condition_exercises'][$i]['weight']['percentage'] = array(
       '#type' => 'textfield',
-      '#title' => t('Weight/Percentage'),
-      '#description' => t('Enter prescribed weight'),
+      '#description' => t('Enter prescribed percentage of max'),
       '#size' => 3,
       '#maxlength' => 5,
+      '#states' => array(
+        'visible' => array(
+          ':input[name="condition_exercises[' . $i . '][weight][style][Percentage]"]' => array('checked' => TRUE),
+        ),
+      ),
+    );
+
+    $form['condition_exercises'][$i]['weight']['pounds'] = array(
+      '#type' => 'textfield',
+      '#description' => t('Enter prescribed specific weight'),
+      '#size' => 3,
+      '#maxlength' => 5,
+      '#states' => array(
+        'visible' => array(
+          ':input[name="condition_exercises[' . $i . '][weight][style][Weight]"]' => array('checked' => TRUE),
+        ),
+      ),
     );
   }
 
