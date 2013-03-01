@@ -21,13 +21,6 @@ function workout_builder_menu() {
   $items = array();
   $items['workout_builder'] = array(
     'title' => 'Workout Builder',
-    'page callback' => 'workout_builder_intro',
-    'access callback' => TRUE,
-    'expanded' => TRUE,
-  );
-
-  $items['workout_builder/wbuild'] = array(
-    'title' => 'Workout',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('workout_builder_wbuilder'),
     'access callback' => TRUE,
