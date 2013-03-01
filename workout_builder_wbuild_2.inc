@@ -23,12 +23,20 @@ function workout_builder_wbuilder($form, &$form_state){
     $form_state['num_strength'] = 1;
   }  
 
+  $form['clock'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Clock'),
+    '#description' => t('Time per set in minutes'),
+    '#size' => 5,
+    '#maxlength' => 10,
+  );
+
   for($i = 1; $i <= $form_state['num_strength']; $i++){
     $form['strength_exercises'][$i] = array(
       '#type' => 'fieldset',
-      '#title' => t('Strength Exercise #@num', array('@num' => $i)),
+      '#title' => t('Strength Movement #@num', array('@num' => $i)),
       '#collapsible' => TRUE,
-      '#collapsed' => FALSE,
+      '#collapsed' => TRUE,
     );
 
     $form['strength_exercises'][$i]['set'] = array(
@@ -111,14 +119,6 @@ function workout_builder_wbuilder($form, &$form_state){
     );
   }
 
-  $form['strength_exercises']['clock'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Clock'),
-    '#description' => t('Enter timing in minutes'),
-    '#size' => 5,
-    '#maxlength' => 10,
-  );
-
   $form['add_strength'] = array(
     '#type' => 'submit',
     '#value' => t('Add another movement'),
@@ -184,6 +184,16 @@ function workout_builder_wbuild_page_two($form, &$form_state){
   if(empty($form_state['num_condition'])){
     $form_state['num_condition'] = 1;
   }  
+  
+  $form['condition_exercises']['style'] = array(
+    '#type' => 'radios',
+    '#options' => array(
+      'amrap' => t('AMRAP'),
+      'for_time' => t('For Time'),
+      'intervals' => t('Intervals'),
+    ),
+    '#title' => t('Choose the style of conditioning workout'),
+  );
 
   $form['condition_exercises']['duration'] = array(
     '#type' => 'textfield',
@@ -191,14 +201,48 @@ function workout_builder_wbuild_page_two($form, &$form_state){
     '#description' => t('Enter timing in minutes'),
     '#size' => 5,
     '#maxlength' => 10,
+    '#states' => array(
+      'visible' => array(
+          ':input[name="condition_exercises[style]"]' => array('value' => 'amrap'),
+      ),
+    ),
+  );
+
+  $form['condition_exercises']['rounds'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Rounds'),
+    '#description' => t('Number of rounds'),
+    '#size' => 5,
+    '#maxlength' => 10,
+    '#states' => array(
+      'visible' => array(
+          ':input[name="condition_exercises[style]"]' => array(
+          array('value' => 'for_time'),
+          array('value' => 'intervals'),
+        ),
+      ),
+    ),
+  );
+
+  $form['condition_exercises']['cutoff'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Time Cutoff'),
+    '#description' => t('Enter time cutoff in minutes'),
+    '#size' => 5,
+    '#maxlength' => 10,
+    '#states' => array(
+      'visible' => array(
+        ':input[name="condition_exercises[style]"]' => array('value' => 'for_time'),
+      ),
+    ),
   );
 
   for($i = 1; $i <= $form_state['num_condition']; $i++){
     $form['condition_exercises'][$i] = array(
       '#type' => 'fieldset',
-      '#title' => t('Conditioning Exercise #@num', array('@num' => $i)),
+      '#title' => t('Conditioning Movement #@num', array('@num' => $i)),
       '#collapsible' => TRUE,
-      '#collapsed' => FALSE,
+      '#collapsed' => TRUE,
     );
 
     $form['condition_exercises'][$i]['reps'] = array(
@@ -207,6 +251,24 @@ function workout_builder_wbuild_page_two($form, &$form_state){
       '#description' => t('Enter number of reps per set. (or MAX for max reps)'),
       '#size' => 3,
       '#maxlength' => 3,
+      '#states' => array(
+        'visible' => array(
+          ':input[name="condition_exercises[style]"]' => array('!value' => 'intervals'),
+        ),
+      ),
+    );
+
+    $form['condition_exercises'][$i]['interval_time'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Movement Duration'),
+      '#description' => t('Duration of Interval in Seconds'),
+      '#size' => 4,
+      '#maxlength' => 5,
+      '#states' => array(
+        'visible' => array(
+          ':input[name="condition_exercises[style]"]' => array('value' => 'intervals'),
+        ),
+      ),
     );
 
     $form['condition_exercises'][$i]['movement'] = array(
@@ -271,14 +333,6 @@ function workout_builder_wbuild_page_two($form, &$form_state){
       ),
     );
   }
-
-  $form['condition_exercises']['cutoff'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Time Cutoff'),
-    '#description' => t('Minutes'),
-    '#size' => 5,
-    '#maxlength' => 10,
-  );
 
   $form['back'] = array(
     '#type' => 'submit',
