@@ -1,0 +1,5 @@
+name = Max Reps
+description = Form that allows users to set max reps for all exercises
+package = WOD Modules
+core = 7.x
+
