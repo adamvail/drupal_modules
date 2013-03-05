@@ -262,6 +262,15 @@ function workout_builder_wbuild_page_two($form, &$form_state){
       '#title' => t('Conditioning Movement #@num', array('@num' => $i)),
       '#collapsible' => TRUE,
       '#collapsed' => TRUE,
+      '#states' => array(
+        'visible' => array(
+          ':input[name="condition_exercises[style]"]'=> array(
+            array('value' => 'amrap'), 
+            array('value' => 'for_time'), 
+            array('value' => 'intervals'), 
+          ),
+        ),
+      ),
     );
 
     $form['condition_exercises'][$i]['reps'] = array(
