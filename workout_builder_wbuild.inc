@@ -246,7 +246,7 @@ function workout_builder_wbuild_next_submit($form, &$form_state){
 function workout_builder_wbuild_next_validate($form, &$form_state){
 	// Time to do some magic
 	if(isset($form_state['values'])){
-		drupal_set_message('<pre>' . print_r($form_state['values'], TRUE) . '</pre>');	
+//		drupal_set_message('<pre>' . print_r($form_state['values'], TRUE) . '</pre>');	
 	}	
 }
 
@@ -378,11 +378,25 @@ function workout_builder_wbuild_page_two($form, &$form_state){
 				'#maxlength' => 40,
       );
 
+			$form['cond_workout'][$k]['condition_exercises'][$i]['weight_choice'] = array(
+				'#type' => 'radios',
+				'#options' => array(
+					'weight' => t('Weight'),
+					'distance' => t('Distance (box jumps, rowing, running, etc.)'),
+				),
+				'#title' => t('Do this movement for weight or distance?'),
+			);
+
       $form['cond_workout'][$k]['condition_exercises'][$i]['weight'] = array(
 				'#type' => 'fieldset',
 				'#title' => t('Weight'),
 				'#collapsible' => TRUE,
 				'#collapsed' => TRUE,
+				'#states' => array(
+					'visible' => array(
+						':input[name="cond_workout[' . $k . '][condition_exercises][' . $i . '][weight_choice]"]' => array('value' => 'weight'),
+					),
+				),
       );
 
       $form['cond_workout'][$k]['condition_exercises'][$i]['weight']['style'] = array(
@@ -445,6 +459,50 @@ function workout_builder_wbuild_page_two($form, &$form_state){
 						':input[name="cond_workout[' . $k . '][condition_exercises][' . $i . '][weight][style]"]' => array('value' => 'weight'),
 					),
 				),
+      );
+
+      $form['cond_workout'][$k]['condition_exercises'][$i]['distance'] = array(
+				'#type' => 'fieldset',
+				'#title' => t('Distance'),
+				'#collapsible' => TRUE,
+				'#collapsed' => TRUE,
+				'#states' => array(
+					'visible' => array(
+						':input[name="cond_workout[' . $k . '][condition_exercises][' . $i . '][weight_choice]"]' => array('value' => 'distance'),
+					),
+				),
+      );
+
+			$form['cond_workout'][$k]['condition_exercises'][$i]['distance']['units'] = array(
+				'#type' => 'select',
+				'#description' => t('Meters or inches'),
+				'#options' => array(t('m'), t('in')),
+			);
+
+      $form['cond_workout'][$k]['condition_exercises'][$i]['distance']['men'] = array(
+				'#type' => 'textfield',
+				'#title' => t('Men'),
+				'#description' => t('Enter Height/Distance for Men'),
+				'#size' => 3,
+				'#maxlength' => 5,
+				'#access' => in_array('coach', array_values($user->roles)),
+      );
+
+			$form['cond_workout'][$k]['condition_exercises'][$i]['distance']['women'] = array(
+				'#type' => 'textfield',
+				'#title' => t('Women'),
+				'#description' => t('Enter Height/Distance for Women'),
+				'#size' => 3,
+				'#maxlength' => 5,
+				'#access' => in_array('coach', array_values($user->roles)),
+      );
+
+			$form['cond_workout'][$k]['condition_exercises'][$i]['distance']['self_prescribed'] = array(
+				'#type' => 'textfield',
+				'#description' => t('Enter Height/Distance'),
+				'#size' => 3,
+				'#maxlength' => 5,
+				'#access' => in_array('athlete', array_values($user->roles)),
       );
     }
 
