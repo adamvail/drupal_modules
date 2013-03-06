@@ -30,6 +30,7 @@ function workout_builder_wbuilder($form, &$form_state){
 	// is added then there needs to be one movement to start out with.
   // addition and deletion of all other movements in this additional
 	// workout are handled in the button handlers.
+	// reset this value when deleting a workout, look at handler for more details
   $num_workouts = $form_state['num_strength_wo'];
   if(empty($form_state['num_strength'][$num_workouts])){
     $form_state['num_strength'][$num_workouts] = 1;
@@ -52,28 +53,99 @@ function workout_builder_wbuilder($form, &$form_state){
 			'#maxlength' => 10,
 		);
 
+		$form['strength_wo'][$k]['set'] = array(
+			'#type' => 'textfield',
+			'#title' => t('Number of Sets'),
+			'#description' => t('Enter number of sets'),
+			'#size' => 2,
+			'#maxlength' => 2,
+		);
+
+		$form['strength_wo'][$k]['reps'] = array(
+			'#type' => 'textfield',
+			'#title' => t('Number of Reps'),
+			'#description' => t('Enter number of reps per set. (or MAX for max reps)'),
+			'#size' => 3,
+			'#maxlength' => 3,
+		);
+
+		$form['strength_wo'][$k]['weight'] = array(
+			'#type' => 'fieldset',
+			'#title' => t('Weight'),
+			'#collapsible' => TRUE,
+			'#collapsed' => TRUE,
+		);
+
+		$form['strength_wo'][$k]['weight']['style'] = array(
+			'#type' => 'radios',
+//      '#options' => drupal_map_assoc(array(t('Percentage'), t('Weight'))),
+			'#options' => array(
+				'percentage' => t('Percentage'),
+				'weight' => t('Weight'),
+				'ahap' => t('As Heavy As Possible'),
+			),
+			'#title' => t('Prescribe a percentage of max or a specific weight?'),
+		);
+
+		$form['strength_wo'][$k]['weight']['percentage'] = array(
+			'#type' => 'textfield',
+			'#description' => t('Enter prescribed percentage of max'),
+			'#size' => 3,
+			'#maxlength' => 5,
+			'#states' => array(
+				'visible' => array(
+					':input[name="strength_wo[' . $k . '][weight][style]"]' => array('value' => 'percentage'),
+				),
+			),
+		);
+
+		$form['strength_wo'][$k]['weight']['men'] = array(
+			'#type' => 'textfield',
+			'#title' => t('Men'),
+			'#description' => t('Enter prescribed weight for men'),
+			'#size' => 3,
+			'#maxlength' => 5,
+			'#access' => in_array('coach', array_values($user->roles)),
+			'#states' => array(
+				'visible' => array(
+					':input[name="strength_wo[' . $k . '][weight][style]"]' => array('value' => 'weight'),
+				),
+			),
+		);
+
+		$form['strength_wo'][$k]['weight']['women'] = array(
+			'#type' => 'textfield',
+			'#title' => t('Women'),
+			'#description' => t('Enter prescribed weight for women'),
+			'#size' => 3,
+			'#maxlength' => 5,
+			'#access' => in_array('coach', array_values($user->roles)),
+			'#states' => array(
+				'visible' => array(
+					':input[name="strength_wo[' . $k . '][weight][style]"]' => array('value' => 'weight'),
+				),
+			),
+		);
+
+		$form['strength_wo'][$k]['weight']['self_prescribed'] = array(
+			'#type' => 'textfield',
+			'#description' => t('Enter prescribed weight.'),
+			'#size' => 3,
+			'#maxlength' => 5,
+			'#access' => in_array('athlete', array_values($user->roles)),
+			'#states' => array(
+				'visible' => array(
+					':input[name="strength_wo[' . $k . '][weight][style]"]' => array('value' => 'weight'),
+				),
+			),
+		);
+
 		for($i = 1; $i <= $form_state['num_strength'][$k]; $i++){
 			$form['strength_wo'][$k]['strength_exercises'][$i] = array(
 				'#type' => 'fieldset',
 				'#title' => t('Movement #@num', array('@num' => $i)),
 				'#collapsible' => TRUE,
 				'#collapsed' => TRUE,
-			);
-
-			$form['strength_wo'][$k]['strength_exercises'][$i]['set'] = array(
-				'#type' => 'textfield',
-				'#title' => t('Number of Sets'),
-				'#description' => t('Enter number of sets'),
-				'#size' => 2,
-				'#maxlength' => 2,
-			);
-
-			$form['strength_wo'][$k]['strength_exercises'][$i]['reps'] = array(
-				'#type' => 'textfield',
-				'#title' => t('Number of Reps'),
-				'#description' => t('Enter number of reps per set. (or MAX for max reps)'),
-				'#size' => 3,
-				'#maxlength' => 3,
 			);
 
 			$form['strength_wo'][$k]['strength_exercises'][$i]['lift'] = array(
@@ -84,75 +156,6 @@ function workout_builder_wbuilder($form, &$form_state){
 				'#maxlength' => 40,
 			);
 
-			$form['strength_wo'][$k]['strength_exercises'][$i]['weight'] = array(
-				'#type' => 'fieldset',
-				'#title' => t('Weight'),
-				'#collapsible' => TRUE,
-				'#collapsed' => FALSE,
-			);
-
-			$form['strength_wo'][$k]['strength_exercises'][$i]['weight']['style'] = array(
-				'#type' => 'radios',
-	//      '#options' => drupal_map_assoc(array(t('Percentage'), t('Weight'))),
-				'#options' => array(
-					'percentage' => t('Percentage'),
-					'weight' => t('Weight'),
-				),
-				'#title' => t('Prescribe a percentage of max or a specific weight?'),
-			);
-
-			$form['strength_wo'][$k]['strength_exercises'][$i]['weight']['percentage'] = array(
-				'#type' => 'textfield',
-				'#description' => t('Enter prescribed percentage of max'),
-				'#size' => 3,
-				'#maxlength' => 5,
-				'#states' => array(
-					'visible' => array(
-						':input[name="strength_wo[' . $k . '][strength_exercises][' . $i . '][weight][style]"]' => array('value' => 'percentage'),
-					),
-				),
-			);
-
-			$form['strength_wo'][$k]['strength_exercises'][$i]['weight']['men'] = array(
-				'#type' => 'textfield',
-				'#title' => t('Men'),
-				'#description' => t('Enter prescribed weight for men'),
-				'#size' => 3,
-				'#maxlength' => 5,
-				'#access' => in_array('coach', array_values($user->roles)),
-				'#states' => array(
-					'visible' => array(
-						':input[name="strength_wo[' . $k . '][strength_exercises][' . $i . '][weight][style]"]' => array('value' => 'weight'),
-					),
-				),
-			);
-
-			$form['strength_wo'][$k]['strength_exercises'][$i]['weight']['women'] = array(
-				'#type' => 'textfield',
-				'#title' => t('Women'),
-				'#description' => t('Enter prescribed weight for women'),
-				'#size' => 3,
-				'#maxlength' => 5,
-				'#access' => in_array('coach', array_values($user->roles)),
-				'#states' => array(
-					'visible' => array(
-						':input[name="strength_wo[' . $k . '][strength_exercises][' . $i . '][weight][style]"]' => array('value' => 'weight'),
-					),
-				),
-			);
-
-			$form['strength_wo'][$k]['strength_exercises'][$i]['weight']['self_prescribed'] = array(
-				'#type' => 'textfield',
-				'#description' => t('Enter prescribed weight.'),
-				'#size' => 3,
-				'#maxlength' => 5,
-				'#access' => in_array('athlete', array_values($user->roles)),
-				'#states' => array(
-					'visible' => array(
-						':input[name="strength_wo[' . $k . '][strength_exercises][' . $i . '][weight][style]"]' => array('value' => 'weight'),
-					),
-				),
-			);
 		}
 
 		$form['strength_wo'][$k]['add_strength'] = array(
@@ -221,6 +224,8 @@ function workout_builder_wbuild_remove_strength_wo($form, &$form_state){
   if($form_state['num_strength_wo'] > 1){
 		$index = $form_state['num_strength_wo'];
     $form_state['num_strength_wo']--;
+		// reset start value so when user adds a new workout after
+		// just deleting one, it only has a single movement
 		$form_state['num_strength'][$index] = 1;
   }
   $form_state['rebuild'] = TRUE;
@@ -239,7 +244,10 @@ function workout_builder_wbuild_next_submit($form, &$form_state){
 }
 
 function workout_builder_wbuild_next_validate($form, &$form_state){
-  // Do nothing for now
+	// Time to do some magic
+	if(isset($form_state['values'])){
+		drupal_set_message('<pre>' . print_r($form_state['values'], TRUE) . '</pre>');	
+	}	
 }
 
 function workout_builder_wbuild_page_two($form, &$form_state){
@@ -374,7 +382,7 @@ function workout_builder_wbuild_page_two($form, &$form_state){
 				'#type' => 'fieldset',
 				'#title' => t('Weight'),
 				'#collapsible' => TRUE,
-				'#collapsed' => FALSE,
+				'#collapsed' => TRUE,
       );
 
       $form['cond_workout'][$k]['condition_exercises'][$i]['weight']['style'] = array(
@@ -526,6 +534,8 @@ function workout_builder_wbuild_remove_cond_wo($form, &$form_state){
   if($form_state['num_cond_wo'] > 1){
 		$index = $form_state['num_cond_wo'];
     $form_state['num_cond_wo']--;
+		// reset start value so when user adds a new workout after
+		// just deleting one, it only has a single movement
 		$form_state['num_condition'][$index] = 1;
   }
 
