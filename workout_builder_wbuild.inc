@@ -88,9 +88,9 @@ function workout_builder_wbuilder($form, &$form_state){
 			'#type' => 'radios',
 //      '#options' => drupal_map_assoc(array(t('Percentage'), t('Weight'))),
 			'#options' => array(
-				'percentage' => t('Percentage'),
-				'weight' => t('Weight'),
-				'ahap' => t('As Heavy As Possible'),
+				'percentage' => t('Percentage'), 			// 0
+				'weight' => t('Weight'),							// 1
+				'ahap' => t('As Heavy As Possible'),	// 2
 			),
 			'#title' => t('Prescribe a percentage of max or a specific weight?'),
 		);
@@ -844,6 +844,62 @@ function workout_builder_wbuild_page_two_build_validate($form, &$form_state){
 
 function workout_builder_wbuild_page_two_build_submit($form, &$form_state){
   // Put data into the database
+
+	// get the highest wid in the table and use one more than it.
+	$highest_wid = db_query('SELECT MAX(wid) FROM {workout_builder_strength}')->fetchField();
+
+	if(isset($highest_wid)){
+		$wid = (int)$highest_wid + 1;
+	}
+	else{
+		$wid = 1;
+	}
+
+	_populate_strength_table($form_state, $wid);
 }
 
+function _populate_strength_table(&$form_state, $wid){
+	global $user;
+	$table = 'workout_builder_strength';
 
+	for($i = 1; isset($form_state['page_values'][1]['strength_wo'][$i]); $i++){
+		$workout = $form_state['page_values'][1]['strength_wo'][$i];
+		$record = new stdClass();
+		$record->wid = $wid;
+		$record->date = time();
+		$record->strength_id = $i;
+		// need an entry for every movement, going to take up a lot of space though...
+		for($k = 1; isset($workout['strength_exercises'][$k]); $k++){	
+			$movement = $workout['strength_exercises'][$k];
+
+			$record->clock = $workout['clock'];
+			$record->sets = $workout['sets'];
+			$record->reps = $workout['reps'];
+
+			if($workout['weight']['style'] == 'percentage'){
+				// percentage: 0
+				$record->wgt_style = 'percentage';
+				$record->wgt_percentage = $workout['weight']['percentage'];
+			}
+			elseif($workout['weight']['style'] == 'weight'){
+				$record->wgt_style = 'weight';
+				if(in_array('coach', array_values($user->roles))){
+					$record->wgt_men = $workout['weight']['men'];
+					$record->wgt_women = $workout['weight']['women'];
+				}
+				else{
+					$record->wgt_self_rx = $workout['weight']['self_prescribed'];
+				}
+			}
+			elseif($workout['weight']['style'] == 'ahap'){
+				$record->wgt_style = 'ahap';
+			}
+			
+			$record->movement = $movement['lift'];
+//			drupal_set_message('<pre>' . print_r($record, TRUE) . '</pre>');
+
+			// insert the record in the table
+			drupal_write_record($table, $record);
+		}
+	}
+}
