@@ -1,0 +1,88 @@
+<?php
+
+function workout_builder_schema(){
+	$schema['workout_builder'] = array(
+		'description' => 'Stores values for building a workout, values are returned from page one of the workout_builder',	
+		'fields' => array(
+			'wid' => array(
+				'type' => 'int',
+				'unsigned' => TRUE,
+				'not null' => TRUE,
+				'size' => 'normal',
+				'description' => t('The workout id, group workouts from the same form together'),	
+			),
+			'date' => array(
+				'type' => 'int',
+				'unsigned' => TRUE,
+				'not null' => TRUE,
+				'size' => 'normal',
+				'description' => t('The date that this workout was created'),	
+			),
+			'clock' => array(
+				'type' => 'int',
+				'unsigned' => TRUE,
+				'size' => 'normal',
+				'description' => t('The time for each set'),	
+			),			
+			'sets' => array(
+				'type' => 'int',
+				'unsigned' => TRUE,
+				'size' => 'normal',
+				'description' => t('The number of sets'),	
+			),			
+			'reps' => array(
+				'type' => 'int',
+				'unsigned' => TRUE,
+				'size' => 'normal',
+				'description' => t('The number of reps'),	
+			),			
+			'wgt_style' => array(
+				'type' => 'int',
+				'unsigned' => TRUE,
+				'size' => 'small',
+				'description' => t('The style of weight (percentage, specific, ahap)'),	
+			),			
+			'wgt_men' => array(
+				'type' => 'int',
+				'unsigned' => TRUE,
+				'size' => 'normal',
+				'description' => t('Men\'s weight'),	
+			),			
+			'wgt_women' => array(
+				'type' => 'int',
+				'unsigned' => TRUE,
+				'size' => 'normal',
+				'description' => t('Women\'s weight'),	
+			),			
+			'wgt_percentage' => array(
+				'type' => 'int',
+				'unsigned' => TRUE,
+				'size' => 'normal',
+				'description' => t('Percentage of max weight'),	
+			),			
+			'wgt_self_rx' => array(
+				'type' => 'int',
+				'unsigned' => TRUE,
+				'size' => 'normal',
+				'description' => t('Self prescribed weight'),	
+			),		
+			'movement' => array(
+				'type' => 'varchar',
+				'length' => '255',
+				'not null' => TRUE,
+				'description' => t('The strength movement'),
+			),	
+		),
+		'indexes' => array(
+			'wid' => array('wid'),
+		),
+	);
+	return $schema;
+}
+
+function workout_builder_uninstall() {
+  $result = db_query("SELECT * FROM {workout_builder_strength}");
+  foreach ($result as $data) {
+//    db_query("DELETE FROM {variable} WHERE name = :name", array(':name' => 'example_', $data->nid));
+  }
+}
