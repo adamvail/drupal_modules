@@ -19,6 +19,7 @@ function workout_builder_wbuilder($form, &$form_state){
     $form_state['values'] = $form_state['page_values'][1];
   }
 
+
   $form_state['page_num'] = 1;
 
 	// initialize to a single strength workout
@@ -31,12 +32,17 @@ function workout_builder_wbuilder($form, &$form_state){
   // addition and deletion of all other movements in this additional
 	// workout are handled in the button handlers.
 	// reset this value when deleting a workout, look at handler for more details
-  $num_workouts = $form_state['num_strength_wo'];
+/*  $num_workouts = $form_state['num_strength_wo'];
   if(empty($form_state['num_strength'][$num_workouts])){
     $form_state['num_strength'][$num_workouts] = 1;
   }  
+*/
 
 	for($k = 1; $k <= $form_state['num_strength_wo']; $k++){
+
+		if(empty($form_state[$k]['num_movements'])){
+			$form_state[$k]['num_movements'] = 1;
+		}
 
 		$form['strength_wo'][$k] = array(
 			'#type' => 'fieldset',
@@ -45,6 +51,8 @@ function workout_builder_wbuilder($form, &$form_state){
 			'#collapsed' => TRUE,
 		);
 
+		// don't use the #name field in any of these
+		// IT BREAKS F****** EVERYTHING!!!!! aka an hour of my life I can't have back
 		$form['strength_wo'][$k]['clock'] = array(
 			'#type' => 'textfield',
 			'#title' => t('Clock'),
@@ -53,7 +61,7 @@ function workout_builder_wbuilder($form, &$form_state){
 			'#maxlength' => 10,
 		);
 
-		$form['strength_wo'][$k]['set'] = array(
+		$form['strength_wo'][$k]['sets'] = array(
 			'#type' => 'textfield',
 			'#title' => t('Number of Sets'),
 			'#description' => t('Enter number of sets'),
@@ -140,7 +148,7 @@ function workout_builder_wbuilder($form, &$form_state){
 			),
 		);
 
-		for($i = 1; $i <= $form_state['num_strength'][$k]; $i++){
+		for($i = 1; $i <= $form_state[$k]['num_movements']; $i++){
 			$form['strength_wo'][$k]['strength_exercises'][$i] = array(
 				'#type' => 'fieldset',
 				'#title' => t('Movement #@num', array('@num' => $i)),
@@ -155,7 +163,6 @@ function workout_builder_wbuilder($form, &$form_state){
 				'#size' => 20,
 				'#maxlength' => 40,
 			);
-
 		}
 
 		$form['strength_wo'][$k]['add_strength'] = array(
@@ -165,7 +172,7 @@ function workout_builder_wbuilder($form, &$form_state){
 			'#submit' => array('workout_builder_wbuild_add_strength'),
 		);
 
-		if($form_state['num_strength'][$k] > 1){
+		if($form_state[$k]['num_movements'] > 1){
 			$form['strength_wo'][$k]['remove_strength'] = array(
 				'#type' => 'submit',
 				'#name' => $k,
@@ -203,14 +210,14 @@ function workout_builder_wbuilder($form, &$form_state){
 
 function workout_builder_wbuild_add_strength($form, &$form_state){
 	$index = $form_state['triggering_element']['#name'];
-  $form_state['num_strength'][$index]++;
+  $form_state[$index]['num_movements']++;
   $form_state['rebuild'] = TRUE;
 }
 
 function workout_builder_wbuild_remove_strength($form, &$form_state){
 	$index = $form_state['triggering_element']['#name'];
-  if($form_state['num_strength'][$index] > 1){
-    $form_state['num_strength'][$index]--;
+  if($form_state[$index]['num_movements'] > 1){
+    $form_state[$index]['num_movements']--;
   }
   $form_state['rebuild'] = TRUE;
 }
@@ -226,7 +233,7 @@ function workout_builder_wbuild_remove_strength_wo($form, &$form_state){
     $form_state['num_strength_wo']--;
 		// reset start value so when user adds a new workout after
 		// just deleting one, it only has a single movement
-		$form_state['num_strength'][$index] = 1;
+		$form_state[$index]['num_movements'] = 1;
   }
   $form_state['rebuild'] = TRUE;
 }
@@ -244,10 +251,99 @@ function workout_builder_wbuild_next_submit($form, &$form_state){
 }
 
 function workout_builder_wbuild_next_validate($form, &$form_state){
-	// Time to do some magic
-	if(isset($form_state['values'])){
-//		drupal_set_message('<pre>' . print_r($form_state['values'], TRUE) . '</pre>');	
-	}	
+	// cycle through all the specified strength workouts
+	// check to make sure everything is numeric
+	// don't check the movement since it can be a mix of numerics and strings
+	// e.g. Hang Clean or T2B/K2E, both a valid, eventually move to taxonomy
+	// populated element
+	for($i = 1; isset($form_state['values']['strength_wo'][$i]); $i++){
+		$workout = $form_state['values']['strength_wo'][$i];
+
+		if(!_validate_numeric($workout['clock'])){
+			form_set_error($workout['clock'], t('Workout #'. $i .': Clock field must be a number'));	
+		}
+
+		if(!_validate_numeric($workout['sets'])){
+			form_set_error($workout['sets'], t('Workout #'. $i .': Sets field must be a number'));	
+		}
+
+		if(!_validate_numeric($workout['reps'])){
+			form_set_error($workout['reps'], t('Workout #'. $i .': Reps field must be a number'));	
+		}
+
+		$weight = $workout['weight'];
+
+		if(!empty($weight['percentage'])){
+			if(!_validate_numeric($weight['percentage'])){
+				form_set_error($weight['percentage'], t('Workout #'. $i .': Weight percentage field must be a number'));	
+			}
+
+			if(!_validate_range($weight['percentage'], 1, 100)){
+				form_set_error($weight['percentage'], t('Workout #'. $i .': Weight percentage field must be between 1 - 100'));	
+			}
+		}
+
+		if(!empty($weight['men'])){
+			if(!_validate_numeric($weight['men'])){
+				form_set_error($weight['men'], t('Workout #'. $i .': Men\'s weight field must be a number'));	
+			}
+
+			if(!_validate_range($weight['men'], 0, NULL)){
+				form_set_error($weight['men'], t('Workout #'. $i .': Men\'s weight field must be greater than 0'));	
+			}
+		}
+
+		if(!empty($weight['women'])){
+			if(!_validate_numeric($weight['women'])){
+				form_set_error($weight['women'], t('Workout #'. $i .': Women\'s weight field must be a number'));	
+			}
+
+			if(!_validate_range($weight['women'], 0, NULL)){
+				form_set_error($weight['women'], t('Workout #'. $i .': Women\'s weight field must be greater than 0'));	
+			}
+		}
+
+		if(!empty($weight['self_prescribed'])){
+			if(!_validate_numeric($weight['self_prescribed'])){
+				form_set_error($weight['self_prescribed'], t('Workout #'. $i .': Weight field must be a number'));	
+			}		
+
+			if(!_validate_range($weight['self_prescribed'], 0, NULL)){
+				form_set_error($weight['self_prescribed'], t('Workout #'. $i .': Weight field must be greater than 0'));	
+			}
+		}
+
+
+		
+//		drupal_set_message('<pre>' . print_r($form_state['values']['strength_wo'][$i]['clock'], TRUE) . '</pre>');	
+	}
+}
+
+function _validate_numeric($value){
+	if(!empty($value) && !is_numeric($value)){
+			return FALSE;
+	}
+	else{
+		return TRUE;
+	}
+}
+
+/**
+* Return if value from form in in between the range inclusive
+*/
+
+function _validate_range($value, $start, $finish){
+	$number = (int)$value;
+
+	if($finish == NULL && $number >= $start){
+		return TRUE;
+	}
+	elseif($number >= $start && $number <= $finish){
+		return TRUE;
+	}
+	else{
+		return FALSE;
+	}
 }
 
 function workout_builder_wbuild_page_two($form, &$form_state){
@@ -608,6 +704,10 @@ function workout_builder_wbuild_page_two_back($form, &$form_state){
   $form_state['values'] = $form_state['page_values'][1];
   $form_state['page_num'] = 1;
   $form_state['rebuild'] = TRUE;
+}
+
+function workout_builder_wbuild_page_two_submit_validate($form, &$form_state){
+	// validate errthang
 }
 
 function workout_builder_wbuild_page_two_submit($form, &$form_state){
