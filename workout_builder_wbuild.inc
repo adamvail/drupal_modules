@@ -651,10 +651,11 @@ function workout_builder_wbuild_page_two($form, &$form_state){
     );
   }
 
-  $form['submit'] = array(
+  $form['build'] = array(
     '#type' => 'submit',
     '#value' => t('Build Workout'),
-    '#submit' => array('workout_builder_wbuild_page_two_submit'),
+		'#validate' => array('workout_builder_wbuild_page_two_build_validate'),
+    '#submit' => array('workout_builder_wbuild_page_two_build_submit'),
   );
 
   return $form;
@@ -706,12 +707,143 @@ function workout_builder_wbuild_page_two_back($form, &$form_state){
   $form_state['rebuild'] = TRUE;
 }
 
-function workout_builder_wbuild_page_two_submit_validate($form, &$form_state){
+function workout_builder_wbuild_page_two_build_validate($form, &$form_state){
 	// validate errthang
+//	drupal_set_message('<pre>' . print_r($form_state['values']['cond_workout'], TRUE) . '</pre>');	
+//		drupal_set_message('<pre>' . print_r($workout, TRUE) . '</pre>');	
+	for($i = 1; isset($form_state['values']['cond_workout'][$i]); $i++){
+		$workout = $form_state['values']['cond_workout'][$i]['condition_exercises'];
+
+		if(!empty($workout['duration'])){
+			if(!_validate_numeric($workout['duration'])){
+				form_set_error($workout['duration'], t('Workout #'. $i .': Duration time field must be a number'));	
+			}
+
+			if(!_validate_range($workout['duration'], 0, NULL)){
+				form_set_error($workout['duration'], t('Workout #'. $i .': Duration time field must be greater than 0'));	
+			}
+		}
+
+		if(!empty($workout['rounds'])){
+			if(!_validate_numeric($workout['rounds'])){
+				form_set_error($workout['rounds'], t('Workout #'. $i .': Number of rounds must be a number'));	
+			}
+
+			if(!_validate_range($workout['rounds'], 1, NULL)){
+				form_set_error($workout['rounds'], t('Workout #'. $i .': Number of rounds must be at least 1'));	
+			}
+		}
+
+		if(!empty($workout['cutoff'])){
+			if(!_validate_numeric($workout['cutoff'])){
+				form_set_error($workout['cutoff'], t('Workout #'. $i .': Cutoff time must be a number'));	
+			}
+
+			if(!_validate_range($workout['cutoff'], 1, NULL)){
+				form_set_error($workout['cutoff'], t('Workout #'. $i .': Cutoff time must be at least 1 minute'));	
+			}
+		}
+
+		for($k = 1; isset($workout[$k]); $k++){
+			$movement = $workout[$k];
+
+			if(!empty($movement['reps'])){
+				if(!_validate_numeric($movement['reps'])){
+					form_set_error($movement['reps'], t('Workout #'. $i .': Movement #' . $k . ': Reps must be a number'));	
+				}
+
+				if(!_validate_range($movement['reps'], 1, NULL)){
+					form_set_error($movement['reps'], t('Workout #'. $i .': Movement #' . $k . ': Reps must be greater than 1'));	
+				}
+			}
+
+			if(!empty($movement['interval_time'])){
+				if(!_validate_numeric($movement['interval_time'])){
+					form_set_error($movement['interval_time'], t('Workout #'. $i .': Movement #' . $k . ': Interval must be a number'));	
+				}
+
+				if(!_validate_range($movement['interval_time'], 1, NULL)){
+					form_set_error($movement['interval_time'], t('Workout #'. $i .': Movement #' . $k . ': Interval must be greater than 1 second'));	
+				}
+			}
+
+			$weight = $movement['weight'];
+			if(!empty($weight['percentage'])){
+				if(!_validate_numeric($weight['percentage'])){
+					form_set_error($weight['percentage'], t('Workout #'. $i .': Movement #' . $k . ': Percentage must be a number'));	
+				}
+
+				if(!_validate_range($weight['percentage'], 1, 100)){
+					form_set_error($weight['percentage'], t('Workout #'. $i .': Movement #' . $k . ': Percentage must be between 1 - 100'));	
+				}
+			}
+
+			if(!empty($weight['men'])){
+				if(!_validate_numeric($weight['men'])){
+					form_set_error($weight['men'], t('Workout #'. $i .': Movement #' . $k . ': Men\'s weight must be a number'));	
+				}
+
+				if(!_validate_range($weight['men'], 1, NULL)){
+					form_set_error($weight['men'], t('Workout #'. $i .': Movement #' . $k . ': Men\'s weight must be greater than 0'));	
+				}
+			}
+
+			if(!empty($weight['women'])){
+				if(!_validate_numeric($weight['women'])){
+					form_set_error($weight['women'], t('Workout #'. $i .': Movement #' . $k . ': Women\'s weight must be a number'));	
+				}
+
+				if(!_validate_range($weight['women'], 1, NULL)){
+					form_set_error($weight['women'], t('Workout #'. $i .': Movement #' . $k . ': Women\'s weight must be greater than 0'));	
+				}
+			}
+
+			if(!empty($weight['self_prescribed'])){
+				if(!_validate_numeric($weight['self_prescribed'])){
+					form_set_error($weight['self_prescribed'], t('Workout #'. $i .': Movement #' . $k . ': Weight must be a number'));	
+				}
+
+				if(!_validate_range($weight['self_prescribed'], 1, NULL)){
+					form_set_error($weight['self_prescribed'], t('Workout #'. $i .': Movement #' . $k . ': Weight must be greater than 0'));	
+				}
+			}
+
+			$distance = $movement['distance'];
+			if(!empty($distance['men'])){
+				if(!_validate_numeric($distance['men'])){
+					form_set_error($distance['men'], t('Workout #'. $i .': Movement #' . $k . ': Men\'s distance must be a number'));	
+				}
+
+				if(!_validate_range($distance['men'], 1, NULL)){
+					form_set_error($distance['men'], t('Workout #'. $i .': Movement #' . $k . ': Men\'s distance must be greater than 0'));	
+				}
+			}
+
+			if(!empty($distance['women'])){
+				if(!_validate_numeric($distance['women'])){
+					form_set_error($distance['women'], t('Workout #'. $i .': Movement #' . $k . ': Women\'s distance must be a number'));	
+				}
+
+				if(!_validate_range($distance['women'], 1, NULL)){
+					form_set_error($distance['women'], t('Workout #'. $i .': Movement #' . $k . ': Women\'s distance must be greater than 0'));	
+				}
+			}
+
+			if(!empty($distance['self_prescribed'])){
+				if(!_validate_numeric($distance['self_prescribed'])){
+					form_set_error($distance['self_prescribed'], t('Workout #'. $i .': Movement #' . $k . ': Distance must be a number'));	
+				}
+
+				if(!_validate_range($distance['self_prescribed'], 1, NULL)){
+					form_set_error($distance['self_prescribed'], t('Workout #'. $i .': Movement #' . $k . ': Distance must be greater than 0'));	
+				}
+			}
+		}
+	}
 }
 
-function workout_builder_wbuild_page_two_submit($form, &$form_state){
-  // do nothing for now
+function workout_builder_wbuild_page_two_build_submit($form, &$form_state){
+  // Put data into the database
 }
 
 
