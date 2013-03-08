@@ -572,7 +572,7 @@ function workout_builder_wbuild_page_two($form, &$form_state){
 			$form['cond_workout'][$k]['condition_exercises'][$i]['distance']['units'] = array(
 				'#type' => 'select',
 				'#description' => t('Meters or inches'),
-				'#options' => array(t('m'), t('in')),
+				'#options' => array(t('m'), t('in'), t('cal')),
 			);
 
       $form['cond_workout'][$k]['condition_exercises'][$i]['distance']['men'] = array(
@@ -856,6 +856,7 @@ function workout_builder_wbuild_page_two_build_submit($form, &$form_state){
 	}
 
 	_populate_strength_table($form_state, $wid);
+	_populate_conditioning_table($form_state, $wid);
 }
 
 function _populate_strength_table(&$form_state, $wid){
@@ -877,7 +878,6 @@ function _populate_strength_table(&$form_state, $wid){
 			$record->reps = $workout['reps'];
 
 			if($workout['weight']['style'] == 'percentage'){
-				// percentage: 0
 				$record->wgt_style = 'percentage';
 				$record->wgt_percentage = $workout['weight']['percentage'];
 			}
@@ -903,3 +903,81 @@ function _populate_strength_table(&$form_state, $wid){
 		}
 	}
 }
+
+function _populate_conditioning_table(&$form_state, $wid){
+	global $user;
+	$table = 'workout_builder_conditioning';
+
+//	drupal_set_message('<pre>' . print_r($form_state['values'], TRUE) . '</pre>');
+	for($i = 1; isset($form_state['values']['cond_workout'][$i]); $i++){
+		$workout = $form_state['values']['cond_workout'][$i]['condition_exercises'];
+
+		for($k = 1; isset($workout[$k]); $k++){	
+			$movement = $workout[$k];
+			$record = new stdClass();
+			$record->wid = $wid;
+			$record->date = time();
+			$record->conditioning_id = $i;
+
+			if($workout['style'] == 'amrap'){
+				$record->style = 'amrap';
+				$record->duration = $workout['duration'];
+				$record->reps = $movement['reps'];
+			}	
+			elseif($workout['style'] == 'for_time'){
+				$record->style = 'for_time';
+				$record->rounds = $workout['rounds'];
+				$record->cutoff = $workout['cutoff'];
+				$record->reps = $movement['reps'];
+			}
+			elseif($workout['style'] == 'intervals'){
+				$record->style = 'intervals';
+				$record->rounds = $workout['rounds'];
+				$record->interval_time = $movement['interval_time'];
+			}
+
+			$record->movement = $movement['movement'];
+
+			if($movement['weight_choice'] == 'weight'){
+				$record->wgt_choice = 'weight';
+				$weight = $movement['weight'];
+				if($weight['style'] == 'percentage'){
+					$record->wgt_style = 'percentage';
+					$record->wgt_percentage = $weight['percentage'];
+				}
+				elseif($weight['style'] == 'weight'){
+					$record->wgt_style = 'weight';
+					if(in_array('coach', array_values($user->roles))){
+						$record->wgt_men = $weight['men'];
+						$record->wgt_women = $weight['women'];
+					}
+					else{
+						$record->wgt_self_rx = $weight['self_prescribed'];
+					}
+				}
+			}
+			elseif($movement['weight_choice'] == 'distance'){
+				$record->wgt_choice = 'distance';
+				$distance = $movement['distance'];
+			
+				$record->distance_units = $distance['units'];
+				if(in_array('coach', array_values($user->roles))){
+					$record->distance_men = $distance['men'];
+					$record->distance_women = $distance['women'];
+				}
+				else{
+					$record->distance_self_rx = $distance['self_prescribed'];
+				}
+				
+			}
+			//drupal_set_message('<pre>' . print_r($record, TRUE) . '</pre>');
+			drupal_write_record($table, $record);
+		}
+	}
+
+}
+
+
+
+
+
