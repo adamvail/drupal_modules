@@ -894,8 +894,14 @@ function _populate_strength_table(&$form_state, $wid){
 			elseif($workout['weight']['style'] == 'ahap'){
 				$record->wgt_style = 'ahap';
 			}
-			
-			$record->movement = $movement['lift'];
+		
+			if(empty($movement['lift'])){
+				// This workout isn't being used.
+				break;
+			}	
+			else{
+				$record->movement = $movement['lift'];
+			}
 //			drupal_set_message('<pre>' . print_r($record, TRUE) . '</pre>');
 
 			// insert the record in the table
@@ -923,6 +929,7 @@ function _populate_conditioning_table(&$form_state, $wid){
 				$record->style = 'amrap';
 				$record->duration = $workout['duration'];
 				$record->reps = $movement['reps'];
+				$exists = TRUE;
 			}	
 			elseif($workout['style'] == 'for_time'){
 				$record->style = 'for_time';
@@ -935,8 +942,19 @@ function _populate_conditioning_table(&$form_state, $wid){
 				$record->rounds = $workout['rounds'];
 				$record->interval_time = $movement['interval_time'];
 			}
+			else{
+				// None of the radios were selected so there must not
+				// be a conditioning portion to this workout
+				break;
+			}
 
-			$record->movement = $movement['movement'];
+			if(empty($movement['movement'])){
+				// No movement specified, so don't add anything to the DB
+				break;
+			}
+			else{
+				$record->movement = $movement['movement'];
+			}
 
 			if($movement['weight_choice'] == 'weight'){
 				$record->wgt_choice = 'weight';

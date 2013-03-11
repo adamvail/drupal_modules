@@ -16,7 +16,7 @@
 * can be chosen right from the menu.
 */
 
-function workout_builder_menu() {
+function workout_tracker_menu() {
 
   $items = array();
   $items['workout_tracker'] = array(
@@ -34,7 +34,7 @@ function workout_builder_menu() {
 /**
 * Page callback for out general info page
 */
-function workout_builder_intro(){
+function workout_tracker_intro(){
   $markup = t('This module allows a user to track a workout which has already been built');
   return array('#markup' => $markup);
 }
@@ -43,9 +43,9 @@ function workout_builder_intro(){
 * Implements hook_help()
 */
 
-function workout_builder_help($path, $arg){
+function workout_tracker_help($path, $arg){
   switch($path) {
- /*   case 'workout_builder/wbuild':
+ /*   case 'workout_tracker/wbuild':
       $help = t('This form is where the workout\'s movements are constructed');
       break;
 */
