@@ -1,0 +1,57 @@
+<?php
+
+/**
+* @file
+* First attempt at building a module that allows a user
+* to build their own workout. Hopefully, this will then 
+* be submitted and redirected to another form where the
+* user can input the values for this specific workout.
+*/
+
+
+/**
+* Implements hook_menu().
+*
+* Set up URL so building a workout
+* can be chosen right from the menu.
+*/
+
+function workout_builder_menu() {
+
+  $items = array();
+  $items['workout_tracker'] = array(
+    'title' => 'Workout Tracker',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('workout_tracker'),
+    'access callback' => TRUE,
+    'description' => 'Track your workout',
+    'file' => 'workout_tracker.inc',
+    'type' => MENU_NORMAL_ITEM, 
+  );
+
+  return $items;
+}
+/**
+* Page callback for out general info page
+*/
+function workout_builder_intro(){
+  $markup = t('This module allows a user to track a workout which has already been built');
+  return array('#markup' => $markup);
+}
+
+/**
+* Implements hook_help()
+*/
+
+function workout_builder_help($path, $arg){
+  switch($path) {
+ /*   case 'workout_builder/wbuild':
+      $help = t('This form is where the workout\'s movements are constructed');
+      break;
+*/
+  }
+
+  if (!empty($help)){
+    return '<p>' . $help . '</p>';
+  }
+}

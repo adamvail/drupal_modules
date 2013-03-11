@@ -1,0 +1,5 @@
+name = Workout Tracker
+description = Form that allows someone to track a prebuilt workout
+package = WOD Modules
+core = 7.x
+
