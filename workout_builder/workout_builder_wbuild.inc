@@ -72,7 +72,7 @@ function workout_builder_wbuilder($form, &$form_state){
 		$form['strength_wo'][$k]['reps'] = array(
 			'#type' => 'textfield',
 			'#title' => t('Number of Reps'),
-			'#description' => t('Enter number of reps per set. (or MAX for max reps)'),
+			'#description' => t('Enter number of reps per set. (or 0 for max reps)'),
 			'#size' => 3,
 			'#maxlength' => 3,
 		);
@@ -267,8 +267,15 @@ function workout_builder_wbuild_next_validate($form, &$form_state){
 			form_set_error($workout['sets'], t('Workout #'. $i .': Sets field must be a number'));	
 		}
 
-		if(!_validate_numeric($workout['reps'])){
-			form_set_error($workout['reps'], t('Workout #'. $i .': Reps field must be a number'));	
+
+		if(!empty($workout['reps'])){
+			if(!_validate_numeric($workout['reps'])){
+				form_set_error($workout['reps'], t('Workout #'. $i .': Reps field must be a number'));	
+			}
+
+			if(!_validate_range($workout['reps'], 0, NULL)){
+				form_set_error($workout['reps'], t('The number of reps must be a positive number OR 0 for MAX reps'));
+			}	
 		}
 
 		$weight = $workout['weight'];
@@ -846,10 +853,16 @@ function workout_builder_wbuild_page_two_build_submit($form, &$form_state){
   // Put data into the database
 
 	// get the highest wid in the table and use one more than it.
-	$highest_wid = db_query('SELECT MAX(wid) FROM {workout_builder_strength}')->fetchField();
+	$wid_strength = db_query('SELECT MAX(wid) FROM {workout_builder_strength}')->fetchField();
+	$wid_cond = db_query('SELECT MAX(wid) FROM {workout_builder_conditioning}')->fetchField();
 
-	if(isset($highest_wid)){
-		$wid = (int)$highest_wid + 1;
+	if(isset($wid_strength) || isset($wid_cond)){
+		if((int)$wid_strength >= (int)$wid_cond){
+			$wid = (int)$wid_strength + 1;
+		}
+		else{
+			$wid = (int)$wid_cond + 1;
+		}
 	}
 	else{
 		$wid = 1;
