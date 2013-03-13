@@ -1,0 +1,31 @@
+/* max_reps style sheet */
+
+#wod{
+	float:right;
+	padding: 0px 10px 0px 20px;
+	border-style:solid;
+	border-width:2px;
+	border-color:grey;
+	width: 50%;
+}
+
+#sets{
+	float:left;
+	padding: 0px 10px 0px 20px;
+}
+#x{
+	float:left;
+	padding: 0px 10px 0px 20px;
+}
+#reps{
+	float:left;
+	padding: 0px 20px 0px 10px;
+}
+#exercise{
+	float:left;
+	padding: 0px 20px 0px 20px;
+}
+#weight{
+	float:left;
+	padding: 0px 20px 0px 20px;
+}
