@@ -7,16 +7,25 @@
 #wod{
 	margin:10px;
 	width:100%;
+	clear:both;
+}
+#cond{
+	margin:10px;
+	width:100%;
+	clear:both;
 }
 #one_half{
 	float:left;
 	width:40%;
 	margin:20px;
+	border-style:solid;
+	border-width:5px;
 }
 #two_half{
 	float:left;
 	padding: 0px 20px 0px 20px;
-	width:45%;
+	border-style:solid;
+	border-width:5px;
 }
 #title{
 	text-align:center;
@@ -33,11 +42,37 @@ th,td{
 	global $user;
 
 	if ( $user->uid ) {
-		print '<div id="one_half">';
+		print '<div class="one_half">';
 			print '<img src="' .  base_path() . drupal_get_path('theme', 'skeletontheme') . '/mockup/workout-motivation.jpg">';
+			db_query('SELECT @last_id := MAX(wid) FROM {workout_builder_conditioning}');
+			$result = db_query('SELECT * FROM {workout_builder_conditioning} WHERE wid = @last_id');
+			print '<div id="cond">';
+				print '<table>';
+				
+					print '<tr>';
+						print '<th colspan="4">' . 'Conditioning Portion:' . '</th>';	
+					print '</tr>';
+					
+					print '<tr>' ;
+						print '<th>' . 'Style' . '</th>';
+						print '<th>' . 'Duration' . '</th>';
+						print '<th>' . 'Reps' . '</th>';
+						print '<th>' . 'Movement' . '</th>';
+					print '</tr>';
+					foreach ($result as $row) {
+						print '<tr>' ;
+							print '<td>' . $row->style . '</td>';
+							print '<td>' . $row->duration . '</td>';
+							print '<td>' . $row->reps . '</td>';
+							print '<td>' . $row->movement . '</td>';
+						print '</tr>';
+					}
+				print '</table>';			
+			
+			print '</div>';
 		print '</div>';
 
-		print '<div id="two_half">';
+		print '<div class="one_half last">';
 	
 			db_query('SELECT @last_id := MAX(wid) FROM {workout_builder_strength}');
 			$result = db_query('SELECT * FROM {workout_builder_strength} WHERE wid = @last_id');
@@ -45,7 +80,7 @@ th,td{
 				print '<table>';
 				
 					print '<tr>';
-						print '<th colspan="4">' . 'Workout of the Day:' . '</th>';	
+						print '<th colspan="4">' . 'Strength Portion:' . '</th>';	
 					print '</tr>';
 					
 					print '<tr>' ;
