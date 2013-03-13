@@ -1,5 +1,14 @@
 <?php
 
+/**
+* Implementation of of hook_install().
+*/
+
+function workout_tracker_install(){
+     // Create Tables
+    drupal_install_schema('workout_pr');
+}
+
 function workout_tracker_schema(){
 	// At the moment have one table for all the users.
 	// This doesn't scale so we'll have to figure out 

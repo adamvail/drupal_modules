@@ -23,7 +23,7 @@ function workout_builder_menu() {
     'title' => 'Workout Builder',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('workout_builder_wbuilder'),
-    'access callback' => TRUE,
+    'access callback' => 'user_is_logged_in',
     'description' => 'Build your workout',
     'file' => 'workout_builder_wbuild.inc',
     'type' => MENU_NORMAL_ITEM, 

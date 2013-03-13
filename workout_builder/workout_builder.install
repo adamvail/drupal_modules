@@ -1,5 +1,14 @@
 <?php
 
+/**
+* Implementation of of hook_install().
+*/
+
+function workout_builder_install(){
+     // Create Tables
+    drupal_install_schema('workout_builder_strength');
+}
+
 function workout_builder_schema(){
 	$schema['workout_builder_strength'] = array(
 		'description' => 'Values for building a strength workout, values are returned from page one of the workout_builder',	

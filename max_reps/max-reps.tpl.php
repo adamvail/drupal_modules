@@ -10,7 +10,10 @@
  * printing $variables['formexample_nameform_form'];
  *
  */
-
+	drupal_add_css(path_to_theme() . '/max_reps.css');
+	 //print_r($max_reps_form, TRUE);
+	// wrap the form in some html markup in order to style it
+	// with a .css file.
 	print '<div id="max_reps">';
 		print '<div id="sets">';
 			print $max_reps['sets'];			
@@ -29,28 +32,3 @@
 		print '</div>';
 	print '</div>';
 ?>
-
-<style type="text/css">
-
-	#sets{
-		float:left;
-		padding: 0px 10px 0px 20px;
-	}
-	#x{
-		float:left;
-		padding: 25px 0px 0px 0px;
-	}
-	#reps{
-		float:left;
-		padding: 0px 20px 0px 10px;
-	}
-	#exercise{
-		float:left;
-		padding: 0px 20px 0px 20px;
-	}
-	#submit{
-		clear:both;
-	}
-
-	
-	</style>

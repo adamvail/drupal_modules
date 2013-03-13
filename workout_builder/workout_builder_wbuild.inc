@@ -3,7 +3,7 @@
 function workout_builder_wbuilder($form, &$form_state){
 
   global $user;
-
+	
   $form['#tree'] = TRUE;
 
   $form['description'] = array(
@@ -843,8 +843,10 @@ function workout_builder_wbuild_page_two_build_validate($form, &$form_state){
 }
 
 function workout_builder_wbuild_page_two_build_submit($form, &$form_state){
-  // Put data into the database
+	// Put data into the database
 
+
+  
 	// get the highest wid in the table and use one more than it.
 	$highest_wid = db_query('SELECT MAX(wid) FROM {workout_builder_strength}')->fetchField();
 
@@ -854,9 +856,10 @@ function workout_builder_wbuild_page_two_build_submit($form, &$form_state){
 	else{
 		$wid = 1;
 	}
-
-	_populate_strength_table($form_state, $wid);
+	
+  	_populate_strength_table($form_state, $wid);
 	_populate_conditioning_table($form_state, $wid);
+
 }
 
 function _populate_strength_table(&$form_state, $wid){

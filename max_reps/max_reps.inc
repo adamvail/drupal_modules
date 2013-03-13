@@ -14,6 +14,13 @@ function max_reps() {
 		'#maxlength' => 5,
 		'#description' => t('Enter sets'),
 	);
+	$form['sets']['complete'] = array(
+		'#title' => t('Set Complete?'),
+		'#type' => 'textfield',
+		'#size' => 3,
+		'#maxlength' => 3,
+		'#description' => t('Enter yes or no'),
+	);
 	$form['reps'] = array(
 		'#title' => t('Reps'),
 		'#type' => 'textfield',

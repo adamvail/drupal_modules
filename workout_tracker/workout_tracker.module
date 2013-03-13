@@ -23,7 +23,7 @@ function workout_tracker_menu() {
     'title' => 'Workout Tracker',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('workout_tracker'),
-    'access callback' => TRUE,
+    'access callback' => 'user_is_logged_in',
     'description' => 'Track your workout',
     'file' => 'workout_tracker.inc',
     'type' => MENU_NORMAL_ITEM, 

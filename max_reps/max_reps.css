@@ -1,0 +1,25 @@
+/* max_reps style sheet */
+
+#sets{
+	float:left;
+	padding: 0px 10px 0px 20px;
+}
+#x{
+	float:left;
+	padding: 25px 0px 0px 0px;
+}
+#reps{
+	float:left;
+	padding: 0px 20px 0px 10px;
+}
+#exercise{
+	float:left;
+	padding: 0px 20px 0px 20px;
+}
+#complete{
+	float:left;
+	padding: 0px 20px 0px 20px;
+}
+#submit{
+	clear:both;
+}

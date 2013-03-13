@@ -51,7 +51,14 @@ function max_reps_theme() {
 function template_preprocess_max_reps(&$variables) {
 
 	$variables['max_reps'] = array();
-	$hidden = array();
+	$variables['max_reps']['sets'] = drupal_render($variables['form']['sets']);
+	$variables['max_reps']['reps'] = drupal_render($variables['form']['reps']);
+	$variables['max_reps']['exercise'] = drupal_render($variables['form']['exercise']);
+	$variables['max_reps']['submit'] = drupal_render($variables['form']['submit']);
+	$variables['max_reps']['complete'] = drupal_render($variables['form']['sets']['complete']);
+	$variables['max_reps_form'] = implode($variables['max_reps']);
+	
+	/*$hidden = array();
 	// Provide variables named after form keys so themers can print each element
 	//independently.
 	foreach (element_children($variables['form']) as $key) {
@@ -66,5 +73,5 @@ function template_preprocess_max_reps(&$variables) {
 	// Hidden form elements have no value to themers. No need for separation.
 	$variables['max_reps']['hidden'] = implode($hidden);
 	// Collect all form elements to make it easier to print the whole form.
-	$variables['max_reps_form'] = implode($variables['max_reps']);
+	*/
 }
