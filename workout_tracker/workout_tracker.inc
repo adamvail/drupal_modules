@@ -36,6 +36,11 @@ function workout_tracker($form, &$form_state){
 		}
 	}
 
+	if(empty($top_ten)){
+	  drupal_set_message('<pre>' . print_r("There are no specified workouts, please use the Workout Builder to create a workout.", TRUE) . '</pre>');
+	  return;
+	}
+
 	krsort($top_ten);
 
 //	drupal_set_message('<pre>' . print_r($top_ten, TRUE) . '</pre>');
