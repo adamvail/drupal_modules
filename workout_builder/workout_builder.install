@@ -291,6 +291,38 @@ function workout_builder_schema(){
 		),
 	);
 
+	$schema['workout_gym_affiliation'] = array(
+		'description' => 'The gym affiliated with each user',
+		'fields' => array(
+			'uid' => array(
+				'type' => 'int',
+				'unsigned' => TRUE,
+				'not null' => TRUE,
+				'size' => 'normal',
+				'description' => t('The user\'s id'),	
+			),
+			'username' => array(
+				'type' => 'varchar',
+				'length' => 255,
+				'description' => t('Gym affiliation for each user.'),			
+			),
+			'role' => array(
+				'type' => 'varchar',
+				'length' => 255,
+				'description' => t('The user\'s role. Either athlete or coach'),			
+			),
+			'gym' => array(
+				'type' => 'varchar',
+				'length' => 255,
+				'description' => t('The name of the user\'s gym'),			
+			),
+		),
+		'indexes' => array(
+			'uid' => array('uid'),
+			'role' => array('role'),
+			'gym' => array('gym'),
+		),
+	);
 
 	return $schema;
 }
