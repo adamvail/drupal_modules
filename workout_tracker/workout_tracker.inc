@@ -5,6 +5,11 @@ function workout_tracker($form, &$form_state){
 
 	$form['#tree'] = TRUE;
 
+	if(isset($_GET['wid'])){
+		$form_state['values']['workout_choice'] = $_GET['wid'];
+		return workout_tracker_workout($form, $form_state);
+	}
+
 	if(!empty($form_state['page_num']) && $form_state['page_num'] == 2){
 		return workout_tracker_workout($form, $form_state);
 	}
@@ -78,8 +83,6 @@ function workout_tracker_workout($form, &$form_state){
 	// Build this form based off the workout they just chose
 	$wid = $form_state['values']['workout_choice'];
 
-	//drupal_set_message('<pre>' . print_r($wid, TRUE) . '</pre>');
-
 	$strength = db_query('SELECT * FROM {workout_builder_strength} where wid=:wid', array(':wid' => $wid));
 	$conditioning = db_query('SELECT * FROM {workout_builder_conditioning} where wid=:wid', array(':wid' => $wid));
 
@@ -87,12 +90,57 @@ function workout_tracker_workout($form, &$form_state){
 		$strength_data = array();	
 		// put the rows from the db into an array for looping by strength_id
 		foreach($strength as $movement){
-			$strength_data[] = $movement;
+			// group by the strength id for form building
+			$strength_data[$movement->strength_id][] = $movement;
 		}
-		drupal_set_message('<pre>' . print_r($strength_data, TRUE) . '</pre>');
+//		drupal_set_message('<pre>' . print_r($strength_data, TRUE) . '</pre>');
+		
+		foreach($strength_data as $workout){
+			$movement_str = $workout[0]->sets . 'x' . $workout[0]->reps . ' of';
+			for($i = 0; isset($workout[$i]); $i++){
+				if($i == 0){
+					$movement_str = $movement_str . ' ' . $workout[$i]->movement;
+				}
+				else{
+					$movement_str = $movement_str . ' + ' . $workout[$i]->movement;
+				}
+			}
+
+			if(isset($workout[0]->wgt_style)){
+				switch($workout[0]->wgt_style){
+					case 'ahap':
+						$movement_str = $movement_str . ' AHAP';
+						break;
+					case 'percentage': 
+						$movement_str = $movement_str . ' at ' . $workout[0]->wgt_percentage . '%';
+						break;
+					case 'weight':
+						if(isset($workout[0]->wgt_self_rx)){
+							$movement_str = $movement_str . ' at ' . $workout[0]->wgt_self_rx . ' lbs';
+							break;
+						}
+						else{
+							$movement_str = $movement_str . ' at ' . $workout[0]->wgt_men . '/' . $workout[0]->wgt_women . ' lbs';
+							break;	
+						}
+				}
+			}
+			
+			if(isset($workout[0]->clock)){
+				$movement_str = $movement_str . ' on a ' . $workout[0]->clock . ' clock';
+			}
+
+			// print the workout line
+			$form[$workout[0]->strength_id]['header'] = array(
+				'#markup' => '<p>' . $movement_str . '</p>',
+			);	
+	
+			//drupal_set_message('<pre>' . print_r($movement_str, TRUE) . '</pre>');
+			// constuct boxes based on sets for weight/count input
+
+		}	
+
 	}	
-
-
 	return $form;
 }
 

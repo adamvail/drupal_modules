@@ -6,7 +6,7 @@
 
 function workout_tracker_install(){
      // Create Tables
-    drupal_install_schema('workout_pr');
+//    drupal_install_schema('workout_pr');
 }
 
 function workout_tracker_schema(){
@@ -48,6 +48,96 @@ function workout_tracker_schema(){
 			'movement' => array('movement'),
 		),
 	);
+
+	$schema['workout_tracker_strength'] = array(
+		'description' => t('Strength workout results'),
+		'fields', => array(
+			'athlete_uid' => array(
+				'type' => 'int',
+				'unsigned' => TRUE,
+				'size' => 'normal',
+				'description' => t('The UID for user who performed this workout'),	
+			),
+			'wid' => array(
+				'type' => 'int',
+				'unsigned' => TRUE,
+				'not null' => TRUE,
+				'size' => 'normal',
+				'description' => t('The workout id'),	
+			),
+			'strength_id' => array(
+				'type' => 'int',
+				'unsigned' => TRUE,
+				'not null' => TRUE,
+				'size' => 'normal',
+				'description' => t('The strength id, group movements in workout together'),	
+			),
+			'work' => array(
+				'type' => 'varchar',
+				'length' => 255,
+				'description' => t('Comma delimited list of weights or reps (skill exercises) used for this strength id'),
+			),
+		),
+		'indexes' => array(
+			'athlete_uid' => array('athlete_uid'),
+			'wid' => array('wid'),
+			'strength_id' => array('strength_id'),
+		),
+	);
+
+	$schema['workout_tracker_conditioning'] = array(
+		'description' => t('Conditioning workout results'),
+		'fields', => array(
+			'athlete_uid' => array(
+				'type' => 'int',
+				'unsigned' => TRUE,
+				'size' => 'normal',
+				'description' => t('The UID for user who performed this workout'),	
+			),
+			'wid' => array(
+				'type' => 'int',
+				'unsigned' => TRUE,
+				'not null' => TRUE,
+				'size' => 'normal',
+				'description' => t('The workout id'),	
+			),
+			'cond_id' => array(
+				'type' => 'int',
+				'unsigned' => TRUE,
+				'not null' => TRUE,
+				'size' => 'normal',
+				'description' => t('The conditioning id, group movements in workout together'),	
+			),
+			'time' => array(
+				'type' => 'varchar',
+				'length' => 5,
+				'description' => t('Time it took to complete all work (Round for time)'),
+			),
+			'reps' => array(
+				'type' => 'int',
+				'unsigned' => TRUE,
+				'size' => 'normal',
+				'description' => t('Number of total reps of work done (AMRAP)'),
+			),
+			'movement' => array(
+				'type' => 'varchar',
+				'length' => 255,
+				'description' => t('Name of movement in interval'),
+			),
+			'interval_reps' => array(
+				'type' => 'varchar',
+				'size' => 255,
+				'description' => t('Comma delimited list of reps from each interval for this movement'),
+			),
+		),
+		'indexes' => array(
+			'athlete_uid' => array('athlete_uid'),
+			'wid' => array('wid'),
+			'cond_id' => array('cond_id'),
+		),
+	);
+
+	return $schema;
 }
 
 

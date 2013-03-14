@@ -6,8 +6,9 @@
 
 function workout_builder_install(){
      // Create Tables
-    drupal_install_schema('workout_builder_strength');
+//    drupal_install_schema('workout_builder_strength');
 }
+
 
 function workout_builder_schema(){
 	$schema['workout_builder_strength'] = array(
@@ -35,9 +36,8 @@ function workout_builder_schema(){
 				'description' => t('The date that this workout was created'),	
 			),
 			'clock' => array(
-				'type' => 'int',
-				'unsigned' => TRUE,
-				'size' => 'normal',
+				'type' => 'varchar',
+				'length' => 5,
 				'description' => t('The time for each set'),	
 			),			
 			'sets' => array(
@@ -70,7 +70,7 @@ function workout_builder_schema(){
 				'description' => t('Women\'s weight'),	
 			),			
 			'wgt_percentage' => array(
-				'type' => 'int',
+				'type' => 'float',
 				'unsigned' => TRUE,
 				'size' => 'normal',
 				'description' => t('Percentage of max weight'),	
@@ -86,11 +86,17 @@ function workout_builder_schema(){
 				'length' => '255',
 				'not null' => TRUE,
 				'description' => t('The strength movement'),
+			),
+			'gym' => array(
+				'type' => 'varchar',
+				'length' => '255',
+				'description' => t('Name of the gym who created this workout'),
 			),	
 		),
 		'indexes' => array(
 			'wid' => array('wid'),
 			'movement' => array('movement'),
+			'gym' => array('gym'),
 		),
 	);
 
@@ -124,9 +130,8 @@ function workout_builder_schema(){
 				'description' => t('The style of conditioning'),	
 			),			
 			'duration' => array(
-				'type' => 'int',
-				'unsigned' => TRUE,
-				'size' => 'normal',
+				'type' => 'varchar',
+				'length' => 5,
 				'description' => t('Length of the workout in minutes'),	
 			),			
 			'rounds' => array(
@@ -176,7 +181,7 @@ function workout_builder_schema(){
 				'description' => t('Women\'s weight'),	
 			),			
 			'wgt_percentage' => array(
-				'type' => 'int',
+				'type' => 'float',
 				'unsigned' => TRUE,
 				'size' => 'normal',
 				'description' => t('Percentage of max weight'),	
@@ -217,14 +222,16 @@ function workout_builder_schema(){
 				'size' => 'normal',
 				'description' => t('Distance'),	
 			),	
+			'gym' => array(
+				'type' => 'varchar',
+				'length' => '255',
+				'description' => t('Name of the gym who created this workout'),
+			),	
 		),
 		'indexes' => array(
 			'wid' => array('wid'),
 			'movement' => array('movement'),
-		),
-		'indexes' => array(
-			'wid' => array('wid'),
-			'movement' => array('movement'),
+			'gym' => array('gym'),
 		),
 	);
 
