@@ -77,6 +77,11 @@ function workout_tracker_schema(){
 				'length' => 255,
 				'description' => t('Comma delimited list of weights or reps (skill exercises) used for this strength id'),
 			),
+			'notes' => array(
+				'type' => 'varchar',
+				'size' => 255,
+				'description' => t('Notes about the workout'),
+			),
 		),
 		'indexes' => array(
 			'athlete_uid' => array('athlete_uid'),
@@ -128,6 +133,11 @@ function workout_tracker_schema(){
 				'type' => 'varchar',
 				'size' => 255,
 				'description' => t('Comma delimited list of reps from each interval for this movement'),
+			),
+			'notes' => array(
+				'type' => 'varchar',
+				'size' => 255,
+				'description' => t('Notes about the workout'),
 			),
 		),
 		'indexes' => array(
