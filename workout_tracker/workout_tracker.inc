@@ -62,13 +62,13 @@ function workout_tracker($form, &$form_state){
 	$form['workout_choice'] = array(
 		'#type' => 'radios',
 		'#options' => $top_ten,
-		'#title' => t('Choose which workout you performed'),
+		'#title' => t('Choose a workout'),
 		'#default_value' => key($top_ten),
 	);	
 
 	$form['next'] = array(
 		'#type' => 'submit',
-		'#value' => 'Track Workout',
+		'#value' => t('Track Workout'),
 		'#submit' => array('workout_tracker_next_submit'),
 	);
 
@@ -89,15 +89,24 @@ function workout_tracker_workout($form, &$form_state){
 
 	$strength = db_query('SELECT * FROM {workout_builder_strength} where wid=:wid', array(':wid' => $wid));
 	$conditioning = db_query('SELECT * FROM {workout_builder_conditioning} where wid=:wid', array(':wid' => $wid));
+	$strength_notes_results = db_query('SELECT * FROM {workout_builder_strength_notes} where wid=:wid', array(':wid' => $wid));
+	$conditioning_notes_results = db_query('SELECT * FROM {workout_builder_conditioning_notes} where wid=:wid', array(':wid' => $wid));
 
 	if(!empty($strength)){
 		$strength_data = array();	
+	
 		// put the rows from the db into an array for looping by strength_id
 		foreach($strength as $movement){
 			// group by the strength id for form building
 			$strength_data[$movement->strength_id][] = $movement;
 		}
-//		drupal_set_message('<pre>' . print_r($strength_data, TRUE) . '</pre>');
+
+		// group notes for each workout
+		foreach($strength_notes_results as $note){
+			$strength_notes[$note->strength_id] = $note;
+		}
+
+//		drupal_set_message('<pre>' . print_r($strength_notes, TRUE) . '</pre>');
 	
 		// Loop through the different strength_id to populate the form	
 		foreach($strength_data as $workout){
@@ -147,6 +156,10 @@ function workout_tracker_workout($form, &$form_state){
 			$form[$workout[0]->strength_id]['header'] = array(
 				'#markup' => '<p>' . $movement_str . '</p>',
 			);	
+
+			$form[$workout[0]->strength_id]['strength_notes'] = array(
+				'#markup' => '<p>' . $strength_notes[$workout[0]->strength_id]->notes . '</p>',
+			);	
 	
 			//drupal_set_message('<pre>' . print_r($movement_str, TRUE) . '</pre>');
 			// constuct boxes based on sets for weight/count input
@@ -161,7 +174,7 @@ function workout_tracker_workout($form, &$form_state){
 			for($k = 1; $k <= $sets; $k++){
 				$form[$workout[0]->strength_id][$k]['set'] = array(
 					'#type' => 'textfield',
-					'#title' => t('Set #@num', array('@num' => $k)),
+					'#title' => t('Set #@num Weight/Count', array('@num' => $k)),
 				);
 				
 				$form[$workout[0]->strength_id][$k]['fail'] = array(
