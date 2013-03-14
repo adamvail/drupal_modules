@@ -1,0 +1,38 @@
+<?php
+
+/**
+* @file
+* Overides the registration process and adds fields that 
+* allow a user to define whether they are an athlete or coach
+* as well as affiliate with a gym of their choosing.
+*/
+
+/**
+* Implements hook_form_FORM_ID_alter().
+*
+* Set up URL so building a workout
+* can be chosen right from the menu.
+*/
+
+
+function role_dec_form_user_register_alter(&$form, &$form_state) {
+	$form['role'] = array(
+			'#type' => 'radios',
+			//'#options' => drupal_map_assoc(array(t('Percentage'), t('Weight'))),
+			'#options' => array(
+				'percentage' => t('Coach'), 			
+				'weight' => t('Athlete'),						
+			),
+			'#title' => t('Choose whether you are a Coach or Athlete'),
+		);
+	$form['affiliation'] = array(
+			'#type' => 'textfield',
+			'#title' => t('Gym Affiliation'),
+			'#description' => t('Please enter the name of your gym.'),
+			'#size' => 3,
+			'#maxlength' => 50,
+		);
+		
+	$form_state['rebuild'] = TRUE;
+	 return $form;
+}

@@ -51,7 +51,7 @@ function workout_tracker_schema(){
 
 	$schema['workout_tracker_strength'] = array(
 		'description' => t('Strength workout results'),
-		'fields', => array(
+		'fields' => array(
 			'athlete_uid' => array(
 				'type' => 'int',
 				'unsigned' => TRUE,
@@ -104,7 +104,7 @@ function workout_tracker_schema(){
 
 	$schema['workout_tracker_conditioning'] = array(
 		'description' => t('Conditioning workout results'),
-		'fields', => array(
+		'fields' => array(
 			'athlete_uid' => array(
 				'type' => 'int',
 				'unsigned' => TRUE,

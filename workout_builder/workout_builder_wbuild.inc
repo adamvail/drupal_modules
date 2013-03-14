@@ -46,7 +46,7 @@ function workout_builder_wbuilder($form, &$form_state){
 
 		$form['strength_wo'][$k] = array(
 			'#type' => 'fieldset',
-      '#title' => t('Workout #@num', array('@num' => $k)),
+			'#title' => t('Workout #@num', array('@num' => $k)),
 			'#collapsible' => TRUE,
 			'#collapsed' => TRUE,
 		);
