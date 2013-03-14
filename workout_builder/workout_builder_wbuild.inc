@@ -165,6 +165,11 @@ function workout_builder_wbuilder($form, &$form_state){
 			);
 		}
 
+		$form['strength_wo'][$k]['notes'] = array(
+			'#type' => 'textarea',
+			'#title' => t('Notes'),
+		);
+
 		$form['strength_wo'][$k]['add_strength'] = array(
 			'#type' => 'submit',
 			'#name' => $k,
@@ -260,7 +265,7 @@ function workout_builder_wbuild_next_validate($form, &$form_state){
 		$workout = $form_state['values']['strength_wo'][$i];
 
 		if(!_validate_numeric($workout['clock'])){
-			form_set_error($workout['clock'], t('Workout #'. $i .': Clock field must be a number'));	
+		//	form_set_error($workout['clock'], t('Workout #'. $i .': Clock field must be a number'));	
 		}
 
 		if(!_validate_numeric($workout['sets'])){
@@ -494,7 +499,7 @@ function workout_builder_wbuild_page_two($form, &$form_state){
 				'#type' => 'fieldset',
 				'#title' => t('Weight'),
 				'#collapsible' => TRUE,
-				'#collapsed' => TRUE,
+				'#collapsed' => FALSE,
 				'#states' => array(
 					'visible' => array(
 						':input[name="cond_workout[' . $k . '][condition_exercises][' . $i . '][weight_choice]"]' => array('value' => 'weight'),
@@ -609,6 +614,20 @@ function workout_builder_wbuild_page_two($form, &$form_state){
       );
     }
 
+		$form['cond_workout'][$k]['condition_exercises']['notes'] = array(
+			'#type' => 'textarea',
+			'#title' => t('Notes'),
+			'#states' => array(
+				'visible' => array(
+	    		':input[name="cond_workout[' . $k . '][condition_exercises][style]"]' => array(
+						array('value' => 'amrap'),
+	    			array('value' => 'for_time'),
+	    			array('value' => 'intervals'),
+	  			),
+				),
+      ),
+		);
+
     $form['cond_workout'][$k]['add_cond_movement'] = array(
       '#type' => 'submit',
       '#name' => $k,
@@ -722,13 +741,14 @@ function workout_builder_wbuild_page_two_build_validate($form, &$form_state){
 		$workout = $form_state['values']['cond_workout'][$i]['condition_exercises'];
 
 		if(!empty($workout['duration'])){
-			if(!_validate_numeric($workout['duration'])){
+	/*		if(!_validate_numeric($workout['duration'])){
 				form_set_error($workout['duration'], t('Workout #'. $i .': Duration time field must be a number'));	
 			}
 
 			if(!_validate_range($workout['duration'], 0, NULL)){
 				form_set_error($workout['duration'], t('Workout #'. $i .': Duration time field must be greater than 0'));	
 			}
+*/
 		}
 
 		if(!empty($workout['rounds'])){
@@ -870,7 +890,7 @@ function workout_builder_wbuild_page_two_build_submit($form, &$form_state){
 		$wid = 1;
 	}
 	
-  	_populate_strength_table($form_state, $wid);
+  _populate_strength_table($form_state, $wid);
 	_populate_conditioning_table($form_state, $wid);
 
 }
@@ -878,6 +898,7 @@ function workout_builder_wbuild_page_two_build_submit($form, &$form_state){
 function _populate_strength_table(&$form_state, $wid){
 	global $user;
 	$table = 'workout_builder_strength';
+	$table_notes = 'workout_builder_strength_notes';
 
 	for($i = 1; isset($form_state['page_values'][1]['strength_wo'][$i]); $i++){
 		$workout = $form_state['page_values'][1]['strength_wo'][$i];
@@ -885,6 +906,13 @@ function _populate_strength_table(&$form_state, $wid){
 		$record->wid = $wid;
 		$record->date = time();
 		$record->strength_id = $i;
+
+		$workout_exists = TRUE;
+
+		$note = new stdClass();
+		$note->wid = $wid;
+		$note->strength_id = $i;
+
 		// need an entry for every movement, going to take up a lot of space though...
 		for($k = 1; isset($workout['strength_exercises'][$k]); $k++){	
 			$movement = $workout['strength_exercises'][$k];
@@ -892,6 +920,8 @@ function _populate_strength_table(&$form_state, $wid){
 			$record->clock = $workout['clock'];
 			$record->sets = $workout['sets'];
 			$record->reps = $workout['reps'];
+
+			$note->notes = $workout['notes'];
 
 			if($workout['weight']['style'] == 'percentage'){
 				$record->wgt_style = 'percentage';
@@ -913,6 +943,11 @@ function _populate_strength_table(&$form_state, $wid){
 		
 			if(empty($movement['lift'])){
 				// This workout isn't being used.
+				if(!isset($workout['strength_exercises'][$k-1]['lift'])){
+					drupal_set_message('<pre>' . print_r("NOT adding notes to this workout", TRUE) . '</pre>');
+					$workout_exists = FALSE;
+				}
+
 				break;
 			}	
 			else{
@@ -923,16 +958,29 @@ function _populate_strength_table(&$form_state, $wid){
 			// insert the record in the table
 			drupal_write_record($table, $record);
 		}
+
+		// If there was a movement specified then add the note to the database
+		if($workout_exists == TRUE && !empty($note->notes)){
+//			drupal_set_message('<pre>' . print_r($note, TRUE) . '</pre>');
+			drupal_write_record($table_notes, $note);
+		}
 	}
 }
 
 function _populate_conditioning_table(&$form_state, $wid){
 	global $user;
 	$table = 'workout_builder_conditioning';
+	$table_notes = 'workout_builder_conditioning_notes';
 
 //	drupal_set_message('<pre>' . print_r($form_state['values'], TRUE) . '</pre>');
 	for($i = 1; isset($form_state['values']['cond_workout'][$i]); $i++){
 		$workout = $form_state['values']['cond_workout'][$i]['condition_exercises'];
+
+		$workout_exists = TRUE;
+	
+		$note = new stdClass();
+		$note->wid = $wid;
+		$note->conditioning_id = $i;
 
 		for($k = 1; isset($workout[$k]); $k++){	
 			$movement = $workout[$k];
@@ -940,6 +988,8 @@ function _populate_conditioning_table(&$form_state, $wid){
 			$record->wid = $wid;
 			$record->date = time();
 			$record->conditioning_id = $i;
+
+			$note->notes = $workout['notes'];
 
 			if($workout['style'] == 'amrap'){
 				$record->style = 'amrap';
@@ -966,6 +1016,11 @@ function _populate_conditioning_table(&$form_state, $wid){
 
 			if(empty($movement['movement'])){
 				// No movement specified, so don't add anything to the DB
+				if(!isset($workout[$k-1]['movement'])){
+					drupal_set_message('<pre>' . print_r("NOT inserting note", TRUE) . '</pre>');
+					$workout_exists = FALSE;
+				}
+
 				break;
 			}
 			else{
@@ -1002,13 +1057,15 @@ function _populate_conditioning_table(&$form_state, $wid){
 				else{
 					$record->distance_self_rx = $distance['self_prescribed'];
 				}
-				
 			}
 			//drupal_set_message('<pre>' . print_r($record, TRUE) . '</pre>');
 			drupal_write_record($table, $record);
 		}
+		if($workout_exists == TRUE && !empty($note->notes)){
+			//drupal_set_message('<pre>' . print_r($note, TRUE) . '</pre>');
+			drupal_write_record($table_notes, $note);
+		}
 	}
-
 }
 
 

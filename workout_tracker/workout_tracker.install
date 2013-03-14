@@ -89,11 +89,6 @@ function workout_tracker_schema(){
 				'size' => 'normal',
 				'description' => t('The rep that was failed on'),	
 			),
-			'notes' => array(
-				'type' => 'varchar',
-				'size' => 255,
-				'description' => t('Notes about the workout'),
-			),
 		),
 		'indexes' => array(
 			'athlete_uid' => array('athlete_uid'),
@@ -143,13 +138,8 @@ function workout_tracker_schema(){
 			),
 			'interval_reps' => array(
 				'type' => 'varchar',
-				'size' => 255,
+				'length' => 255,
 				'description' => t('Comma delimited list of reps from each interval for this movement'),
-			),
-			'notes' => array(
-				'type' => 'varchar',
-				'size' => 255,
-				'description' => t('Notes about the workout'),
 			),
 		),
 		'indexes' => array(
@@ -159,6 +149,61 @@ function workout_tracker_schema(){
 		),
 	);
 
+	$schema['workout_tracker_strength_notes'] = array(
+		'description' => 'Notes that are attached to a strength workout',
+		'fields' => array(
+			'wid' => array(
+				'type' => 'int',
+				'unsigned' => TRUE,
+				'not null' => TRUE,
+				'size' => 'normal',
+				'description' => t('The workout id, group workouts from the same form together'),	
+			),
+			'strength_id' => array(
+				'type' => 'int',
+				'unsigned' => TRUE,
+				'not null' => TRUE,
+				'size' => 'normal',
+				'description' => t('The strength id, group movements in workout together'),	
+			),
+			'notes' => array(
+				'type' => 'text',
+				'size' => 'medium',
+				'description' => t('Notes about the strength workout'),
+			),	
+		),
+		'indexes' => array(
+			'wid' => array('wid'),
+		),
+	);
+
+	$schema['workout_tracker_conditioning_notes'] = array(
+		'description' => 'Notes that are attached to a conditioning workout',
+		'fields' => array(
+			'wid' => array(
+				'type' => 'int',
+				'unsigned' => TRUE,
+				'not null' => TRUE,
+				'size' => 'normal',
+				'description' => t('The workout id, group workouts from the same form together'),	
+			),
+			'conditioning_id' => array(
+				'type' => 'int',
+				'unsigned' => TRUE,
+				'not null' => TRUE,
+				'size' => 'normal',
+				'description' => t('The conditioning id, group movements in workout together'),	
+			),
+			'notes' => array(
+				'type' => 'text',
+				'size' => 'medium',
+				'description' => t('Notes about the conditioning workout'),
+			),	
+		),
+		'indexes' => array(
+			'wid' => array('wid'),
+		),
+	);
 	return $schema;
 }
 
