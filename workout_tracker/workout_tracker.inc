@@ -24,7 +24,9 @@ function workout_tracker($form, &$form_state){
 	$top_conditioning = db_query('SELECT wid, date FROM {workout_builder_conditioning} ORDER BY wid DESC LIMIT 7');
 
 	if(empty($top_strength) && empty($top_conditioning)){
-		drupal_set_message('<pre>' . print_r("There are no specified workouts, please use the Workout Builder to create a workout.", TRUE) . '</pre>');
+		$form[$workout[0]->strength_id]['header'] = array(
+			'#markup' => '<p>There are no built workouts, please use the Workout Builder to create a workout</p>',
+		);	
 		return;
 	}
 
@@ -42,7 +44,9 @@ function workout_tracker($form, &$form_state){
 	}
 
 	if(empty($top_ten)){
-	  drupal_set_message('<pre>' . print_r("There are no specified workouts, please use the Workout Builder to create a workout.", TRUE) . '</pre>');
+		$form[$workout[0]->strength_id]['header'] = array(
+			'#markup' => '<p>There are no built workouts, please use the Workout Builder to create a workout</p>',
+		);	
 	  return;
 	}
 
@@ -94,9 +98,11 @@ function workout_tracker_workout($form, &$form_state){
 			$strength_data[$movement->strength_id][] = $movement;
 		}
 //		drupal_set_message('<pre>' . print_r($strength_data, TRUE) . '</pre>');
-		
+	
+		// Loop through the different strength_id to populate the form	
 		foreach($strength_data as $workout){
-			$movement_str = $workout[0]->sets . 'x' . $workout[0]->reps . ' of';
+			// make the header string
+			$movement_str = $workout[0]->sets . 'x' . $workout[0]->reps . ',';
 			for($i = 0; isset($workout[$i]); $i++){
 				if($i == 0){
 					$movement_str = $movement_str . ' ' . $workout[$i]->movement;
@@ -130,6 +136,13 @@ function workout_tracker_workout($form, &$form_state){
 				$movement_str = $movement_str . ' on a ' . $workout[0]->clock . ' clock';
 			}
 
+			$form[$workout[0]->strength_id] = array(
+				'#type' => 'fieldset',
+				'#title' => t('@header', array('@header' => $movement_str)),
+				'#collapsible' => TRUE,
+				'#collapsed' => TRUE,
+			);
+
 			// print the workout line
 			$form[$workout[0]->strength_id]['header'] = array(
 				'#markup' => '<p>' . $movement_str . '</p>',
@@ -137,9 +150,39 @@ function workout_tracker_workout($form, &$form_state){
 	
 			//drupal_set_message('<pre>' . print_r($movement_str, TRUE) . '</pre>');
 			// constuct boxes based on sets for weight/count input
+			$sets = $workout[0]->sets;
+			$reps = $workout[0]->reps; // use reps to populate drop down for failed reps
+			$reps_array = array();
 
+			for($j = 1; $j <= $reps; $j++){
+				$reps_array[$j] = $j;
+			}
+
+			for($k = 1; $k <= $sets; $k++){
+				$form[$workout[0]->strength_id][$k]['set'] = array(
+					'#type' => 'textfield',
+					'#title' => t('Set #@num', array('@num' => $k)),
+				);
+				
+				$form[$workout[0]->strength_id][$k]['fail'] = array(
+					'#type' => 'checkbox',
+					'#title' => t('Fail on a rep?'),
+				);
+		
+//				$visibility = $workout[0]->strength_id . '[' . $k . '][fail]';
+	
+				$form[$workout[0]->strength_id][$k]['fail_rep'] = array(
+					'#type' => 'select',
+					'#title' => t('Failed on rep:'),
+					'#options' => $reps_array,
+					'#states' => array(
+						'visible' => array(
+							':input[name="' . $workout[0]->strength_id . '[' . $k . '][fail]"]' => array('checked' => TRUE),
+						),
+					),
+				);				
+			}
 		}	
-
 	}	
 	return $form;
 }
