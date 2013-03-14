@@ -46,11 +46,15 @@ th,td{
 			print '<img src="' .  base_path() . drupal_get_path('theme', 'skeletontheme') . '/mockup/workout-motivation.jpg">';
 			db_query('SELECT @last_id := MAX(wid) FROM {workout_builder_conditioning}');
 			$result = db_query('SELECT * FROM {workout_builder_conditioning} WHERE wid = @last_id');
-			print '<div id="cond">';
+			$query = db_query('SELECT wid FROM {workout_builder_conditioning} WHERE wid = @last_id');
+			$wid = 0;
+			foreach($query as $row){
+				$wid = $row->wid;
+			}
 				print '<table>';
 				
 					print '<tr>';
-						print '<th colspan="4">' . 'Conditioning Portion:' . '</th>';	
+						print '<th colspan="4"><a href="?q=workout_tracker&wid=' . $wid . '">' . 'Conditioning Portion:' . '</a></th>';	
 					print '</tr>';
 					
 					print '<tr>' ;
@@ -61,7 +65,7 @@ th,td{
 					print '</tr>';
 					foreach ($result as $row) {
 						print '<tr>' ;
-							print '<td>' . $row->style . '</td>';
+							print '<td>' . $row->wid . '</td>';
 							print '<td>' . $row->duration . '</td>';
 							print '<td>' . $row->reps . '</td>';
 							print '<td>' . $row->movement . '</td>';
@@ -80,7 +84,7 @@ th,td{
 				print '<table>';
 				
 					print '<tr>';
-						print '<th colspan="4">' . 'Strength Portion:' . '</th>';	
+						print '<th colspan="4"><a href="?q=workout_tracker&wid=' . $wid . '">' . 'Strength Portion:' . '</a></th>';	
 					print '</tr>';
 					
 					print '<tr>' ;
