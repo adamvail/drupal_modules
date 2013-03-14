@@ -72,10 +72,22 @@ function workout_tracker_schema(){
 				'size' => 'normal',
 				'description' => t('The strength id, group movements in workout together'),	
 			),
+			'set' => array(
+				'type' => 'int',
+				'unsigned' => TRUE,
+				'size' => 'normal',
+				'description' => t('The set for this movement'),	
+			),
 			'work' => array(
 				'type' => 'varchar',
 				'length' => 255,
-				'description' => t('Comma delimited list of weights or reps (skill exercises) used for this strength id'),
+				'description' => t('Weight/count for this movement on this set'),
+			),
+			'fail' => array(
+				'type' => 'int',
+				'unsigned' => TRUE,
+				'size' => 'normal',
+				'description' => t('The rep that was failed on'),	
 			),
 			'notes' => array(
 				'type' => 'varchar',
