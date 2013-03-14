@@ -24,10 +24,10 @@ function workout_tracker($form, &$form_state){
 	$top_conditioning = db_query('SELECT wid, date FROM {workout_builder_conditioning} ORDER BY wid DESC LIMIT 7');
 
 	if(empty($top_strength) && empty($top_conditioning)){
-		$form[$workout[0]->strength_id]['header'] = array(
-			'#markup' => '<p>There are no built workouts, please use the Workout Builder to create a workout</p>',
+		$form['header'] = array(
+			'#markup' => '<p>There are no workouts built, please use the Workout Builder to create a workout</p>',
 		);	
-		return;
+		return $form;
 	}
 
 	// Take the last 10 workouts from both strength and conditioning
@@ -44,10 +44,10 @@ function workout_tracker($form, &$form_state){
 	}
 
 	if(empty($top_ten)){
-		$form[$workout[0]->strength_id]['header'] = array(
-			'#markup' => '<p>There are no built workouts, please use the Workout Builder to create a workout</p>',
+		$form['header'] = array(
+			'#markup' => '<p>There are no workouts built, please use the Workout Builder to create a workout</p>',
 		);	
-	  return;
+	  return $form;
 	}
 
 	krsort($top_ten);
