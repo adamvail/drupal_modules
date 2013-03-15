@@ -56,7 +56,7 @@ function role_dec_user_insert(&$edit, $account, $category){
 	//drupal_set_message('<pre>' . print_r($category, TRUE) . '</pre>');
 	
 	$record->uid = $account->uid;
-	$record->username = $account->name;
+	$record->name = $account->name;
 	$record->role = $account->role;
 	$record->gym = $account->affiliate;
 	
