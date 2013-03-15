@@ -1,0 +1,64 @@
+<?php
+
+/**
+* @file
+* Overides the registration process and adds fields that 
+* allow a user to define whether they are an athlete or coach
+* as well as affiliate with a gym of their choosing.
+*/
+
+/**
+* Implements hook_form_alter().
+*
+*/
+
+function role_dec_form_alter(&$form, &$form_state, $form_id) {
+	// check to see if the form is the user registration or user profile form
+	// if not then return and don’t do anything
+	if (!($form_id == 'user_register_form' || $form_id == 'user_profile_form')) {
+		return;
+	}
+	
+	$form['account']['role_dec'] = array(
+			'#type' => 'fieldset',
+			'#title' => t('User Role Decision'),
+	);
+
+	$form['account']['role_dec']['role'] = array(
+			'#type' => 'radios',
+			'#options' => array(
+				'coach' => t('Coach'), 			
+				'athlete' => t('Athlete'),						
+			),
+			'#description' => t('Choose whether you are a Coach or Athlete'),
+	);
+	$form['account']['affiliation_dec'] = array(
+			'#type' => 'fieldset',
+			'#title' => t('Gym Affiliation'),
+	);
+	
+	$form['account']['affiliation_dec']['affiliate'] = array(
+			'#type' => 'textfield',
+			'#description' => t('Please enter the name of your gym.'),
+			'#size' => 15,
+			'#maxlength' => 50,
+	);
+	
+}
+
+function role_dec_user_insert(&$edit, $account, $category){
+
+	$table = 'workout_gym_affiliation';
+	$record = new stdClass();
+	
+	//drupal_set_message('<pre>' . print_r($edit, TRUE) . '</pre>');
+	//drupal_set_message('<pre>' . print_r($account, TRUE) . '</pre>');
+	//drupal_set_message('<pre>' . print_r($category, TRUE) . '</pre>');
+	
+	$record->uid = $account->uid;
+	$record->username = $account->name;
+	$record->role = $account->role;
+	$record->gym = $account->affiliate;
+	
+	drupal_write_record($table, $record);
+}
