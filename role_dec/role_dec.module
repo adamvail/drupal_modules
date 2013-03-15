@@ -8,31 +8,57 @@
 */
 
 /**
-* Implements hook_form_FORM_ID_alter().
+* Implements hook_form_alter().
 *
-* Set up URL so building a workout
-* can be chosen right from the menu.
 */
 
+function role_dec_form_alter(&$form, &$form_state, $form_id) {
+	// check to see if the form is the user registration or user profile form
+	// if not then return and don’t do anything
+	if (!($form_id == 'user_register_form' || $form_id == 'user_profile_form')) {
+		return;
+	}
+	
+	$form['account']['role_dec'] = array(
+			'#type' => 'fieldset',
+			'#title' => t('User Role Decision'),
+	);
 
-function role_dec_form_user_register_alter(&$form, &$form_state) {
-	$form['role'] = array(
+	$form['account']['role_dec']['role'] = array(
 			'#type' => 'radios',
-			//'#options' => drupal_map_assoc(array(t('Percentage'), t('Weight'))),
 			'#options' => array(
-				'percentage' => t('Coach'), 			
-				'weight' => t('Athlete'),						
+				'coach' => t('Coach'), 			
+				'athlete' => t('Athlete'),						
 			),
-			'#title' => t('Choose whether you are a Coach or Athlete'),
-		);
-	$form['affiliation'] = array(
-			'#type' => 'textfield',
+			'#description' => t('Choose whether you are a Coach or Athlete'),
+	);
+	$form['account']['affiliation_dec'] = array(
+			'#type' => 'fieldset',
 			'#title' => t('Gym Affiliation'),
+	);
+	
+	$form['account']['affiliation_dec']['affiliate'] = array(
+			'#type' => 'textfield',
 			'#description' => t('Please enter the name of your gym.'),
-			'#size' => 3,
+			'#size' => 15,
 			'#maxlength' => 50,
-		);
-		
-	$form_state['rebuild'] = TRUE;
-	 return $form;
+	);
+	
+}
+
+function role_dec_user_insert(&$edit, $account, $category){
+
+	$table = 'workout_gym_affiliation';
+	$record = new stdClass();
+	
+	//drupal_set_message('<pre>' . print_r($edit, TRUE) . '</pre>');
+	//drupal_set_message('<pre>' . print_r($account, TRUE) . '</pre>');
+	//drupal_set_message('<pre>' . print_r($category, TRUE) . '</pre>');
+	
+	$record->uid = $account->uid;
+	$record->username = $account->name;
+	$record->role = $account->role;
+	$record->gym = $account->affiliate;
+	
+	drupal_write_record($table, $record);
 }

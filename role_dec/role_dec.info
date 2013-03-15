@@ -2,4 +2,4 @@ name = Role Decision
 description = Login overide that allows new user to chose their role
 package = WOD Modules
 core = 7.x
-
+files[] = role_dec.module
