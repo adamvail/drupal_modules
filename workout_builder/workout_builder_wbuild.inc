@@ -785,13 +785,14 @@ function workout_builder_wbuild_page_two_build_validate($form, &$form_state){
 			}
 
 			if(!empty($movement['interval_time'])){
-				if(!_validate_numeric($movement['interval_time'])){
+		/*		if(!_validate_numeric($movement['interval_time'])){
 					form_set_error($movement['interval_time'], t('Workout #'. $i .': Movement #' . $k . ': Interval must be a number'));	
 				}
 
 				if(!_validate_range($movement['interval_time'], 1, NULL)){
 					form_set_error($movement['interval_time'], t('Workout #'. $i .': Movement #' . $k . ': Interval must be greater than 1 second'));	
 				}
+*/
 			}
 
 			$weight = $movement['weight'];
