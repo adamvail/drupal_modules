@@ -34,16 +34,32 @@ th,td{
 			db_query('SELECT @last_id := MAX(wid) FROM {workout_builder_conditioning}');
 			$result = db_query('SELECT * FROM {workout_builder_conditioning} WHERE wid = @last_id');
 			$wid = db_query('SELECT MAX(wid) FROM {workout_builder_conditioning}')->fetchField();
-				print '<table>';			
+				print '<table>';
+				
 					print '<tr>';
 						print '<th colspan="0"><a href="?q=workout_tracker&wid=' . (int)$wid . '">' . 'Conditioning Portion:' . '</a></th>';	
 					print '</tr>';
+					
+					$i = 0;
+					foreach ($result as $row) {
+						if($i != $row->conditioning_id){
+							if($row->style == 'amrap'){
+							
+							}
+							elseif($row->style == 'for_time'){
+							
+							}
+							elseif($row->style == 'intervals'){
+							
+							}
+						
+						print '<tr>';
 							print '<th>' . 'Style' . '</th>';
 							print '<th>' . 'Duration' . '</th>';
 							print '<th>' . 'Reps' . '</th>';
 							print '<th>' . 'Movement' . '</th>';
 						print '</tr>';
-					foreach ($result as $row) {
+						}
 						print '<tr>' ;
 							print '<td>' . $row->style . '</td>';
 							print '<td>' . $row->duration . '</td>';
@@ -156,7 +172,6 @@ th,td{
 						}			
 					}
 				print '</table>';
-
 	}
 ?>
 

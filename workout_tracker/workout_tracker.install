@@ -207,6 +207,12 @@ function workout_tracker_schema(){
 	return $schema;
 }
 
+function workout_tracker_uninstall() {
+ // $result = db_query("SELECT * FROM {workout_builder_strength}");
+ // foreach ($result as $data) {
+//    db_query("DELETE FROM {variable} WHERE name = :name", array(':name' => 'example_', $data->nid));
+//  }
+}
 
 
 
