@@ -169,9 +169,8 @@ function workout_builder_schema(){
 				'description' => t('The number of rounds to be completed'),	
 			),			
 			'cutoff' => array(
-				'type' => 'int',
-				'unsigned' => TRUE,
-				'size' => 'normal',
+				'type' => 'varchar',
+				'length' => 6,
 				'description' => t('The time cutoff in minutes'),	
 			),			
 			'reps' => array(
@@ -181,9 +180,8 @@ function workout_builder_schema(){
 				'description' => t('The number of reps'),	
 			),			
 			'interval_time' => array(
-				'type' => 'int',
-				'unsigned' => TRUE,
-				'size' => 'normal',
+				'type' => 'varchar',
+				'length' => 6,
 				'description' => t('Time for each interval in seconds'),	
 			),			
 			'wgt_choice' => array(
@@ -301,10 +299,10 @@ function workout_builder_schema(){
 				'size' => 'normal',
 				'description' => t('The user\'s id'),	
 			),
-			'username' => array(
+			'name' => array(
 				'type' => 'varchar',
 				'length' => 255,
-				'description' => t('Gym affiliation for each user.'),			
+				'description' => t('Actual name of the user.'),			
 			),
 			'role' => array(
 				'type' => 'varchar',
