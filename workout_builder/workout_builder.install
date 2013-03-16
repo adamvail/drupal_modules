@@ -91,12 +91,19 @@ function workout_builder_schema(){
 				'type' => 'varchar',
 				'length' => '255',
 				'description' => t('Name of the gym who created this workout'),
-			)
+			),
+			'creator_id' => array(
+				'type' => 'int',
+				'unsigned' => TRUE,
+				'size' => 'normal',
+				'description' => t('User ID of the workout creator'),	
+			),		
 		),
 		'indexes' => array(
 			'wid' => array('wid'),
 			'movement' => array('movement'),
 			'gym' => array('gym'),
+			'creator_id' => array('creator_id'),
 		),
 	);
 
@@ -253,11 +260,18 @@ function workout_builder_schema(){
 				'length' => '255',
 				'description' => t('Name of the gym who created this workout'),
 			),	
+			'creator_id' => array(
+				'type' => 'int',
+				'unsigned' => TRUE,
+				'size' => 'normal',
+				'description' => t('User ID of the workout creator'),	
+			),		
 		),
 		'indexes' => array(
 			'wid' => array('wid'),
 			'movement' => array('movement'),
 			'gym' => array('gym'),
+			'creator_id' => array('creator_id'),
 		),
 	);
 
