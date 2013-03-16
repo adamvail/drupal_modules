@@ -196,7 +196,97 @@ function workout_tracker_workout($form, &$form_state){
 				);				
 			}
 		}	
-	}	
+	}
+
+	if(!empty($conditioning)){
+		$conditioning_data = array();	
+	
+		// put the rows from the db into an array for looping by conditioning_id
+		foreach($conditioning as $movement){
+			// group by the conditioning id for form building
+			$conditioning_data[$movement->conditioning_id][] = $movement;
+		}
+
+		// group notes for each workout
+		foreach($conditioning_notes_results as $note){
+			$conditioning_notes[$note->conditioning_id] = $note;
+		}
+
+		// Loop through the different strength_id to populate the form	
+		foreach($conditioning_data as $workout){
+			// $workout is an array of movements all with the same conditioning_id
+
+			$workout_str = '';
+			if($workout[0]->style == 'amrap'){
+				$movement_str = $workout[0]->duration . " minute AMRAP:\n";
+			}
+			elseif($workout[0]->style == 'for_time'){
+				$movement_str = $workout[0]->rounds . " For Time, " . $workout[0]->cutoff . " minute cutoff:\n";
+			}
+
+			// build the workout string
+			for($i = 0; isset($workout[$i]); $i++){
+				if($workout[$i]->style == 'amrap' || $workout[$i]->style == 'for_time'){
+					if(!empty($workout[$i]->reps)){
+						$movement_str = $movement_str . $workout[$i]->reps . ' '  . $workout[$i]->movement;
+					}
+					else{
+						$movement_str = $movement_str . $workout[$i]->movement;
+					}
+					if($workout[$i]->wgt_choice == 'weight'){
+						if($workout[$i]->wgt_style == 'weight'){
+							if(!empty($workout[$i]->wgt_self_rx)){
+								$movement_str = $movement_str . ', ' . $workout[$i]->wgt_self_prescribed . " lbs\n";
+							}
+							else{
+								$movement_str = $movement_str . ', ' . $workout[$i]->wgt_men . '/' . $workout[$i]->wgt_women . " lbs\n";
+							}
+						}
+						elseif($workout[$i]->wgt_style == 'percentage'){					
+							$movement_str = $movement_str . ', ' . $workout[$i]->wgt_percentage . "%\n";
+						}
+					}	
+					elseif($workout[$i]->wgt_choice == 'distance'){
+						if(!empty($workout[$i]->distance_self_rx)){
+							switch($workout[$i]->distance_units){
+								case 0: // meters
+									$movement_str = $movement_str . ', ' . $workout[$i]->distance_self_rx . " meters\n";
+									break;
+								case 1: // inches
+									$movement_str = $movement_str . ', ' . $workout[$i]->distance_self_rx . " inches\n";
+									break;
+								case 2: // cal
+									$movement_str = $movement_str . ', ' . $workout[$i]->distance_self_rx . " cal\n";
+									break;
+							}
+						}
+						else {	
+							switch($workout[$i]->distance_units){
+								case 0: // meters
+									$movement_str = $movement_str . ', ' . $workout[$i]->distance_men . '/' . $workout[$i]->distance_women . " meters\n";
+									break;
+								case 1: // inches
+									$movement_str = $movement_str . ', ' . $workout[$i]->distance_men . '/' . $workout[$i]->distance_women  . " inches\n";
+									break;
+								case 2: // cal
+									$movement_str = $movement_str . ', ' . $workout[$i]->distance_men . '/' . $workout[$i]->distance_women  . " cal\n";
+									break;
+							}
+						}
+					}
+					else {
+						$movement_str = $movement_str . "\n";
+					}
+				}
+
+				// TODO Interval workout building starts here -----
+
+			}
+			drupal_set_message('<pre>' . print_r($movement_str, TRUE) . '</pre>');
+		}
+
+	}
+	
 	return $form;
 }
 
