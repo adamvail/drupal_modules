@@ -891,7 +891,7 @@ function workout_builder_wbuild_page_two_build_submit($form, &$form_state){
 		$wid = 1;
 	}
 	
-  _populate_strength_table($form_state, $wid);
+	_populate_strength_table($form_state, $wid);
 	_populate_conditioning_table($form_state, $wid);
 
 }
