@@ -901,7 +901,7 @@ function _populate_strength_table(&$form_state, $wid){
 	$table = 'workout_builder_strength';
 	$table_notes = 'workout_builder_strength_notes';
 
-	$gym = db_query('SELECT gym from {workout_gym_affiliation} where uid=:uid', array(':uid' => $user->uid));
+//	$gym = db_query('SELECT gym from {workout_gym_affiliation} where uid=:uid', array(':uid' => $user->uid));
 
 	for($i = 1; isset($form_state['page_values'][1]['strength_wo'][$i]); $i++){
 		$workout = $form_state['page_values'][1]['strength_wo'][$i];
@@ -909,7 +909,7 @@ function _populate_strength_table(&$form_state, $wid){
 		$record->wid = $wid;
 		$record->date = time();
 		$record->strength_id = $i;
-		$record->gym = $gym;
+	//	$record->gym = $gym;
 		$record->creator_id = $user->uid;
 
 		$workout_exists = TRUE;
@@ -949,7 +949,7 @@ function _populate_strength_table(&$form_state, $wid){
 			if(empty($movement['lift'])){
 				// This workout isn't being used.
 				if(!isset($workout['strength_exercises'][$k-1]['lift'])){
-					drupal_set_message('<pre>' . print_r("NOT adding notes to this workout", TRUE) . '</pre>');
+//					drupal_set_message('<pre>' . print_r("NOT adding notes to this workout, strength", TRUE) . '</pre>');
 					$workout_exists = FALSE;
 				}
 
@@ -961,7 +961,9 @@ function _populate_strength_table(&$form_state, $wid){
 //			drupal_set_message('<pre>' . print_r($record, TRUE) . '</pre>');
 
 			// insert the record in the table
-			drupal_write_record($table, $record);
+			if($workout_exists == TRUE){
+				drupal_write_record($table, $record);
+			}
 		}
 
 		// If there was a movement specified then add the note to the database
@@ -976,7 +978,8 @@ function _populate_conditioning_table(&$form_state, $wid){
 	global $user;
 	$table = 'workout_builder_conditioning';
 	$table_notes = 'workout_builder_conditioning_notes';
-	$gym = db_query('SELECT gym from {workout_gym_affiliation} where uid=:uid', array(':uid' => $user->uid));
+	// TODO there is something wrong with this query, investigate later
+	//$gym = db_query('SELECT gym from {workout_gym_affiliation} where uid=:uid', array(':uid' => $user->uid));
 
 //	drupal_set_message('<pre>' . print_r($form_state['values'], TRUE) . '</pre>');
 	for($i = 1; isset($form_state['values']['cond_workout'][$i]); $i++){
@@ -994,7 +997,7 @@ function _populate_conditioning_table(&$form_state, $wid){
 			$record->wid = $wid;
 			$record->date = time();
 			$record->conditioning_id = $i;
-			$record->gym = $gym;
+		//	$record->gym = $gym;
 			$record->creator_id = $user->uid;
 
 			$note->notes = $workout['notes'];
@@ -1019,13 +1022,14 @@ function _populate_conditioning_table(&$form_state, $wid){
 			else{
 				// None of the radios were selected so there must not
 				// be a conditioning portion to this workout
+				$workout_exists = FALSE;
 				break;
 			}
 
 			if(empty($movement['movement'])){
 				// No movement specified, so don't add anything to the DB
 				if(!isset($workout[$k-1]['movement'])){
-					drupal_set_message('<pre>' . print_r("NOT inserting note", TRUE) . '</pre>');
+					drupal_set_message('<pre>' . print_r("NOT inserting note " . $k, TRUE) . '</pre>');
 					$workout_exists = FALSE;
 				}
 
@@ -1066,7 +1070,7 @@ function _populate_conditioning_table(&$form_state, $wid){
 					$record->distance_self_rx = $distance['self_prescribed'];
 				}
 			}
-			//drupal_set_message('<pre>' . print_r($record, TRUE) . '</pre>');
+		//	drupal_set_message('<pre>' . print_r($record, TRUE) . '</pre>');
 			drupal_write_record($table, $record);
 		}
 		if($workout_exists == TRUE && !empty($note->notes)){
