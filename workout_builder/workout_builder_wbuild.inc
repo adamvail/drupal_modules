@@ -92,7 +92,7 @@ function workout_builder_wbuilder($form, &$form_state){
 				'weight' => t('Weight'),							// 1
 				'ahap' => t('As Heavy As Possible'),	// 2
 			),
-			'#title' => t('Prescribe a percentage of max or a specific weight?'),
+			'#title' => t('Percentage of max or a specific weight?'),
 		);
 
 		$form['strength_wo'][$k]['weight']['percentage'] = array(
@@ -455,7 +455,7 @@ function workout_builder_wbuild_page_two($form, &$form_state){
       $form['cond_workout'][$k]['condition_exercises'][$i]['reps'] = array(
 				'#type' => 'textfield',
 				'#title' => t('Number of Reps'),
-				'#description' => t('Enter number of reps per set. (or MAX for max reps)'),
+				'#description' => t('Enter number of reps per set. (or 0 for max reps)'),
 				'#size' => 3,
 				'#maxlength' => 3,
 				'#states' => array(
@@ -513,7 +513,7 @@ function workout_builder_wbuild_page_two($form, &$form_state){
 					'percentage' => t('Percentage'),
 					'weight' => t('Weight'),
 				),
-				'#title' => t('Prescribe a percentage of max or a specific weight?'),
+				'#title' => t('Percentage of max or a specific weight?'),
       );
 
       $form['cond_workout'][$k]['condition_exercises'][$i]['weight']['percentage'] = array(
@@ -573,7 +573,7 @@ function workout_builder_wbuild_page_two($form, &$form_state){
 				'#type' => 'fieldset',
 				'#title' => t('Distance'),
 				'#collapsible' => TRUE,
-				'#collapsed' => TRUE,
+				'#collapsed' => FALSE,
 				'#states' => array(
 					'visible' => array(
 						':input[name="cond_workout[' . $k . '][condition_exercises][' . $i . '][weight_choice]"]' => array('value' => 'distance'),
