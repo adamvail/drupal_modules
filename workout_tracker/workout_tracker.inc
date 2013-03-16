@@ -162,6 +162,7 @@ function workout_tracker_workout($form, &$form_state){
 			);	
 	
 			//drupal_set_message('<pre>' . print_r($movement_str, TRUE) . '</pre>');
+
 			// constuct boxes based on sets for weight/count input
 			$sets = $workout[0]->sets;
 			$reps = $workout[0]->reps; // use reps to populate drop down for failed reps
