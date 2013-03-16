@@ -901,12 +901,16 @@ function _populate_strength_table(&$form_state, $wid){
 	$table = 'workout_builder_strength';
 	$table_notes = 'workout_builder_strength_notes';
 
+	$gym = db_query('SELECT gym from {workout_gym_affiliation} where uid=:uid', array(':uid' => $user->uid));
+
 	for($i = 1; isset($form_state['page_values'][1]['strength_wo'][$i]); $i++){
 		$workout = $form_state['page_values'][1]['strength_wo'][$i];
 		$record = new stdClass();
 		$record->wid = $wid;
 		$record->date = time();
 		$record->strength_id = $i;
+		$record->gym = $gym;
+		$record->creator_id = $user->uid;
 
 		$workout_exists = TRUE;
 
@@ -972,6 +976,7 @@ function _populate_conditioning_table(&$form_state, $wid){
 	global $user;
 	$table = 'workout_builder_conditioning';
 	$table_notes = 'workout_builder_conditioning_notes';
+	$gym = db_query('SELECT gym from {workout_gym_affiliation} where uid=:uid', array(':uid' => $user->uid));
 
 //	drupal_set_message('<pre>' . print_r($form_state['values'], TRUE) . '</pre>');
 	for($i = 1; isset($form_state['values']['cond_workout'][$i]); $i++){
@@ -989,6 +994,8 @@ function _populate_conditioning_table(&$form_state, $wid){
 			$record->wid = $wid;
 			$record->date = time();
 			$record->conditioning_id = $i;
+			$record->gym = $gym;
+			$record->creator_id = $user->uid;
 
 			$note->notes = $workout['notes'];
 
