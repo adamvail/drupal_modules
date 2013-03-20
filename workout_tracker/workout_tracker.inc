@@ -130,12 +130,19 @@ function workout_tracker_workout($form, &$form_state){
 						$movement_str = $movement_str . ' at ' . $workout[0]->wgt_percentage . '%';
 						break;
 					case 'weight':
+						if($workout[0]->wgt_units == 0){
+							$units = 'lbs';
+						}
+						else{
+							$units = 'kg';
+						}
+
 						if(isset($workout[0]->wgt_self_rx)){
-							$movement_str = $movement_str . ' at ' . $workout[0]->wgt_self_rx . ' lbs';
+							$movement_str = $movement_str . ' at ' . $workout[0]->wgt_self_rx . ' ' . $units;
 							break;
 						}
 						else{
-							$movement_str = $movement_str . ' at ' . $workout[0]->wgt_men . '/' . $workout[0]->wgt_women . ' lbs';
+							$movement_str = $movement_str . ' at ' . $workout[0]->wgt_men . '/' . $workout[0]->wgt_women . ' ' . $units;
 							break;	
 						}
 				}
@@ -245,11 +252,18 @@ function workout_tracker_workout($form, &$form_state){
 					}
 					if($workout[$i]->wgt_choice == 'weight'){
 						if($workout[$i]->wgt_style == 'weight'){
-							if(!empty($workout[$i]->wgt_self_rx)){
-								$movement_str = $movement_str . ", " . $workout[$i]->wgt_self_prescribed . " lbs<br>";
+							if($workout[$i]->wgt_units == 0){
+								$units = 'lbs';
 							}
 							else{
-								$movement_str = $movement_str . ", " . $workout[$i]->wgt_men . '/' . $workout[$i]->wgt_women . " lbs<br>";
+								$units = 'kg';
+							}
+
+							if(!empty($workout[$i]->wgt_self_rx)){
+								$movement_str = $movement_str . ", " . $workout[$i]->wgt_self_prescribed . " " . $units . "<br>";
+							}
+							else{
+								$movement_str = $movement_str . ", " . $workout[$i]->wgt_men . '/' . $workout[$i]->wgt_women . " " . $units . "<br>";
 							}
 						}
 						elseif($workout[$i]->wgt_style == 'percentage'){					
@@ -357,7 +371,33 @@ function workout_tracker_workout($form, &$form_state){
 						'#markup' => '<p>' . $conditioning_notes[$workout[0]->conditioning_id]->notes . '</p>',
 					);	
 				}
+			
+				if($workout[0]->style == 'amrap'){	
+					$form['conditioning'][$workout[0]->conditioning_id]['amrap_rounds'] = array(
+						'#type' => 'textfield',
+						'#title' => t('Rounds Completed'),
+						'#size' => 3,
+						'#maxlength' => 3,
+					);
 
+					$form['conditioning'][$workout[0]->conditioning_id]['amrap_reps'] = array(
+						'#type' => 'textfield',
+						'#title' => t('Extra Reps'),
+						'#size' => 3,
+						'#maxlength' => 3,
+					);
+				}
+			
+				if($workout[0]->style == 'for_time'){
+					$form['conditioning'][$workout[0]->conditioning_id]['for_time'] = array(
+						'#type' => 'textfield',
+						'#title' => t('Time'),
+						'#size' => 5,
+						'#maxsize' => 5,
+					); 
+				}
+
+			// TODO add stuff for intervals
 
 		}
 	}

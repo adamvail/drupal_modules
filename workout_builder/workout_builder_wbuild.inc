@@ -107,6 +107,17 @@ function workout_builder_wbuilder($form, &$form_state){
 			),
 		);
 
+		$form['strength_wo'][$k]['weight']['units'] = array(
+			'#type' => 'select',
+			'#description' => t('Lbs or KG'),
+			'#options' => array(t('lbs'), t('kg')),
+			'#states' => array(
+				'visible' => array(
+					':input[name="strength_wo[' . $k . '][weight][style]"]' => array('value' => 'weight'),
+				),
+			),
+		);
+
 		$form['strength_wo'][$k]['weight']['men'] = array(
 			'#type' => 'textfield',
 			'#title' => t('Men'),
@@ -528,6 +539,17 @@ function workout_builder_wbuild_page_two($form, &$form_state){
 				),
       );
 
+      $form['cond_workout'][$k]['condition_exercises'][$i]['weight']['units'] = array(
+				'#type' => 'select',
+				'#description' => t('Lbs or KG'),
+				'#options' => array(t('lbs'), t('kg')),
+				'#states' => array(
+					'visible' => array(
+						':input[name="cond_workout[' . $k . '][condition_exercises][' . $i . '][weight][style]"]' => array('value' => 'weight'),
+					),
+				),
+      );
+
       $form['cond_workout'][$k]['condition_exercises'][$i]['weight']['men'] = array(
 				'#type' => 'textfield',
 				'#title' => t('Men'),
@@ -933,7 +955,8 @@ function _populate_strength_table(&$form_state, $wid){
 				$record->wgt_percentage = $workout['weight']['percentage'];
 			}
 			elseif($workout['weight']['style'] == 'weight'){
-				$record->wgt_style = 'weight';
+				$record->wgt_style = 'weight';				
+				$record->wgt_units = $workout['weight']['units'];
 				if(in_array('coach', array_values($user->roles))){
 					$record->wgt_men = $workout['weight']['men'];
 					$record->wgt_women = $workout['weight']['women'];
@@ -1048,6 +1071,7 @@ function _populate_conditioning_table(&$form_state, $wid){
 				}
 				elseif($weight['style'] == 'weight'){
 					$record->wgt_style = 'weight';
+					$record->wgt_units = $weight['units'];
 					if(in_array('coach', array_values($user->roles))){
 						$record->wgt_men = $weight['men'];
 						$record->wgt_women = $weight['women'];

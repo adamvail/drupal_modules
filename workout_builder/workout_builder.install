@@ -56,6 +56,12 @@ function workout_builder_schema(){
 				'type' => 'varchar',
 				'length' => 255,
 				'description' => t('The style of weight (percentage, specific, ahap)'),	
+			),
+			'wgt_units' => array(
+				'type' => 'int',
+				'unsigned' => TRUE,
+				'size' => 'small',
+				'description' => t('Weight units. (lbs or kg)'),	
 			),			
 			'wgt_men' => array(
 				'type' => 'int',
@@ -200,6 +206,12 @@ function workout_builder_schema(){
 				'type' => 'varchar',
 				'length' => 255,
 				'description' => t('The style of weight (percentage, specific)'),	
+			),			
+			'wgt_units' => array(
+				'type' => 'int',
+				'unsigned' => TRUE,
+				'size' => 'small',
+				'description' => t('Weight units. (lbs or kg)'),	
 			),			
 			'wgt_men' => array(
 				'type' => 'int',
