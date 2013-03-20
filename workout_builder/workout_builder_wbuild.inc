@@ -61,6 +61,15 @@ function workout_builder_wbuilder($form, &$form_state){
 			'#maxlength' => 10,
 		);
 
+		$form['strength_wo'][$k]['rep_scheme'] = array(
+			'#type' => 'textfield',
+			'#title' => t('Rep Scheme'),
+			'#description' => t('e.g. 5x3 or 5-3-1-1'),
+			'#size' => 20,
+			'#maxlength' => 20,
+		);
+
+/*
 		$form['strength_wo'][$k]['sets'] = array(
 			'#type' => 'textfield',
 			'#title' => t('Number of Sets'),
@@ -76,7 +85,7 @@ function workout_builder_wbuilder($form, &$form_state){
 			'#size' => 3,
 			'#maxlength' => 3,
 		);
-
+*/
 		$form['strength_wo'][$k]['weight'] = array(
 			'#type' => 'fieldset',
 			'#title' => t('Weight'),
@@ -165,6 +174,15 @@ function workout_builder_wbuilder($form, &$form_state){
 				'#title' => t('Movement #@num', array('@num' => $i)),
 				'#collapsible' => TRUE,
 				'#collapsed' => TRUE,
+			);
+
+			$form['strength_wo'][$k]['strength_exercises'][$i]['reps'] = array(
+				'#type' => 'textfield',
+				'#title' => t('Reps'),
+				'#description' => t('Enter number of reps for this movement.'),
+				'#size' => 3,
+				'#maxlength' => 3,
+				'#default_value' => '1',
 			);
 
 			$form['strength_wo'][$k]['strength_exercises'][$i]['lift'] = array(
@@ -279,11 +297,11 @@ function workout_builder_wbuild_next_validate($form, &$form_state){
 		//	form_set_error($workout['clock'], t('Workout #'. $i .': Clock field must be a number'));	
 		}
 
-		if(!_validate_numeric($workout['sets'])){
+/*		if(!_validate_numeric($workout['sets'])){
 			form_set_error($workout['sets'], t('Workout #'. $i .': Sets field must be a number'));	
 		}
-
-
+*/
+/*
 		if(!empty($workout['reps'])){
 			if(!_validate_numeric($workout['reps'])){
 				form_set_error($workout['reps'], t('Workout #'. $i .': Reps field must be a number'));	
@@ -293,7 +311,7 @@ function workout_builder_wbuild_next_validate($form, &$form_state){
 				form_set_error($workout['reps'], t('The number of reps must be a positive number OR 0 for MAX reps'));
 			}	
 		}
-
+*/
 		$weight = $workout['weight'];
 
 		if(!empty($weight['percentage'])){
@@ -400,9 +418,23 @@ function workout_builder_wbuild_page_two($form, &$form_state){
 				'amrap' => t('AMRAP'),
 				'for_time' => t('For Time'),
 				'intervals' => t('Intervals'),
+				'rest' => t('Rest'),
       ),
       '#title' => t('Choose the style of conditioning workout'),
     );
+	
+		$form['cond_workout'][$k]['condition_exercises']['rest'] = array(
+			'#type' => 'textfield',
+      '#title' => t('Duration'),
+      '#description' => t('Enter rest time (2:30 or :30 for seconds)'),
+      '#size' => 5,
+      '#maxlength' => 10,
+      '#states' => array(
+				'visible' => array(
+	    		':input[name="cond_workout[' . $k . '][condition_exercises][style]"]' => array('value' => 'rest'),
+				),
+      ),
+		);
 
     $form['cond_workout'][$k]['condition_exercises']['duration'] = array(
       '#type' => 'textfield',
@@ -475,7 +507,12 @@ function workout_builder_wbuild_page_two($form, &$form_state){
 					),
 				),
       );
-
+/*
+			$form['cond_workout'][$k]['condition_exercises'][$i]['rest'] = array(
+				'#type' => 'checkbox',
+				'#title' => t('Rest?'),	
+			);
+*/
       $form['cond_workout'][$k]['condition_exercises'][$i]['interval_time'] = array(
 				'#type' => 'textfield',
 				'#title' => t('Movement Duration'),
@@ -945,8 +982,9 @@ function _populate_strength_table(&$form_state, $wid){
 			$movement = $workout['strength_exercises'][$k];
 
 			$record->clock = $workout['clock'];
-			$record->sets = $workout['sets'];
-			$record->reps = $workout['reps'];
+			$record->rep_scheme = $workout['rep_scheme'];
+//			$record->sets = $workout['sets'];
+//			$record->reps = $workout['reps'];
 
 			$note->notes = $workout['notes'];
 
@@ -979,6 +1017,7 @@ function _populate_strength_table(&$form_state, $wid){
 				break;
 			}	
 			else{
+				$record->movement_reps = $movement['reps'];
 				$record->movement = $movement['lift'];
 			}
 //			drupal_set_message('<pre>' . print_r($record, TRUE) . '</pre>');
@@ -990,7 +1029,7 @@ function _populate_strength_table(&$form_state, $wid){
 		}
 
 		// If there was a movement specified then add the note to the database
-		if($workout_exists == TRUE && !empty($note->notes)){
+		if(!empty($note->notes)){
 //			drupal_set_message('<pre>' . print_r($note, TRUE) . '</pre>');
 			drupal_write_record($table_notes, $note);
 		}
@@ -1042,6 +1081,10 @@ function _populate_conditioning_table(&$form_state, $wid){
 				$record->rounds = $workout['rounds'];
 				$record->interval_time = $movement['interval_time'];
 			}
+			elseif($workout['style'] == 'rest'){
+				$record->style = 'rest';
+				$record->duration = $workout['rest'];
+			}
 			else{
 				// None of the radios were selected so there must not
 				// be a conditioning portion to this workout
@@ -1052,7 +1095,7 @@ function _populate_conditioning_table(&$form_state, $wid){
 			if(empty($movement['movement'])){
 				// No movement specified, so don't add anything to the DB
 				if(!isset($workout[$k-1]['movement'])){
-					drupal_set_message('<pre>' . print_r("NOT inserting note " . $k, TRUE) . '</pre>');
+			//		drupal_set_message('<pre>' . print_r("NOT inserting note " . $k, TRUE) . '</pre>');
 					$workout_exists = FALSE;
 				}
 
@@ -1097,7 +1140,7 @@ function _populate_conditioning_table(&$form_state, $wid){
 		//	drupal_set_message('<pre>' . print_r($record, TRUE) . '</pre>');
 			drupal_write_record($table, $record);
 		}
-		if($workout_exists == TRUE && !empty($note->notes)){
+		if(!empty($note->notes)){
 			//drupal_set_message('<pre>' . print_r($note, TRUE) . '</pre>');
 			drupal_write_record($table_notes, $note);
 		}

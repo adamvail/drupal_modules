@@ -111,13 +111,23 @@ function workout_tracker_workout($form, &$form_state){
 		// Loop through the different strength_id to populate the form	
 		foreach($strength_data as $workout){
 			// make the header string
-			$movement_str = $workout[0]->sets . 'x' . $workout[0]->reps . ',';
+			$movement_str = $workout[0]->rep_scheme . ',';
 			for($i = 0; isset($workout[$i]); $i++){
 				if($i == 0){
-					$movement_str = $movement_str . ' ' . $workout[$i]->movement;
+					if($workout[$i]->movement_reps == 1){
+						$movement_str = $movement_str . ' ' . $workout[$i]->movement;
+					}
+					else{
+						$movement_str = $movement_str . ' [' . $workout[$i]->movement_reps . ' ' . $workout[$i]->movement . ']';
+					}
 				}
 				else{
-					$movement_str = $movement_str . ' + ' . $workout[$i]->movement;
+					if($workout[$i]->movement_reps == 1){
+						$movement_str = $movement_str . ' + ' . $workout[$i]->movement;
+					}
+					else{
+						$movement_str = $movement_str . ' + [' . $workout[$i]->movement_reps . ' ' . $workout[$i]->movement . ']';
+					}
 				}
 			}
 
@@ -173,15 +183,36 @@ function workout_tracker_workout($form, &$form_state){
 			//drupal_set_message('<pre>' . print_r($movement_str, TRUE) . '</pre>');
 
 			// constuct boxes based on sets for weight/count input
-			$sets = $workout[0]->sets;
-			$reps = $workout[0]->reps; // use reps to populate drop down for failed reps
-			$reps_array = array();
-
-			for($j = 1; $j <= $reps; $j++){
-				$reps_array[$j] = $j;
+			$rep_scheme = $workout[0]->rep_scheme;
+			$pivot = strpos($rep_scheme, 'x');
+			if($pivot != FALSE){
+				// set it up by 3x4
+				$sets = trim(substr($rep_scheme, 0, $pivot));
+				$rep = trim(substr($rep_scheme, $pivot+1));
+				for($j=1; j <= $sets; $j++){
+					$reps[] = $rep;
+				}
+			}
+			elseif($pivot == FALSE){
+				$pivot = strpos($rep_scheme, '-');
+				if($pivot == FALSE){
+					drupal_set_message('<pre>' . print_r("UNKNOWN REP SCHEME STYLE, VALIDATE FOR THIS IN BUILDER", TRUE) . '</pre>');
+					return;
+				}
+				// Scheme is 5-3-2-2-1 style
+				$reps = explode("-", $rep_scheme);
+				$sets = count($reps);
 			}
 
+			//$sets = $workout[0]->sets;
+			//$reps = $workout[0]->reps; // use reps to populate drop down for failed reps
+
 			for($k = 1; $k <= $sets; $k++){
+				$reps_array = array();
+				for($j = 1; $j <= $reps[$k-1]; $j++){
+					$reps_array[] = $j;
+				}
+
 				$form['strength'][$workout[0]->strength_id][$k]['set'] = array(
 					'#type' => 'textfield',
 					'#title' => t('Set #@num Weight/Count', array('@num' => $k)),
@@ -192,15 +223,13 @@ function workout_tracker_workout($form, &$form_state){
 					'#title' => t('Fail on a rep?'),
 				);
 		
-//				$visibility = $workout[0]->strength_id . '[' . $k . '][fail]';
-	
 				$form['strength'][$workout[0]->strength_id][$k]['fail_rep'] = array(
 					'#type' => 'select',
 					'#title' => t('Failed on rep:'),
 					'#options' => $reps_array,
 					'#states' => array(
 						'visible' => array(
-							':input[name="' . $workout[0]->strength_id . '[' . $k . '][fail]"]' => array('checked' => TRUE),
+							':input[name="strength[' . $workout[0]->strength_id . '][' . $k . '][fail]"]' => array('checked' => TRUE),
 						),
 					),
 				);				
