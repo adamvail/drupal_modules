@@ -106,9 +106,9 @@ function workout_builder_wbuilder($form, &$form_state){
 
 		$form['strength_wo'][$k]['weight']['percentage'] = array(
 			'#type' => 'textfield',
-			'#description' => t('Enter prescribed percentage of max'),
-			'#size' => 3,
-			'#maxlength' => 5,
+			'#description' => t('Enter prescribed percentage of max.<br>If you want to specify a different percentage per set, seperate by commas.'),
+			'#size' => 10,
+			'#maxlength' => 50,
 			'#states' => array(
 				'visible' => array(
 					':input[name="strength_wo[' . $k . '][weight][style]"]' => array('value' => 'percentage'),
@@ -313,7 +313,7 @@ function workout_builder_wbuild_next_validate($form, &$form_state){
 		}
 */
 		$weight = $workout['weight'];
-
+/*
 		if(!empty($weight['percentage'])){
 			if(!_validate_numeric($weight['percentage'])){
 				form_set_error($weight['percentage'], t('Workout #'. $i .': Weight percentage field must be a number'));	
@@ -323,7 +323,7 @@ function workout_builder_wbuild_next_validate($form, &$form_state){
 				form_set_error($weight['percentage'], t('Workout #'. $i .': Weight percentage field must be between 1 - 100'));	
 			}
 		}
-
+*/
 		if(!empty($weight['men'])){
 			if(!_validate_numeric($weight['men'])){
 				form_set_error($weight['men'], t('Workout #'. $i .': Men\'s weight field must be a number'));	

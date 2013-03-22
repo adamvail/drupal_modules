@@ -69,9 +69,8 @@ function workout_builder_schema(){
 				'description' => t('Women\'s weight'),	
 			),			
 			'wgt_percentage' => array(
-				'type' => 'float',
-				'unsigned' => TRUE,
-				'size' => 'normal',
+				'type' => 'varchar',
+				'length' => 255,
 				'description' => t('Percentage of max weight'),	
 			),			
 			'wgt_self_rx' => array(

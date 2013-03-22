@@ -111,53 +111,64 @@ function workout_tracker_workout($form, &$form_state){
 		// Loop through the different strength_id to populate the form	
 		foreach($strength_data as $workout){
 			// make the header string
-			$movement_str = $workout[0]->rep_scheme . ',';
-			for($i = 0; isset($workout[$i]); $i++){
-				if($i == 0){
-					if($workout[$i]->movement_reps == 1){
-						$movement_str = $movement_str . ' ' . $workout[$i]->movement;
-					}
-					else{
-						$movement_str = $movement_str . ' [' . $workout[$i]->movement_reps . ' ' . $workout[$i]->movement . ']';
-					}
+			$movement_str = "";
+			if(isset($workout[0]->wgt_style) && $workout[0]->wgt_style == 'percentage' && (sizeof(explode("-", $workout[0]->wgt_percentage)) > 1)){
+				$percentage_scheme = explode("-", $workout[0]->wgt_percentage);
+				$rep_scheme = explode("-", $workout[0]->rep_scheme);
+				for($l = 0; $l < sizeof($rep_scheme); $l++){
+					$movement_str .= $rep_scheme[$l] . " @ " . $percentage_scheme[$l] . "%, ";
 				}
-				else{
-					if($workout[$i]->movement_reps == 1){
-						$movement_str = $movement_str . ' + ' . $workout[$i]->movement;
-					}
-					else{
-						$movement_str = $movement_str . ' + [' . $workout[$i]->movement_reps . ' ' . $workout[$i]->movement . ']';
-					}
-				}
+				$movement_str .= $workout[0]->movement;
 			}
 
-			if(isset($workout[0]->wgt_style)){
-				switch($workout[0]->wgt_style){
-					case 'ahap':
-						$movement_str = $movement_str . ' AHAP';
-						break;
-					case 'percentage': 
-						$movement_str = $movement_str . ' at ' . $workout[0]->wgt_percentage . '%';
-						break;
-					case 'weight':
-						if($workout[0]->wgt_units == 0){
-							$units = 'lbs';
+			else{
+				$movement_str .= $workout[0]->rep_scheme . ',';
+				for($i = 0; isset($workout[$i]); $i++){
+					if($i == 0){
+						if($workout[$i]->movement_reps == 1){
+							$movement_str = $movement_str . ' ' . $workout[$i]->movement;
 						}
 						else{
-							$units = 'kg';
+							$movement_str = $movement_str . ' [' . $workout[$i]->movement_reps . ' ' . $workout[$i]->movement . ']';
 						}
+					}
+					else{
+						if($workout[$i]->movement_reps == 1){
+							$movement_str = $movement_str . ' + ' . $workout[$i]->movement;
+						}
+						else{
+							$movement_str = $movement_str . ' + [' . $workout[$i]->movement_reps . ' ' . $workout[$i]->movement . ']';
+						}
+					}
+				}
 
-						if(isset($workout[0]->wgt_self_rx)){
-							$movement_str = $movement_str . ' at ' . $workout[0]->wgt_self_rx . ' ' . $units;
+				if(isset($workout[0]->wgt_style)){
+					switch($workout[0]->wgt_style){
+						case 'ahap':
+							$movement_str = $movement_str . ' AHAP';
 							break;
-						}
-						else{
-							$movement_str = $movement_str . ' at ' . $workout[0]->wgt_men . '/' . $workout[0]->wgt_women . ' ' . $units;
-							break;	
-						}
+						case 'percentage': 
+							$movement_str = $movement_str . ' at ' . $workout[0]->wgt_percentage . '%';
+							break;
+						case 'weight':
+							if($workout[0]->wgt_units == 0){
+								$units = 'lbs';
+							}
+							else{
+								$units = 'kg';
+							}
+
+							if(isset($workout[0]->wgt_self_rx)){
+								$movement_str = $movement_str . ' at ' . $workout[0]->wgt_self_rx . ' ' . $units;
+								break;
+							}
+							else{
+								$movement_str = $movement_str . ' at ' . $workout[0]->wgt_men . '/' . $workout[0]->wgt_women . ' ' . $units;
+								break;	
+							}
+					}
 				}
 			}
-			
 			if(isset($workout[0]->clock)){
 				$movement_str = $movement_str . ' on a ' . $workout[0]->clock . ' clock';
 			}
@@ -189,7 +200,7 @@ function workout_tracker_workout($form, &$form_state){
 				// set it up by 3x4
 				$sets = trim(substr($rep_scheme, 0, $pivot));
 				$rep = trim(substr($rep_scheme, $pivot+1));
-				for($j=1; j <= $sets; $j++){
+				for($j=1; $j <= $sets; $j++){
 					$reps[] = $rep;
 				}
 			}
@@ -203,9 +214,6 @@ function workout_tracker_workout($form, &$form_state){
 				$reps = explode("-", $rep_scheme);
 				$sets = count($reps);
 			}
-
-			//$sets = $workout[0]->sets;
-			//$reps = $workout[0]->reps; // use reps to populate drop down for failed reps
 
 			for($k = 1; $k <= $sets; $k++){
 				$reps_array = array();
