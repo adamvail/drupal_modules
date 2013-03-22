@@ -478,200 +478,20 @@ function workout_builder_wbuild_page_two($form, &$form_state){
       ),
     );
 
-    for($i = 1; $i <= $form_state['num_condition'][$k]; $i++){
-      $form['cond_workout'][$k]['condition_exercises'][$i] = array(
-				'#type' => 'fieldset',
-				'#title' => t('Movement #@num', array('@num' => $i)),
-				'#collapsible' => TRUE,
-				'#collapsed' => TRUE,
-				'#states' => array(
-	  			'visible' => array(
-	    			':input[name="cond_workout[' . $k . '][condition_exercises][style]"]'=> array(
-	      			array('value' => 'amrap'), 
-	      			array('value' => 'for_time'), 
-	      			array('value' => 'intervals'), 
-	    			),
+		$form['cond_workout'][$k]['condition_exercises']['workout'] = array(
+			'#type' => 'textarea',
+			'#title' => t('Workout'),
+			'#description' => t('One movement per line'),
+			'#states' => array(
+				'visible' => array(
+	    		':input[name="cond_workout[' . $k . '][condition_exercises][style]"]' => array(
+						array('value' => 'amrap'),
+	    			array('value' => 'for_time'),
+	    			array('value' => 'intervals'),
 	  			),
 				),
-      );
-
-      $form['cond_workout'][$k]['condition_exercises'][$i]['reps'] = array(
-				'#type' => 'textfield',
-				'#title' => t('Number of Reps'),
-				'#description' => t('Enter number of reps per set. (or 0 for max reps)'),
-				'#size' => 3,
-				'#maxlength' => 3,
-				'#states' => array(
-					'visible' => array(
-						':input[name="cond_workout[' . $k . '][condition_exercises][style]"]' => array('!value' => 'intervals'),
-					),
-				),
-      );
-/*
-			$form['cond_workout'][$k]['condition_exercises'][$i]['rest'] = array(
-				'#type' => 'checkbox',
-				'#title' => t('Rest?'),	
-			);
-*/
-      $form['cond_workout'][$k]['condition_exercises'][$i]['interval_time'] = array(
-				'#type' => 'textfield',
-				'#title' => t('Movement Duration'),
-				'#description' => t('Duration of Interval in Seconds'),
-				'#size' => 4,
-				'#maxlength' => 5,
-				'#states' => array(
-					'visible' => array(
-						':input[name="cond_workout[' . $k . '][condition_exercises][style]"]' => array('value' => 'intervals'),
-					),
-				),
-      );
-
-      $form['cond_workout'][$k]['condition_exercises'][$i]['movement'] = array(
-				'#type' => 'textfield',
-				'#title' => t('Movement'),
-				'#description' => t('Enter the movement'),
-				'#size' => 20,
-				'#maxlength' => 40,
-      );
-
-			$form['cond_workout'][$k]['condition_exercises'][$i]['weight_choice'] = array(
-				'#type' => 'radios',
-				'#options' => array(
-					'weight' => t('Weight'),
-					'distance' => t('Distance (box jumps, rowing, running, etc.)'),
-				),
-				'#title' => t('Do this movement for weight or distance?'),
-			);
-
-      $form['cond_workout'][$k]['condition_exercises'][$i]['weight'] = array(
-				'#type' => 'fieldset',
-				'#title' => t('Weight'),
-				'#collapsible' => TRUE,
-				'#collapsed' => FALSE,
-				'#states' => array(
-					'visible' => array(
-						':input[name="cond_workout[' . $k . '][condition_exercises][' . $i . '][weight_choice]"]' => array('value' => 'weight'),
-					),
-				),
-      );
-
-      $form['cond_workout'][$k]['condition_exercises'][$i]['weight']['style'] = array(
-				'#type' => 'radios',
-				'#options' => array(
-					'percentage' => t('Percentage'),
-					'weight' => t('Weight'),
-				),
-				'#title' => t('Percentage of max or a specific weight?'),
-      );
-
-      $form['cond_workout'][$k]['condition_exercises'][$i]['weight']['percentage'] = array(
-				'#type' => 'textfield',
-				'#description' => t('Enter prescribed percentage of max'),
-				'#size' => 3,
-				'#maxlength' => 5,
-				'#states' => array(
-					'visible' => array(
-						':input[name="cond_workout[' . $k . '][condition_exercises][' . $i . '][weight][style]"]' => array('value' => 'percentage'),
-					),
-				),
-      );
-
-      $form['cond_workout'][$k]['condition_exercises'][$i]['weight']['units'] = array(
-				'#type' => 'select',
-				'#description' => t('Lbs or KG'),
-				'#options' => array(t('lbs'), t('kg')),
-				'#states' => array(
-					'visible' => array(
-						':input[name="cond_workout[' . $k . '][condition_exercises][' . $i . '][weight][style]"]' => array('value' => 'weight'),
-					),
-				),
-      );
-
-      $form['cond_workout'][$k]['condition_exercises'][$i]['weight']['men'] = array(
-				'#type' => 'textfield',
-				'#title' => t('Men'),
-				'#description' => t('Enter prescribed weight for men'),
-				'#size' => 3,
-				'#maxlength' => 5,
-				'#access' => in_array('coach', array_values($user->roles)),
-				'#states' => array(
-					'visible' => array(
-						':input[name="cond_workout[' . $k . '][condition_exercises][' . $i . '][weight][style]"]' => array('value' => 'weight'),
-					),
-				),
-      );
-
-      $form['cond_workout'][$k]['condition_exercises'][$i]['weight']['women'] = array(
-				'#type' => 'textfield',
-				'#title' => t('Women'),
-				'#description' => t('Enter prescribed weight for women'),
-				'#size' => 3,
-				'#maxlength' => 5,
-				'#access' => in_array('coach', array_values($user->roles)),
-				'#states' => array(
-					'visible' => array(
-						':input[name="cond_workout[' . $k . '][condition_exercises][' . $i . '][weight][style]"]' => array('value' => 'weight'),
-					),
-				),
-      );
-   
-      $form['cond_workout'][$k]['condition_exercises'][$i]['weight']['self_prescribed'] = array(
-				'#type' => 'textfield',
-				'#description' => t('Enter prescribed weight'),
-				'#size' => 3,
-				'#maxlength' => 5,
-				'#access' => in_array('athlete', array_values($user->roles)),
-				'#states' => array(
-					'visible' => array(
-						':input[name="cond_workout[' . $k . '][condition_exercises][' . $i . '][weight][style]"]' => array('value' => 'weight'),
-					),
-				),
-      );
-
-      $form['cond_workout'][$k]['condition_exercises'][$i]['distance'] = array(
-				'#type' => 'fieldset',
-				'#title' => t('Distance'),
-				'#collapsible' => TRUE,
-				'#collapsed' => FALSE,
-				'#states' => array(
-					'visible' => array(
-						':input[name="cond_workout[' . $k . '][condition_exercises][' . $i . '][weight_choice]"]' => array('value' => 'distance'),
-					),
-				),
-      );
-
-			$form['cond_workout'][$k]['condition_exercises'][$i]['distance']['units'] = array(
-				'#type' => 'select',
-				'#description' => t('Meters or inches'),
-				'#options' => array(t('m'), t('in'), t('cal')),
-			);
-
-      $form['cond_workout'][$k]['condition_exercises'][$i]['distance']['men'] = array(
-				'#type' => 'textfield',
-				'#title' => t('Men'),
-				'#description' => t('Enter Height/Distance for Men'),
-				'#size' => 3,
-				'#maxlength' => 5,
-				'#access' => in_array('coach', array_values($user->roles)),
-      );
-
-			$form['cond_workout'][$k]['condition_exercises'][$i]['distance']['women'] = array(
-				'#type' => 'textfield',
-				'#title' => t('Women'),
-				'#description' => t('Enter Height/Distance for Women'),
-				'#size' => 3,
-				'#maxlength' => 5,
-				'#access' => in_array('coach', array_values($user->roles)),
-      );
-
-			$form['cond_workout'][$k]['condition_exercises'][$i]['distance']['self_prescribed'] = array(
-				'#type' => 'textfield',
-				'#description' => t('Enter Height/Distance'),
-				'#size' => 3,
-				'#maxlength' => 5,
-				'#access' => in_array('athlete', array_values($user->roles)),
-      );
-    }
+      ),
+		);
 
 		$form['cond_workout'][$k]['condition_exercises']['notes'] = array(
 			'#type' => 'textarea',
@@ -796,6 +616,12 @@ function workout_builder_wbuild_page_two_build_validate($form, &$form_state){
 	// validate errthang
 //	drupal_set_message('<pre>' . print_r($form_state['values']['cond_workout'], TRUE) . '</pre>');	
 //		drupal_set_message('<pre>' . print_r($workout, TRUE) . '</pre>');	
+
+	// need to rethink how to do all of this
+	
+	return;
+
+
 	for($i = 1; isset($form_state['values']['cond_workout'][$i]); $i++){
 		$workout = $form_state['values']['cond_workout'][$i]['condition_exercises'];
 
@@ -1053,8 +879,8 @@ function _populate_conditioning_table(&$form_state, $wid){
 		$note->wid = $wid;
 		$note->conditioning_id = $i;
 
-		for($k = 1; isset($workout[$k]); $k++){	
-			$movement = $workout[$k];
+//		for($k = 1; isset($workout[$k]); $k++){	
+			//$movement = $workout[$k];
 			$record = new stdClass();
 			$record->wid = $wid;
 			$record->date = time();
@@ -1067,19 +893,21 @@ function _populate_conditioning_table(&$form_state, $wid){
 			if($workout['style'] == 'amrap'){
 				$record->style = 'amrap';
 				$record->duration = $workout['duration'];
-				$record->reps = $movement['reps'];
+				// replace newlines with pipes to make it easier to read in the DB
+				$record->workout = str_replace("\n", "<br>", $workout['workout']);
 				$exists = TRUE;
 			}	
 			elseif($workout['style'] == 'for_time'){
 				$record->style = 'for_time';
 				$record->rounds = $workout['rounds'];
 				$record->cutoff = $workout['cutoff'];
-				$record->reps = $movement['reps'];
+				$record->workout = str_replace("\n", "<br>", $workout['workout']);
 			}
 			elseif($workout['style'] == 'intervals'){
 				$record->style = 'intervals';
 				$record->rounds = $workout['rounds'];
-				$record->interval_time = $movement['interval_time'];
+			//	$record->interval_time = $movement['interval_time'];
+				$record->workout = str_replace("\n", "<br>", $workout['workout']);
 			}
 			elseif($workout['style'] == 'rest'){
 				$record->style = 'rest';
@@ -1092,59 +920,14 @@ function _populate_conditioning_table(&$form_state, $wid){
 				break;
 			}
 
-			if(empty($movement['movement'])){
-				// No movement specified, so don't add anything to the DB
-				if(!isset($workout[$k-1]['movement'])){
-			//		drupal_set_message('<pre>' . print_r("NOT inserting note " . $k, TRUE) . '</pre>');
-					$workout_exists = FALSE;
-				}
-
-				break;
-			}
-			else{
-				$record->movement = $movement['movement'];
-			}
-
-			if($movement['weight_choice'] == 'weight'){
-				$record->wgt_choice = 'weight';
-				$weight = $movement['weight'];
-				if($weight['style'] == 'percentage'){
-					$record->wgt_style = 'percentage';
-					$record->wgt_percentage = $weight['percentage'];
-				}
-				elseif($weight['style'] == 'weight'){
-					$record->wgt_style = 'weight';
-					$record->wgt_units = $weight['units'];
-					if(in_array('coach', array_values($user->roles))){
-						$record->wgt_men = $weight['men'];
-						$record->wgt_women = $weight['women'];
-					}
-					else{
-						$record->wgt_self_rx = $weight['self_prescribed'];
-					}
-				}
-			}
-			elseif($movement['weight_choice'] == 'distance'){
-				$record->wgt_choice = 'distance';
-				$distance = $movement['distance'];
-			
-				$record->distance_units = $distance['units'];
-				if(in_array('coach', array_values($user->roles))){
-					$record->distance_men = $distance['men'];
-					$record->distance_women = $distance['women'];
-				}
-				else{
-					$record->distance_self_rx = $distance['self_prescribed'];
-				}
-			}
-		//	drupal_set_message('<pre>' . print_r($record, TRUE) . '</pre>');
+			//drupal_set_message('<pre>' . print_r($record, TRUE) . '</pre>');
 			drupal_write_record($table, $record);
 		}
 		if(!empty($note->notes)){
 			//drupal_set_message('<pre>' . print_r($note, TRUE) . '</pre>');
 			drupal_write_record($table_notes, $note);
 		}
-	}
+//	}
 }
 
 

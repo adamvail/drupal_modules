@@ -255,23 +255,31 @@ function workout_tracker_workout($form, &$form_state){
 		foreach($conditioning_data as $workout){
 			// $workout is an array of movements all with the same conditioning_id
 
-			$workout_str = '';
 			$fieldset_title = '';
 			if($workout[0]->style == 'amrap'){
 				$movement_str = $workout[0]->duration . " minute AMRAP:<br>";
 				$fieldset_title = substr($movement_str, 0, strlen($movement_str) - 5);
 			}
 			elseif($workout[0]->style == 'for_time'){
-				$movement_str = $workout[0]->rounds . " Rounds For Time, " . $workout[0]->cutoff . " minute cutoff:<br>";
+				$movement_str = $workout[0]->rounds . " Rounds For Time";
+				if(!empty($workout[0]->cutoff)){
+					$movement_str = $movement_str . ", " . $workout[0]->cutoff . " minute cutoff:<br>";	
+				}
+				else{
+					$movement_str = $movement_str . ":<br>";
+				}
 				$fieldset_title = substr($movement_str, 0, strlen($movement_str) - 5);
 			}
 			elseif($workout[0]->style == 'intervals' && $workout[0]->rounds > 1){
 				$movement_str = $workout[0]->rounds . " Rounds of:<br>";
 				$fieldset_title = 'Intervals';
 			}
+			
+			// replace pipes with html new lines
+			$movement_str = $movement_str . str_replace("&", "<br>", $workout[0]->workout);
 
 			// build the workout string
-			for($i = 0; isset($workout[$i]); $i++){
+/*			for($i = 0; isset($workout[$i]); $i++){
 				if($workout[$i]->style == 'amrap' || $workout[$i]->style == 'for_time'){
 					if(!empty($workout[$i]->reps)){
 						$movement_str = $movement_str . $workout[$i]->reps . " "  . $workout[$i]->movement;
@@ -381,6 +389,7 @@ function workout_tracker_workout($form, &$form_state){
 					}
 				}
 			}
+*/
 			//drupal_set_message('<pre>' . print_r($movement_str, TRUE) . '</pre>');
 			// Now that the string is done, build the fieldset to display it.
 			$form['conditioning'][$workout[0]->conditioning_id] = array(
