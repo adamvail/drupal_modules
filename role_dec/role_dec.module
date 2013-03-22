@@ -32,18 +32,70 @@ function role_dec_form_alter(&$form, &$form_state, $form_id) {
 			),
 			'#description' => t('Choose whether you are a Coach or Athlete'),
 	);
+	
 	$form['account']['affiliation_dec'] = array(
 			'#type' => 'fieldset',
 			'#title' => t('Gym Affiliation'),
 	);
 	
-	$form['account']['affiliation_dec']['affiliate'] = array(
-			'#type' => 'textfield',
-			'#description' => t('Please enter the name of your gym.'),
-			'#size' => 15,
-			'#maxlength' => 50,
+	$form['account']['affiliation_dec']['coach_gym'] = array(
+		'#type' => 'textfield',
+		'#description' => t('Please enter the name of your gym.'),
+		'#size' => 15,
+		'#maxlength' => 50,
+		'#states' => array(
+			'visible' => array(
+				':input[name="role"]' => array('value' => 'coach'),
+			),
+		),
 	);
 	
+	$form['account']['affiliation_dec']['athlete_gym'] = array(
+		'#type' => 'radios',
+		'#options' => array(
+				'select_gym' => t('Select Gym'), 			
+				'new_gym' => t('Enter Gym'),						
+		),
+		'#states' => array(
+			'visible' => array(
+				':input[name="role"]' => array('value' => 'athlete'),
+			),
+		),
+		'#description' => t('Select gym or enter new gym if yours does not exist.'),
+	);
+	
+	//grab all the unique gym names to populate the select dropdown
+	$result = db_query('SELECT DISTINCT gym FROM {workout_gym_affiliation}');
+	$options = array();
+	$i = 0;
+	foreach($result as $row){
+		$options[$i] = $row->gym;
+		$i++;
+	}
+	
+	$form['account']['affiliation_dec']['choose_gym'] = array(
+		'#type' => 'select',
+		'#description' => t('Select gym.'),
+		'#options' => $options,
+		'#states' => array(
+			'visible' => array(
+				':input[name="athlete_gym"]' => array('value' => 'select_gym'),
+			),
+		),
+	);
+	
+	$form['account']['affiliation_dec']['enter_gym'] = array(
+		'#type' => 'textfield',
+		'#description' => t('Please enter the name of your gym.'),
+		'#size' => 15,
+		'#maxlength' => 50,
+		'#states' => array(
+			'visible' => array(
+				':input[name="athlete_gym"]' => array('value' => 'new_gym'),
+			),
+		),
+	);
+	//drupal_set_message('<pre>' . print_r($form, TRUE) . '</pre>');
 }
 
 function role_dec_user_insert(&$edit, $account, $category){
@@ -55,10 +107,42 @@ function role_dec_user_insert(&$edit, $account, $category){
 	//drupal_set_message('<pre>' . print_r($account, TRUE) . '</pre>');
 	//drupal_set_message('<pre>' . print_r($category, TRUE) . '</pre>');
 	
+	//write to the gym affilitation table
 	$record->uid = $account->uid;
 	$record->name = $account->name;
 	$record->role = $account->role;
-	$record->gym = $account->affiliate;
+	
+	//grab all the unique gym names
+	$result = db_query('SELECT DISTINCT gym FROM {workout_gym_affiliation}');
+	$i = 0;
+	$gym = NULL;
+	foreach($result as $row){
+		if($i == $account->choose_gym){
+			$gym = $row->gym;
+		}
+		$i++;
+	}
+	
+	if($account->athlete_gym == 'select_gym'){
+		$record->gym = $gym;
+	}
+	elseif($account->athlete_gym == 'new_gym'){
+		$record->gym = $account->enter_gym;
+	}
+
+	drupal_write_record($table, $record);
+	
+	//add coach or athlete to user role table
+	$table = 'users_roles';
+	$record = new stdClass();
+	
+	$result = db_query('SELECT * FROM {role}');
+	foreach($result as $row){
+		if($row->name == $account->role){
+			$record->uid = $account->uid;
+			$record->rid = $row->rid;
+		}
+	}
 	
 	drupal_write_record($table, $record);
 }

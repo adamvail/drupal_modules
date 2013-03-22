@@ -111,13 +111,23 @@ function workout_tracker_workout($form, &$form_state){
 		// Loop through the different strength_id to populate the form	
 		foreach($strength_data as $workout){
 			// make the header string
-			$movement_str = $workout[0]->sets . 'x' . $workout[0]->reps . ',';
+			$movement_str = $workout[0]->rep_scheme . ',';
 			for($i = 0; isset($workout[$i]); $i++){
 				if($i == 0){
-					$movement_str = $movement_str . ' ' . $workout[$i]->movement;
+					if($workout[$i]->movement_reps == 1){
+						$movement_str = $movement_str . ' ' . $workout[$i]->movement;
+					}
+					else{
+						$movement_str = $movement_str . ' [' . $workout[$i]->movement_reps . ' ' . $workout[$i]->movement . ']';
+					}
 				}
 				else{
-					$movement_str = $movement_str . ' + ' . $workout[$i]->movement;
+					if($workout[$i]->movement_reps == 1){
+						$movement_str = $movement_str . ' + ' . $workout[$i]->movement;
+					}
+					else{
+						$movement_str = $movement_str . ' + [' . $workout[$i]->movement_reps . ' ' . $workout[$i]->movement . ']';
+					}
 				}
 			}
 
@@ -130,12 +140,19 @@ function workout_tracker_workout($form, &$form_state){
 						$movement_str = $movement_str . ' at ' . $workout[0]->wgt_percentage . '%';
 						break;
 					case 'weight':
+						if($workout[0]->wgt_units == 0){
+							$units = 'lbs';
+						}
+						else{
+							$units = 'kg';
+						}
+
 						if(isset($workout[0]->wgt_self_rx)){
-							$movement_str = $movement_str . ' at ' . $workout[0]->wgt_self_rx . ' lbs';
+							$movement_str = $movement_str . ' at ' . $workout[0]->wgt_self_rx . ' ' . $units;
 							break;
 						}
 						else{
-							$movement_str = $movement_str . ' at ' . $workout[0]->wgt_men . '/' . $workout[0]->wgt_women . ' lbs';
+							$movement_str = $movement_str . ' at ' . $workout[0]->wgt_men . '/' . $workout[0]->wgt_women . ' ' . $units;
 							break;	
 						}
 				}
@@ -166,15 +183,36 @@ function workout_tracker_workout($form, &$form_state){
 			//drupal_set_message('<pre>' . print_r($movement_str, TRUE) . '</pre>');
 
 			// constuct boxes based on sets for weight/count input
-			$sets = $workout[0]->sets;
-			$reps = $workout[0]->reps; // use reps to populate drop down for failed reps
-			$reps_array = array();
-
-			for($j = 1; $j <= $reps; $j++){
-				$reps_array[$j] = $j;
+			$rep_scheme = $workout[0]->rep_scheme;
+			$pivot = strpos($rep_scheme, 'x');
+			if($pivot != FALSE){
+				// set it up by 3x4
+				$sets = trim(substr($rep_scheme, 0, $pivot));
+				$rep = trim(substr($rep_scheme, $pivot+1));
+				for($j=1; j <= $sets; $j++){
+					$reps[] = $rep;
+				}
+			}
+			elseif($pivot == FALSE){
+				$pivot = strpos($rep_scheme, '-');
+				if($pivot == FALSE){
+					drupal_set_message('<pre>' . print_r("UNKNOWN REP SCHEME STYLE, VALIDATE FOR THIS IN BUILDER", TRUE) . '</pre>');
+					return;
+				}
+				// Scheme is 5-3-2-2-1 style
+				$reps = explode("-", $rep_scheme);
+				$sets = count($reps);
 			}
 
+			//$sets = $workout[0]->sets;
+			//$reps = $workout[0]->reps; // use reps to populate drop down for failed reps
+
 			for($k = 1; $k <= $sets; $k++){
+				$reps_array = array();
+				for($j = 1; $j <= $reps[$k-1]; $j++){
+					$reps_array[] = $j;
+				}
+
 				$form['strength'][$workout[0]->strength_id][$k]['set'] = array(
 					'#type' => 'textfield',
 					'#title' => t('Set #@num Weight/Count', array('@num' => $k)),
@@ -185,8 +223,6 @@ function workout_tracker_workout($form, &$form_state){
 					'#title' => t('Fail on a rep?'),
 				);
 		
-//				$visibility = $workout[0]->strength_id . '[' . $k . '][fail]';
-	
 				$form['strength'][$workout[0]->strength_id][$k]['fail_rep'] = array(
 					'#type' => 'select',
 					'#title' => t('Failed on rep:'),
@@ -245,11 +281,18 @@ function workout_tracker_workout($form, &$form_state){
 					}
 					if($workout[$i]->wgt_choice == 'weight'){
 						if($workout[$i]->wgt_style == 'weight'){
-							if(!empty($workout[$i]->wgt_self_rx)){
-								$movement_str = $movement_str . ", " . $workout[$i]->wgt_self_prescribed . " lbs<br>";
+							if($workout[$i]->wgt_units == 0){
+								$units = 'lbs';
 							}
 							else{
-								$movement_str = $movement_str . ", " . $workout[$i]->wgt_men . '/' . $workout[$i]->wgt_women . " lbs<br>";
+								$units = 'kg';
+							}
+
+							if(!empty($workout[$i]->wgt_self_rx)){
+								$movement_str = $movement_str . ", " . $workout[$i]->wgt_self_prescribed . " " . $units . "<br>";
+							}
+							else{
+								$movement_str = $movement_str . ", " . $workout[$i]->wgt_men . '/' . $workout[$i]->wgt_women . " " . $units . "<br>";
 							}
 						}
 						elseif($workout[$i]->wgt_style == 'percentage'){					
@@ -357,7 +400,33 @@ function workout_tracker_workout($form, &$form_state){
 						'#markup' => '<p>' . $conditioning_notes[$workout[0]->conditioning_id]->notes . '</p>',
 					);	
 				}
+			
+				if($workout[0]->style == 'amrap'){	
+					$form['conditioning'][$workout[0]->conditioning_id]['amrap_rounds'] = array(
+						'#type' => 'textfield',
+						'#title' => t('Rounds Completed'),
+						'#size' => 3,
+						'#maxlength' => 3,
+					);
 
+					$form['conditioning'][$workout[0]->conditioning_id]['amrap_reps'] = array(
+						'#type' => 'textfield',
+						'#title' => t('Extra Reps'),
+						'#size' => 3,
+						'#maxlength' => 3,
+					);
+				}
+			
+				if($workout[0]->style == 'for_time'){
+					$form['conditioning'][$workout[0]->conditioning_id]['for_time'] = array(
+						'#type' => 'textfield',
+						'#title' => t('Time'),
+						'#size' => 5,
+						'#maxsize' => 5,
+					); 
+				}
+
+			// TODO add stuff for intervals
 
 		}
 	}

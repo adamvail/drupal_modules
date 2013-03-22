@@ -40,22 +40,21 @@ function workout_builder_schema(){
 				'length' => 5,
 				'description' => t('The time for each set'),	
 			),			
-			'sets' => array(
-				'type' => 'int',
-				'unsigned' => TRUE,
-				'size' => 'normal',
-				'description' => t('The number of sets'),	
-			),			
-			'reps' => array(
-				'type' => 'int',
-				'unsigned' => TRUE,
-				'size' => 'normal',
-				'description' => t('The number of reps'),	
+			'rep_scheme' => array(
+				'type' => 'varchar',
+				'length' => 255,
+				'description' => t('The rep scheme. E.g. 5x3 or 3-2-1-1'),	
 			),			
 			'wgt_style' => array(
 				'type' => 'varchar',
 				'length' => 255,
 				'description' => t('The style of weight (percentage, specific, ahap)'),	
+			),
+			'wgt_units' => array(
+				'type' => 'int',
+				'unsigned' => TRUE,
+				'size' => 'small',
+				'description' => t('Weight units. (lbs or kg)'),	
 			),			
 			'wgt_men' => array(
 				'type' => 'int',
@@ -81,6 +80,12 @@ function workout_builder_schema(){
 				'size' => 'normal',
 				'description' => t('Self prescribed weight'),	
 			),		
+			'movement_reps' => array(
+				'type' => 'int',
+				'unsigned' => TRUE,
+				'size' => 'normal',
+				'description' => t('The number of reps for this movement'),	
+			),			
 			'movement' => array(
 				'type' => 'varchar',
 				'length' => '255',
@@ -126,7 +131,7 @@ function workout_builder_schema(){
 			),
 			'notes' => array(
 				'type' => 'text',
-				'size' => 'small',
+				'size' => 'big',
 				'description' => t('Notes about the strength workout'),
 			),	
 		),
@@ -200,6 +205,12 @@ function workout_builder_schema(){
 				'type' => 'varchar',
 				'length' => 255,
 				'description' => t('The style of weight (percentage, specific)'),	
+			),			
+			'wgt_units' => array(
+				'type' => 'int',
+				'unsigned' => TRUE,
+				'size' => 'small',
+				'description' => t('Weight units. (lbs or kg)'),	
 			),			
 			'wgt_men' => array(
 				'type' => 'int',
@@ -294,7 +305,7 @@ function workout_builder_schema(){
 			),
 			'notes' => array(
 				'type' => 'text',
-				'size' => 'small',
+				'size' => 'big',
 				'description' => t('Notes about the conditioning workout'),
 			),	
 		),
