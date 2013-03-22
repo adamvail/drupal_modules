@@ -174,10 +174,9 @@ function workout_builder_schema(){
 				'description' => t('Length of the workout in minutes'),	
 			),			
 			'rounds' => array(
-				'type' => 'int',
-				'unsigned' => TRUE,
-				'size' => 'normal',
-				'description' => t('The number of rounds to be completed'),	
+				'type' => 'varchar',
+				'length' => 255,
+				'description' => t('The number of rounds to be completed, single number of separated by \'-\''),	
 			),			
 			'cutoff' => array(
 				'type' => 'varchar',

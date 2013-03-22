@@ -452,9 +452,9 @@ function workout_builder_wbuild_page_two($form, &$form_state){
     $form['cond_workout'][$k]['condition_exercises']['rounds'] = array(
       '#type' => 'textfield',
       '#title' => t('Rounds'),
-      '#description' => t('Number of rounds'),
-      '#size' => 5,
-      '#maxlength' => 10,
+      '#description' => t('Number of rounds<br>e.g. 5 or 21-15-9'),
+      '#size' => 10,
+      '#maxlength' => 30,
       '#states' => array(
 				'visible' => array(
 	    		':input[name="cond_workout[' . $k . '][condition_exercises][style]"]' => array(
