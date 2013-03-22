@@ -193,7 +193,7 @@ function workout_tracker_workout($form, &$form_state){
 					'#options' => $reps_array,
 					'#states' => array(
 						'visible' => array(
-							':input[name="' . $workout[0]->strength_id . '[' . $k . '][fail]"]' => array('checked' => TRUE),
+							':input[name="strength[' . $workout[0]->strength_id . '][' . $k . '][fail]"]' => array('checked' => TRUE),
 						),
 					),
 				);				
