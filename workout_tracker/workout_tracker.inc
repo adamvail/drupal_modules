@@ -115,9 +115,30 @@ function workout_tracker_workout($form, &$form_state){
 			if(isset($workout[0]->wgt_style) && $workout[0]->wgt_style == 'percentage' && (sizeof(explode("-", $workout[0]->wgt_percentage)) > 1)){
 				$percentage_scheme = explode("-", $workout[0]->wgt_percentage);
 				$rep_scheme = explode("-", $workout[0]->rep_scheme);
-				for($l = 0; $l < sizeof($rep_scheme); $l++){
-					$movement_str .= $rep_scheme[$l] . " @ " . $percentage_scheme[$l] . "%, ";
+			
+				// try to coalesce sets together
+				for($p = 0; $p < sizeof($percentage_scheme); $p++){
+					if($p == sizeof($percentage_scheme) - 1){
+						// This hasn't been coalesced and won't be since it's the last one
+						// so print it out
+						$movement_str .= $rep_scheme[$p] . " @ " . $percentage_scheme[$p] . "%, ";
+					}
+
+					for($k = $p + 1; $k < sizeof($percentage_scheme); $k++){
+						if($percentage_scheme[$p] != $percentage_scheme[$k]){
+							if($k == $p + 1){
+								$movement_str .= $rep_scheme[$p] . " @ " . $percentage_scheme[$p] . "%, ";
+								break;
+							}
+							// This means we found some that are the same
+							$num_sets = $k - $p;
+							$movement_str .= $num_sets . "x" . $rep_scheme[$p] . " @ " . $percentage_scheme[$p] . "%, ";
+							$p = $k - 1;
+							break;
+						}
+					}
 				}
+
 				$movement_str .= $workout[0]->movement;
 			}
 
