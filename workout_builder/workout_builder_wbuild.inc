@@ -56,7 +56,7 @@ function workout_builder_wbuilder($form, &$form_state){
 		$form['strength_wo'][$k]['clock'] = array(
 			'#type' => 'textfield',
 			'#title' => t('Clock'),
-			'#description' => t('Time per set in minutes'),
+			'#description' => t('Time per set in minutes<br>e.g. 1 or 1:30 or :30'),
 			'#size' => 5,
 			'#maxlength' => 10,
 		);
@@ -176,7 +176,7 @@ function workout_builder_wbuilder($form, &$form_state){
 				'#collapsed' => TRUE,
 			);
 
-			$form['strength_wo'][$k]['strength_exercises'][$i]['reps'] = array(
+/*			$form['strength_wo'][$k]['strength_exercises'][$i]['reps'] = array(
 				'#type' => 'textfield',
 				'#title' => t('Reps'),
 				'#description' => t('Enter number of reps for this movement.'),
@@ -184,13 +184,13 @@ function workout_builder_wbuilder($form, &$form_state){
 				'#maxlength' => 3,
 				'#default_value' => '1',
 			);
-
+*/
 			$form['strength_wo'][$k]['strength_exercises'][$i]['lift'] = array(
 				'#type' => 'textfield',
 				'#title' => t('Movement'),
-				'#description' => t('Enter the movement'),
+				'#description' => t('Enter the movement<br>EX1) Clean <br>EX2) Clean + Jerk <br>EX3) 2[deadlift + hang clean] + Jerk<br>To specify complex movements, read the help.'),
 				'#size' => 20,
-				'#maxlength' => 40,
+				'#maxlength' => 100,
 			);
 		}
 
@@ -198,14 +198,14 @@ function workout_builder_wbuilder($form, &$form_state){
 			'#type' => 'textarea',
 			'#title' => t('Notes'),
 		);
-
+/*
 		$form['strength_wo'][$k]['add_strength'] = array(
 			'#type' => 'submit',
 			'#name' => $k,
 			'#value' => t('Add another movement'),
 			'#submit' => array('workout_builder_wbuild_add_strength'),
 		);
-
+*/
 		if($form_state[$k]['num_movements'] > 1){
 			$form['strength_wo'][$k]['remove_strength'] = array(
 				'#type' => 'submit',
@@ -843,7 +843,6 @@ function _populate_strength_table(&$form_state, $wid){
 				break;
 			}	
 			else{
-				$record->movement_reps = $movement['reps'];
 				$record->movement = $movement['lift'];
 			}
 //			drupal_set_message('<pre>' . print_r($record, TRUE) . '</pre>');

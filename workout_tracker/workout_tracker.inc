@@ -118,6 +118,7 @@ function workout_tracker_workout($form, &$form_state){
 			
 				// try to coalesce sets together
 				for($p = 0; $p < sizeof($percentage_scheme); $p++){
+					//drupal_set_message('<pre>' . print_r($p, TRUE) . '</pre>');
 					if($p == sizeof($percentage_scheme) - 1){
 						// This hasn't been coalesced and won't be since it's the last one
 						// so print it out
@@ -125,15 +126,28 @@ function workout_tracker_workout($form, &$form_state){
 					}
 
 					for($k = $p + 1; $k < sizeof($percentage_scheme); $k++){
-						if($percentage_scheme[$p] != $percentage_scheme[$k]){
-							if($k == $p + 1){
+						if($percentage_scheme[$p] != $percentage_scheme[$k] || 
+								($percentage_scheme[$p] == $percentage_scheme[$k] && $k == sizeof($percentage_scheme) - 1) || 
+								($rep_scheme[$p] != $rep_scheme[$k])
+							){
+							if($k == $p + 1 && ($rep_scheme[$p] != $rep_scheme[$k]  || $percentage_scheme[$p] != $percentage_scheme[$k])){
 								$movement_str .= $rep_scheme[$p] . " @ " . $percentage_scheme[$p] . "%, ";
 								break;
 							}
 							// This means we found some that are the same
-							$num_sets = $k - $p;
+							if($k == sizeof($percentage_scheme) - 1){
+								$num_sets = $k + 1 - $p;
+							}
+							else {
+								$num_sets = $k - $p;
+							}
 							$movement_str .= $num_sets . "x" . $rep_scheme[$p] . " @ " . $percentage_scheme[$p] . "%, ";
-							$p = $k - 1;
+							if($k == sizeof($percentage_scheme)-1){
+								$p = $k;
+							}
+							else {
+								$p = $k - 1;
+							}
 							break;
 						}
 					}
@@ -146,20 +160,20 @@ function workout_tracker_workout($form, &$form_state){
 				$movement_str .= $workout[0]->rep_scheme . ',';
 				for($i = 0; isset($workout[$i]); $i++){
 					if($i == 0){
-						if($workout[$i]->movement_reps == 1){
+				//		if($workout[$i]->movement_reps == 1){
 							$movement_str = $movement_str . ' ' . $workout[$i]->movement;
-						}
-						else{
-							$movement_str = $movement_str . ' [' . $workout[$i]->movement_reps . ' ' . $workout[$i]->movement . ']';
-						}
+				//		}
+				//		else{
+				//			$movement_str = $movement_str . ' [' . $workout[$i]->movement_reps . ' ' . $workout[$i]->movement . ']';
+				//		}
 					}
 					else{
-						if($workout[$i]->movement_reps == 1){
+					//	if($workout[$i]->movement_reps == 1){
 							$movement_str = $movement_str . ' + ' . $workout[$i]->movement;
-						}
-						else{
-							$movement_str = $movement_str . ' + [' . $workout[$i]->movement_reps . ' ' . $workout[$i]->movement . ']';
-						}
+					//	}
+					//	else{
+					//		$movement_str = $movement_str . ' + [' . $workout[$i]->movement_reps . ' ' . $workout[$i]->movement . ']';
+					//	}
 					}
 				}
 
@@ -190,8 +204,14 @@ function workout_tracker_workout($form, &$form_state){
 					}
 				}
 			}
+
 			if(isset($workout[0]->clock)){
-				$movement_str = $movement_str . ' on a ' . $workout[0]->clock . ' clock';
+				if(strpos($workout[0]->clock, ":") !== FALSE){
+					$movement_str = $movement_str . ' on a ' . $workout[0]->clock . ' clock';
+				}
+				else {
+					$movement_str = $movement_str . ' on a ' . $workout[0]->clock . ':00 clock';
+				}
 			}
 
 			$form['strength'][$workout[0]->strength_id] = array(
@@ -225,9 +245,9 @@ function workout_tracker_workout($form, &$form_state){
 					$reps[] = $rep;
 				}
 			}
-			elseif($pivot == FALSE){
+			elseif($pivot === FALSE){ 	// triple equals is not a typo, if the str position is 0, 0 == 0 will eval to true, use === instead
 				$pivot = strpos($rep_scheme, '-');
-				if($pivot == FALSE){
+				if($pivot === FALSE){
 					drupal_set_message('<pre>' . print_r("UNKNOWN REP SCHEME STYLE, VALIDATE FOR THIS IN BUILDER", TRUE) . '</pre>');
 					return;
 				}
@@ -253,7 +273,7 @@ function workout_tracker_workout($form, &$form_state){
 				);
 		
 				$form['strength'][$workout[0]->strength_id][$k]['fail_rep'] = array(
-					'#type' => 'select',
+					'#type' => 'radios',
 					'#title' => t('Failed on rep:'),
 					'#options' => $reps_array,
 					'#states' => array(

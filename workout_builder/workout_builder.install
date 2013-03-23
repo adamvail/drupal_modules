@@ -79,12 +79,6 @@ function workout_builder_schema(){
 				'size' => 'normal',
 				'description' => t('Self prescribed weight'),	
 			),		
-			'movement_reps' => array(
-				'type' => 'int',
-				'unsigned' => TRUE,
-				'size' => 'normal',
-				'description' => t('The number of reps for this movement'),	
-			),			
 			'movement' => array(
 				'type' => 'varchar',
 				'length' => '255',
