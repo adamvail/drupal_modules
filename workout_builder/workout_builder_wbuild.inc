@@ -171,7 +171,7 @@ function workout_builder_wbuilder($form, &$form_state){
 		for($i = 1; $i <= $form_state[$k]['num_movements']; $i++){
 			$form['strength_wo'][$k]['strength_exercises'][$i] = array(
 				'#type' => 'fieldset',
-				'#title' => t('Movement #@num', array('@num' => $i)),
+				'#title' => t('Movement'),
 				'#collapsible' => TRUE,
 				'#collapsed' => TRUE,
 			);
