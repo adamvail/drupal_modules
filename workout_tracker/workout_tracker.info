@@ -3,3 +3,5 @@ description = Form that allows someone to track a prebuilt workout
 package = WOD Modules
 core = 7.x
 
+files[] = utils.inc
+files[] = workout_tracker.inc

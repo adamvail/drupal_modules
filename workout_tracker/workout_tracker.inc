@@ -221,9 +221,11 @@ function workout_tracker_workout($form, &$form_state){
 				'#collapsed' => TRUE,
 			);
 
+
 			// print the workout line
 			$form['strength'][$workout[0]->strength_id]['header'] = array(
 				'#markup' => '<p>' . $movement_str . '</p>',
+				//'#markup' => '<p>' . build_strength_text($wid) . '</p>',
 			);	
 
 			if(isset($strength_notes[$workout[0]->strength_id]->notes)){
