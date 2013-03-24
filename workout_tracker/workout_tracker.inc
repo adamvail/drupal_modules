@@ -160,20 +160,10 @@ function workout_tracker_workout($form, &$form_state){
 				$movement_str .= $workout[0]->rep_scheme . ',';
 				for($i = 0; isset($workout[$i]); $i++){
 					if($i == 0){
-				//		if($workout[$i]->movement_reps == 1){
 							$movement_str = $movement_str . ' ' . $workout[$i]->movement;
-				//		}
-				//		else{
-				//			$movement_str = $movement_str . ' [' . $workout[$i]->movement_reps . ' ' . $workout[$i]->movement . ']';
-				//		}
 					}
 					else{
-					//	if($workout[$i]->movement_reps == 1){
 							$movement_str = $movement_str . ' + ' . $workout[$i]->movement;
-					//	}
-					//	else{
-					//		$movement_str = $movement_str . ' + [' . $workout[$i]->movement_reps . ' ' . $workout[$i]->movement . ']';
-					//	}
 					}
 				}
 
@@ -258,6 +248,51 @@ function workout_tracker_workout($form, &$form_state){
 				$sets = count($reps);
 			}
 
+
+			$combo = array();
+			if(substr_count($workout[0]->movement, "[") > 1){
+				// TODO check for this in the builder and disallow it for now
+			}
+			else{
+				$open_brack_pos = strpos($workout[0]->movement, "[");
+				$closing_brack_pos = strpos($workout[0]->movement, "]");
+				$lift_combo = substr($workout[0]->movement, $open_brack_pos+1, $closing_brack_pos - 1 - $open_brack_pos);
+				$reverse_start = (strlen($workout[0]->movement) - $open_brack_pos) * -1;
+				$prev_split = strrpos($workout[0]->movement, "+", $reverse_start);
+				
+				if($prev_split === FALSE || $prev_split > $open_brack_pos){
+					// find reps from beginning of string
+					$combo[$lift_combo] = substr($workout[0]->movement, 0, $open_brack_pos);
+					$lift_minus_combo = substr_replace($workout[0]->movement, "", 0, $closing_brack_pos+1);
+				}
+				else {
+					// find reps from position of '+'
+					$combo[$lift_combo] = substr($workout[0]->movement, $prev_split + 1, $open_brack_pos - 1 - $prev_split);
+					$lift_minus_combo = substr_replace($workout[0]->movement, "", $prev_split+1, $closing_brack_pos - $prev_split);
+				}
+
+				// grab the rest of the lifts and give a rep count of 1
+				$remaining_lifts = explode("+", $lift_minus_combo);
+				for($r = 0; $r < sizeof($remaining_lifts); $r++){
+					if(trim($remaining_lifts[$r]) != ""){
+						$combo[trim($remaining_lifts[$r])] = 1;
+					}
+				}
+
+				foreach(array_keys($combo) as $key){
+					$lift_reps = $combo[$key];
+					$rep_values = array();
+					for($rep = 1; $rep <= $lift_reps; $rep++){
+						$rep_values[$rep] = $rep;
+					}
+					$combo[$key] = $rep_values;
+				}
+			}
+			// now reconstruct arrays ripping apart lifting combos on "+" and mapping
+			// the reps (from 1 to reps)for each movement
+			//drupal_set_message('<pre>' . print_r($combo, TRUE) . '</pre>');
+
+
 			for($k = 1; $k <= $sets; $k++){
 				$reps_array = array();
 				for($j = 1; $j <= $reps[$k-1]; $j++){
@@ -283,7 +318,43 @@ function workout_tracker_workout($form, &$form_state){
 							':input[name="strength[' . $workout[0]->strength_id . '][' . $k . '][fail]"]' => array('checked' => TRUE),
 						),
 					),
-				);				
+				);
+	
+				$lift_keys = array();
+				foreach(array_keys($combo) as $combo_key){
+					$lift_keys[$combo_key] = $combo_key;
+				}			
+	
+					// use this info to build form elements
+					$form['strength'][$workout[0]->strength_id][$k]['fail_lift'] = array(
+						'#type' => 'radios',
+						'#title' => t('Failed on move:'),
+						'#options' => $lift_keys,
+						'#states' => array(
+							'visible' => array(
+								':input[name="strength[' . $workout[0]->strength_id . '][' . $k . '][fail]"]' => array('checked' => TRUE),
+							),
+						),
+					);
+			/*	
+					foreach($lift_keys as $l){
+					//drupal_set_message('<pre>' . print_r($combo[$l], TRUE) . '</pre>');
+
+					$form['strength'][$workout[0]->strength_id][$k]['fail_lift'][$l] = array(
+							'#type' => 'radios',
+							'#title' => t('Failed on movement rep:'),
+							'#options' => $combo[$l],
+							//'#default_value' => key($combo[$l]),
+							'#states' => array(
+								'visible' => array(
+									':input[name="strength[' . $workout[0]->strength_id . '][' . $k . '][fail]"]' => array('checked' => TRUE),
+									':input[name="strength[' . $workout[0]->strength_id . '][' . $k . '][fail_lift]"]' => array('value' => $l),
+								),
+							),
+						);
+
+					}
+*/
 			}
 		}	
 	}
