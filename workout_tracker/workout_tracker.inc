@@ -239,7 +239,7 @@ function workout_tracker_workout($form, &$form_state){
 					$reps[] = $rep;
 				}
 			}
-			elseif($pivot === FALSE){ 	// triple equals is not a typo, if the str position is 0, 0 == 0 will eval to true, use === instead
+			elseif($pivot === FALSE){ 	// triple equals is not a typo, if the str position is 0, 0 == FALSE will eval to true, use === instead
 				$pivot = strpos($rep_scheme, '-');
 				if($pivot === FALSE){
 					drupal_set_message('<pre>' . print_r("UNKNOWN REP SCHEME STYLE, VALIDATE FOR THIS IN BUILDER", TRUE) . '</pre>');
@@ -250,7 +250,7 @@ function workout_tracker_workout($form, &$form_state){
 				$sets = count($reps);
 			}
 
-
+			// This handles specifying failures with complex movements
 			$combo = array();
 			if(substr_count($workout[0]->movement, "[") > 1){
 				// TODO check for this in the builder and disallow it for now
@@ -335,13 +335,12 @@ function workout_tracker_workout($form, &$form_state){
 					$complex_strength = FALSE;
 				}
 			}
-			// now reconstruct arrays ripping apart lifting combos on "+" and mapping
-			// the reps (from 1 to reps)for each movement
 			//drupal_set_message('<pre>' . print_r($combo, TRUE) . '</pre>');
 
 			$form_state['lifts'] = array_keys($combo);
 			$form_state['wid'] = $wid;
 
+			// Stqndard form items for all movements, regardless of complexity
 			for($k = 1; $k <= $sets; $k++){
 				$reps_array = array();
 				for($j = 1; $j <= $reps[$k-1]; $j++){
@@ -370,6 +369,7 @@ function workout_tracker_workout($form, &$form_state){
 					),
 				);
 
+				// form items for failures of complex strength movements
 				if($complex_strength == TRUE){	
 					$lift_keys = array();
 					foreach(array_keys($combo) as $combo_key){
@@ -388,6 +388,8 @@ function workout_tracker_workout($form, &$form_state){
 								),
 							),
 						);
+						// This is supposed to build form elements to specify on which movement rep you failed
+						// for a complex movement....but it doesn't work...i'll come back to it
 				/*	
 						foreach($lift_keys as $l){
 						//drupal_set_message('<pre>' . print_r($combo[$l], TRUE) . '</pre>');
