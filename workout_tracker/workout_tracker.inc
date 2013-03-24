@@ -261,16 +261,25 @@ function workout_tracker_workout($form, &$form_state){
 				$lift_combo = substr($workout[0]->movement, $open_brack_pos+1, $closing_brack_pos - 1 - $open_brack_pos);
 				$reverse_start = (strlen($workout[0]->movement) - $open_brack_pos) * -1;
 				$prev_split = strrpos($workout[0]->movement, "+", $reverse_start);
+				$lift_reps = 1;
 				
 				if($prev_split === FALSE || $prev_split > $open_brack_pos){
 					// find reps from beginning of string
-					$combo[$lift_combo] = substr($workout[0]->movement, 0, $open_brack_pos);
+					$lift_reps = substr($workout[0]->movement, 0, $open_brack_pos);
 					$lift_minus_combo = substr_replace($workout[0]->movement, "", 0, $closing_brack_pos+1);
 				}
 				else {
 					// find reps from position of '+'
-					$combo[$lift_combo] = substr($workout[0]->movement, $prev_split + 1, $open_brack_pos - 1 - $prev_split);
+					$lift_reps = substr($workout[0]->movement, $prev_split + 1, $open_brack_pos - 1 - $prev_split);
 					$lift_minus_combo = substr_replace($workout[0]->movement, "", $prev_split+1, $closing_brack_pos - $prev_split);
+				}
+		
+				// split up complex move into individual moves to specify which was failed on	
+				$individual_lifts = explode("+", $lift_combo);
+				foreach($individual_lifts as $indv_lift){
+					if(trim($indv_lift) != ""){
+						$combo[trim($indv_lift)] = $lift_reps;
+					}
 				}
 
 				// grab the rest of the lifts and give a rep count of 1
