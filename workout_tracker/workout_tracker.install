@@ -72,7 +72,14 @@ function workout_tracker_schema(){
 				'size' => 'normal',
 				'description' => t('The strength id, group movements in workout together'),	
 			),
-			'set' => array(
+			'num_performed' => array(
+				'type' => 'int',
+				'unsigned' => TRUE,
+				'not null' => TRUE,
+				'size' => 'normal',
+				'description' => t('Which time this workout has been performed, since workouts can be redone'),	
+			),
+			'set_num' => array(
 				'type' => 'int',
 				'unsigned' => TRUE,
 				'size' => 'normal',

@@ -337,6 +337,8 @@ function workout_tracker_workout($form, &$form_state){
 			// the reps (from 1 to reps)for each movement
 			//drupal_set_message('<pre>' . print_r($combo, TRUE) . '</pre>');
 
+			$form_state['lifts'] = array_keys($combo);
+			$form_state['wid'] = $wid;
 
 			for($k = 1; $k <= $sets; $k++){
 				$reps_array = array();
@@ -344,7 +346,7 @@ function workout_tracker_workout($form, &$form_state){
 					$reps_array[] = $j;
 				}
 
-				$form['strength'][$workout[0]->strength_id][$k]['set'] = array(
+				$form['strength'][$workout[0]->strength_id][$k]['work'] = array(
 					'#type' => 'textfield',
 					'#title' => t('Set #@num Weight/Count', array('@num' => $k)),
 				);
@@ -358,6 +360,7 @@ function workout_tracker_workout($form, &$form_state){
 					'#type' => 'radios',
 					'#title' => t('Failed on rep:'),
 					'#options' => $reps_array,
+					'#default_value' => key($reps_array),
 					'#states' => array(
 						'visible' => array(
 							':input[name="strength[' . $workout[0]->strength_id . '][' . $k . '][fail]"]' => array('checked' => TRUE),
@@ -376,6 +379,7 @@ function workout_tracker_workout($form, &$form_state){
 							'#type' => 'radios',
 							'#title' => t('Failed on move:'),
 							'#options' => $lift_keys,
+							'#default_value' => key($lift_keys),
 							'#states' => array(
 								'visible' => array(
 									':input[name="strength[' . $workout[0]->strength_id . '][' . $k . '][fail]"]' => array('checked' => TRUE),
@@ -608,12 +612,69 @@ function workout_tracker_workout($form, &$form_state){
 
 		}
 	}
-	
+
+	$form['save'] = array(
+	'#type' => 'submit',
+	'#value' => t('Save'),
+	'#submit' => array('workout_tracker_save_submit'),
+	);
+
 	return $form;
 }
 
 function convert_timestamp($timestamp){
 	$format = 'D d M Y';
 	return date($format, $timestamp);
+}
+
+function workout_tracker_save_submit($form, &$form_state){
+	_save_strength_results($form_state);
+}
+
+function _save_strength_results(&$form_state){
+	global $user;
+	
+	$strength_table = 'workout_tracker_strength';
+	$strength_table_notes = 'workout_tracker_strength_notes';
+
+	// figure out how many times this workout has been done before
+	$num_performed = db_query('SELECT MAX(num_performed) from {workout_tracker_strength} where wid=:wid', array(':wid' => $form_state['wid']))->fetchField();
+
+	if(empty($num_performed)){
+		// workout has never been done
+		$num_performed = 1;
+	}
+	else{
+		// workout has been done, so increase the num count
+		$num_performed += 1;
+	}
+
+	//$lifts = $form_state['lifts'];
+
+	for($i = 1; isset($form_state['input']['strength'][$i]); $i++){
+		$workout = $form_state['input']['strength'][$i];
+		for($s = 1; isset($workout[$s]); $s++){
+			$set = $workout[$s];
+			//drupal_set_message('<pre>' . print_r($set, TRUE) . '</pre>');
+
+			$record = new stdClass();
+			$record->wid = $form_state['wid'];	
+			$record->strength_id = $i;
+			$record->athlete_uid = $user->uid;
+			$record->num_performed = $num_performed;
+			$record->set = $s;
+			if(isset($set['work'])){
+				$record->work = $set['work'];
+			}
+			if(isset($set['fail'])){
+				$record->fail = $set['fail'];
+				if(isset($set['fail_lift'])){
+					$record->fail_movement = $set['fail_lift'];
+				}
+			}
+	//		drupal_set_message('<pre>' . print_r($record, TRUE) . '</pre>');
+			drupal_write_record($strength_table, $record);
+		}
+	}
 }
 
