@@ -333,42 +333,44 @@ function workout_tracker_workout($form, &$form_state){
 						),
 					),
 				);
-	
-				$lift_keys = array();
-				foreach(array_keys($combo) as $combo_key){
-					$lift_keys[$combo_key] = $combo_key;
-				}			
-	
-					// use this info to build form elements
-					$form['strength'][$workout[0]->strength_id][$k]['fail_lift'] = array(
-						'#type' => 'radios',
-						'#title' => t('Failed on move:'),
-						'#options' => $lift_keys,
-						'#states' => array(
-							'visible' => array(
-								':input[name="strength[' . $workout[0]->strength_id . '][' . $k . '][fail]"]' => array('checked' => TRUE),
-							),
-						),
-					);
-			/*	
-					foreach($lift_keys as $l){
-					//drupal_set_message('<pre>' . print_r($combo[$l], TRUE) . '</pre>');
 
-					$form['strength'][$workout[0]->strength_id][$k]['fail_lift'][$l] = array(
+				if($complex_strength == TRUE){	
+					$lift_keys = array();
+					foreach(array_keys($combo) as $combo_key){
+						$lift_keys[$combo_key] = $combo_key;
+					}			
+		
+						// use this info to build form elements
+						$form['strength'][$workout[0]->strength_id][$k]['fail_lift'] = array(
 							'#type' => 'radios',
-							'#title' => t('Failed on movement rep:'),
-							'#options' => $combo[$l],
-							//'#default_value' => key($combo[$l]),
+							'#title' => t('Failed on move:'),
+							'#options' => $lift_keys,
 							'#states' => array(
 								'visible' => array(
 									':input[name="strength[' . $workout[0]->strength_id . '][' . $k . '][fail]"]' => array('checked' => TRUE),
-									':input[name="strength[' . $workout[0]->strength_id . '][' . $k . '][fail_lift]"]' => array('value' => $l),
 								),
 							),
 						);
+				/*	
+						foreach($lift_keys as $l){
+						//drupal_set_message('<pre>' . print_r($combo[$l], TRUE) . '</pre>');
 
-					}
+						$form['strength'][$workout[0]->strength_id][$k]['fail_lift'][$l] = array(
+								'#type' => 'radios',
+								'#title' => t('Failed on movement rep:'),
+								'#options' => $combo[$l],
+								//'#default_value' => key($combo[$l]),
+								'#states' => array(
+									'visible' => array(
+										':input[name="strength[' . $workout[0]->strength_id . '][' . $k . '][fail]"]' => array('checked' => TRUE),
+										':input[name="strength[' . $workout[0]->strength_id . '][' . $k . '][fail_lift]"]' => array('value' => $l),
+									),
+								),
+							);
+
+						}
 */
+				}
 			}
 		}	
 	}
