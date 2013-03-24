@@ -252,8 +252,10 @@ function workout_tracker_workout($form, &$form_state){
 			$combo = array();
 			if(substr_count($workout[0]->movement, "[") > 1){
 				// TODO check for this in the builder and disallow it for now
+				$complex_strength = FALSE;
 			}
-			else{
+			elseif(substr_count($workout[0]->movement, "[") == 1){
+				$complex_strength = TRUE;
 				$open_brack_pos = strpos($workout[0]->movement, "[");
 				$closing_brack_pos = strpos($workout[0]->movement, "]");
 				$lift_combo = substr($workout[0]->movement, $open_brack_pos+1, $closing_brack_pos - 1 - $open_brack_pos);
@@ -287,6 +289,9 @@ function workout_tracker_workout($form, &$form_state){
 					}
 					$combo[$key] = $rep_values;
 				}
+			}
+			else {
+				$complex_strength = FALSE;
 			}
 			// now reconstruct arrays ripping apart lifting combos on "+" and mapping
 			// the reps (from 1 to reps)for each movement
