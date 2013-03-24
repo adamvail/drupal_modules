@@ -86,6 +86,7 @@ function workout_tracker_next_submit($form, &$form_state){
 function workout_tracker_workout($form, &$form_state){
 	// Build this form based off the workout they just chose
 	$wid = $form_state['values']['workout_choice'];
+	$form_state['wid'] = $wid;
 
 	$strength = db_query('SELECT * FROM {workout_builder_strength} where wid=:wid', array(':wid' => $wid));
 	$conditioning = db_query('SELECT * FROM {workout_builder_conditioning} where wid=:wid', array(':wid' => $wid));
@@ -110,6 +111,7 @@ function workout_tracker_workout($form, &$form_state){
 	
 		// Loop through the different strength_id to populate the form	
 		foreach($strength_data as $workout){
+			$form_state['strength_exists'] = TRUE;
 			// make the header string
 			$movement_str = "";
 			if(isset($workout[0]->wgt_style) && $workout[0]->wgt_style == 'percentage' && (sizeof(explode("-", $workout[0]->wgt_percentage)) > 1)){
@@ -410,7 +412,7 @@ function workout_tracker_workout($form, &$form_state){
 		}	
 	}
 
-	if(!empty($conditioning)){
+	if(!empty($conditioning) && isset($conditioning)){
 		$conditioning_data = array();	
 	
 		// put the rows from the db into an array for looping by conditioning_id
@@ -426,6 +428,7 @@ function workout_tracker_workout($form, &$form_state){
 
 		// Loop through the different strength_id to populate the form	
 		foreach($conditioning_data as $workout){
+			$form_state['conditioning_exists'] = TRUE;
 			// $workout is an array of movements all with the same conditioning_id
 
 			$fieldset_title = '';
@@ -628,7 +631,12 @@ function convert_timestamp($timestamp){
 }
 
 function workout_tracker_save_submit($form, &$form_state){
-	_save_strength_results($form_state);
+	if(isset($form_state['strength_exists'])){
+		_save_strength_results($form_state);
+	}
+	if(isset($form_state['conditioning_exists']) && $form_state['conditioning_exists'] == TRUE){
+		_save_conditioning_results($form_state);
+	}
 }
 
 function _save_strength_results(&$form_state){
@@ -659,7 +667,7 @@ function _save_strength_results(&$form_state){
 
 			$record = new stdClass();
 			$record->wid = $form_state['wid'];	
-			$record->strength_id = $i;
+			$record->sid = $i;
 			$record->athlete_uid = $user->uid;
 			$record->num_performed = $num_performed;
 			$record->set = $s;
@@ -675,6 +683,56 @@ function _save_strength_results(&$form_state){
 	//		drupal_set_message('<pre>' . print_r($record, TRUE) . '</pre>');
 			drupal_write_record($strength_table, $record);
 		}
+	}
+}
+
+function _save_conditioning_results(&$form_state){
+	global $user;
+	$conditioning_table = 'workout_tracker_conditioning';
+	$conditioning_notes_table = 'workout_tracker_conditioning_notes';
+
+	drupal_set_message('<pre>' . print_r($form_state['wid'], TRUE) . '</pre>');
+	$num_performed = db_query('SELECT MAX(num_performed) from {workout_tracker_conditioning} where wid=:wid', array(':wid' => $form_state['wid']))->fetchField();
+
+	if(empty($num_performed)){
+		// workout has never been done
+		$num_performed = 1;
+	}
+	else{
+		// workout has been done, so increase the num count
+		$num_performed += 1;
+	}
+
+	for($i = 1; isset($form_state['input']['conditioning'][$i]); $i++){
+		$workout = $form_state['input']['conditioning'][$i];
+		//$movements = db_query('SELECT workout FROM {workout_builder_conditioning} where wid=:wid and conditioning_id=:cid', array(':wid' => $form_state['wid'], ':cid' => $i))->fetchField();
+		//drupal_set_message('<pre>' . print_r($movements, TRUE) . '</pre>');
+		$record = new stdClass();
+		$record->wid = $form_state['wid'];
+		$record->cid = $i;
+		$record->athlete_uid = $user->uid;
+		$record->num_performed = $num_performed;	
+
+		if(isset($workout['amrap_rounds']) || isset($workout['amrap_reps'])){
+			if(isset($workout['amrap_rounds'])){
+				$record->amrap_rounds = $workout['amrap_rounds'];
+			}
+			else{
+				$record->amrap_round = 0;
+			}
+
+			if(isset($workout['amrap_reps'])){
+				$record->amrap_reps = $workout['amrap_reps'];
+			}
+			else {
+				$record->amrap_reps = 0;
+			}
+		}
+		
+		if(isset($workout['for_time'])){
+			$record->time = $workout['for_time'];
+		}
+		drupal_write_record($conditioning_table, $record);
 	}
 }
 
