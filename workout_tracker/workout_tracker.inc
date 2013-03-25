@@ -109,7 +109,8 @@ function workout_tracker_workout($form, &$form_state){
 
 //		drupal_set_message('<pre>' . print_r($strength_notes, TRUE) . '</pre>');
 	
-		// Loop through the different strength_id to populate the form	
+		// Loop through the different strength_id to populate the form
+		$all_lifts = array();	
 		foreach($strength_data as $workout){
 			$form_state['strength_exists'] = TRUE;
 			// make the header string
@@ -317,6 +318,7 @@ function workout_tracker_workout($form, &$form_state){
 						$rep_values[$rep] = $rep;
 					}
 					$combo[$key] = $rep_values;
+					$all_lifts[$workout[0]->strength_id][$key] = $rep_values;
 				}
 			}
 			else {
@@ -328,23 +330,24 @@ function workout_tracker_workout($form, &$form_state){
 						if(trim($lifts[$l]) != ""){
 							$rep[1] = 1;
 							$combo[trim($lifts[$l])] = $rep;
+							$all_lifts[$workout[0]->strength_id][trim($lifts[$l])] = $rep;
 						}
 					}
 				}
 				else{
+					$combo[$workout[0]->movement] = 1;
+					$all_lifts[$workout[0]->strength_id][$workout[0]->movement] = 1;
 					$complex_strength = FALSE;
 				}
 			}
 			//drupal_set_message('<pre>' . print_r($combo, TRUE) . '</pre>');
 
-			$form_state['lifts'] = array_keys($combo);
-			$form_state['wid'] = $wid;
 
 			// Stqndard form items for all movements, regardless of complexity
 			for($k = 1; $k <= $sets; $k++){
 				$reps_array = array();
 				for($j = 1; $j <= $reps[$k-1]; $j++){
-					$reps_array[] = $j;
+					$reps_array[$j] = $j;
 				}
 
 				$form['strength'][$workout[0]->strength_id][$k]['work'] = array(
@@ -412,6 +415,8 @@ function workout_tracker_workout($form, &$form_state){
 				}
 			}
 		}	
+			$form_state['lifts'] = $all_lifts;
+			$form_state['wid'] = $wid;
 	}
 
 	if(!empty($conditioning) && isset($conditioning)){
@@ -659,13 +664,14 @@ function _save_strength_results(&$form_state){
 		$num_performed += 1;
 	}
 
-	//$lifts = $form_state['lifts'];
+	$all_lifts = $form_state['lifts'];
+	$lift_results = array();
 
 	for($i = 1; isset($form_state['input']['strength'][$i]); $i++){
 		$workout = $form_state['input']['strength'][$i];
+		$lifts = array_keys($all_lifts[$i]);
 		for($s = 1; isset($workout[$s]); $s++){
 			$set = $workout[$s];
-			//drupal_set_message('<pre>' . print_r($set, TRUE) . '</pre>');
 
 			$record = new stdClass();
 			$record->wid = $form_state['wid'];	
@@ -677,14 +683,32 @@ function _save_strength_results(&$form_state){
 				$record->work = $set['work'];
 			}
 			if(isset($set['fail'])){
-				$record->fail = $set['fail'];
+				$record->fail = $set['fail_rep'];
+				if(sizeof($lifts) == 1){
+					$set['fail_lift'] = $lifts[0];
+				}
 				if(isset($set['fail_lift'])){
 					$record->fail_movement = $set['fail_lift'];
+					foreach($lifts as $lift){
+						if($lift != $set['fail_lift'] || $set['fail_rep'] > 1){
+							$lift_results[$lift] = $set['work'];
+						}
+					}
 				}
 			}
-	//		drupal_set_message('<pre>' . print_r($record, TRUE) . '</pre>');
-			drupal_write_record($strength_table, $record);
+			else{
+				// didn't fail, so map weights to lifts
+				foreach($lifts as $lift){
+					$lift_results[$lift] = $set['work'];
+				}
+			}
+	
+			//drupal_write_record($strength_table, $record);
 		}
+	}
+	foreach(array_keys($lift_results) as $l){
+		//drupal_set_message('<pre>' . print_r($l, TRUE) . '</pre>');
+		check_pr($l, $lift_results[$l]);
 	}
 }
 
@@ -735,6 +759,35 @@ function _save_conditioning_results(&$form_state){
 			$record->time = $workout['for_time'];
 		}
 		drupal_write_record($conditioning_table, $record);
+	}
+}
+
+function check_pr($lift, $weight){
+	global $user;
+	drupal_set_message('<pre>' . print_r($lift . ':' . $weight, TRUE) . '</pre>');
+	$pr_table = 'workout_pr';
+	$movement = strtolower($lift);
+
+	$cur_pr = db_query('SELECT pr FROM {workout_pr} where athlete_uid=:auid AND movement=:movement', array(':auid' => $user->uid, ':movement' => $movement))->fetchField();
+	drupal_set_message('<pre>' . print_r($cur_pr, TRUE) . '</pre>');
+
+	$record = new stdClass();
+	$record->athlete_uid = $user->uid;
+	$record->date = time(); 
+
+	if(!empty($cur_pr)){
+		if($weight > $cur_pr){
+			$result = db_query('UPDATE {workout_pr} SET pr=:pr WHERE athlete_uid=:auid and movement=:movement', array(':pr' => $weight, ':auid' => $user->uid, ':movement' => $movement));
+			if($result != 1){
+				drupal_set_message('<pre>' . print_r("RESULT from PR UPDATE was NOT a single row!", TRUE) . '</pre>');
+			}	
+		}
+	}
+	else {
+		// this lift isn't already in the database
+		$record->movement = $movement;
+		$record->pr = $weight;
+		drupal_write_record($pr_table, $record);
 	}
 }
 
