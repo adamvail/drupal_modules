@@ -693,6 +693,9 @@ function _save_strength_results(&$form_state){
 						if($lift != $set['fail_lift'] || $set['fail_rep'] > 1){
 							$lift_results[$lift] = $set['work'];
 						}
+						else{
+							break;
+						}
 					}
 				}
 			}
@@ -769,7 +772,6 @@ function check_pr($lift, $weight){
 	$movement = strtolower($lift);
 
 	$cur_pr = db_query('SELECT pr FROM {workout_pr} where athlete_uid=:auid AND movement=:movement', array(':auid' => $user->uid, ':movement' => $movement))->fetchField();
-	drupal_set_message('<pre>' . print_r($cur_pr, TRUE) . '</pre>');
 
 	$record = new stdClass();
 	$record->athlete_uid = $user->uid;
