@@ -343,6 +343,7 @@ function workout_tracker_workout($form, &$form_state){
 			//drupal_set_message('<pre>' . print_r($combo, TRUE) . '</pre>');
 
 
+			$percentage_scheme = explode("-", $workout[0]->wgt_percentage);
 			// Stqndard form items for all movements, regardless of complexity
 			for($k = 1; $k <= $sets; $k++){
 				$reps_array = array();
@@ -350,11 +351,39 @@ function workout_tracker_workout($form, &$form_state){
 					$reps_array[$j] = $j;
 				}
 
-				$form['strength'][$workout[0]->strength_id][$k]['work'] = array(
-					'#type' => 'textfield',
-					'#title' => t('Set #@num Weight/Count', array('@num' => $k)),
-				);
-				
+				if(sizeof($percentage_scheme) > 1){
+					if($complex_strength == FALSE){
+						// if there is only one movement, then populate the default with the % from the PR
+						global $user;
+						$lift = $workout[0]->movement;
+						$pr = db_query('SELECT pr from {workout_pr} where athlete_uid=:auid and movement=:movement', array(':auid' => $user->uid, ':movement' => $lift))->fetchField();
+						$prescribed = $pr * ($percentage_scheme[$k-1] / 100);
+						$form['strength'][$workout[0]->strength_id][$k]['work'] = array(
+							'#type' => 'textfield',
+							'#title' => t('@movement @ @percentage%', array('@movement' => $lift, '@percentage' => $percentage_scheme[$k-1])),
+							'#size' => 10,
+							'#maxlength' => 20,
+							'#default_value' => ($prescribed > 0) ? $prescribed : '',
+						);
+					}
+					else {
+						$form['strength'][$workout[0]->strength_id][$k]['work'] = array(
+							'#type' => 'textfield',
+							'#title' => t('Set #@num Weight/Count: @percentage%', array('@num' => $k, '@percentage' => $percentage_scheme[$k-1])),
+							'#size' => 10,
+							'#maxlength' => 20,
+						);
+					}
+				}
+				else {	
+					$form['strength'][$workout[0]->strength_id][$k]['work'] = array(
+						'#type' => 'textfield',
+						'#title' => t('Set #@num Weight/Count', array('@num' => $k)),
+						'#size' => 10,
+						'#maxlength' => 20,
+					);
+				}				
+
 				$form['strength'][$workout[0]->strength_id][$k]['fail'] = array(
 					'#type' => 'checkbox',
 					'#title' => t('Fail on a rep?'),
