@@ -297,33 +297,54 @@ function workout_builder_wbuild_next_validate($form, &$form_state){
 		//	form_set_error($workout['clock'], t('Workout #'. $i .': Clock field must be a number'));	
 		}
 
-/*		if(!_validate_numeric($workout['sets'])){
-			form_set_error($workout['sets'], t('Workout #'. $i .': Sets field must be a number'));	
-		}
-*/
-/*
-		if(!empty($workout['reps'])){
-			if(!_validate_numeric($workout['reps'])){
-				form_set_error($workout['reps'], t('Workout #'. $i .': Reps field must be a number'));	
-			}
+		if(isset($workout['rep_scheme'])){
+			$combined_scheme = FALSE;
+			$singular_scheme = FALSE;
 
-			if(!_validate_range($workout['reps'], 0, NULL)){
-				form_set_error($workout['reps'], t('The number of reps must be a positive number OR 0 for MAX reps'));
-			}	
+			if(strpos($workout['rep_scheme'], ",") !== FALSE){
+				form_set_error($workout['rep_scheme'], t('Can only specify one style of rep scheme. e.g. 5x3 OR 5-3-2-1'));
+			}
+			if(strpos($workout['rep_scheme'], "x") !== FALSE){
+				$combined_scheme = TRUE;
+			}
+			if(strpos($workout['rep_scheme'], "-") !== FALSE){
+				$singular_scheme = TRUE;
+			}
+			
+			if($combined_scheme == TRUE && $singular_scheme == TRUE){
+				form_set_error($workout['rep_scheme'], t('Can only specify one style of rep scheme. e.g. 5x3 OR 5-3-2-1'));
+			}
 		}
-*/
+
+		$movement = $workout['strength_exercises'][1]['lift'];
+		if(substr_count($movement, "[") > 1 || substr_count($movement, "]") > 1){
+			form_set_error($movement, t('Can only have one complex movement (e.g. movement enclosed in []) at this time'));
+		}
+
 		$weight = $workout['weight'];
-/*
-		if(!empty($weight['percentage'])){
-			if(!_validate_numeric($weight['percentage'])){
-				form_set_error($weight['percentage'], t('Workout #'. $i .': Weight percentage field must be a number'));	
-			}
 
-			if(!_validate_range($weight['percentage'], 1, 100)){
-				form_set_error($weight['percentage'], t('Workout #'. $i .': Weight percentage field must be between 1 - 100'));	
+		if(!empty($weight['percentage'])){
+			// make sure the number of sets and the number of percentages specified are the same.
+			if(strpos($weight['percentage'], ",") !== FALSE){
+				form_set_error($weight['percentage'], t('Percentages must be separated by \'-\''));
+			}
+			if(strpos($workout['rep_scheme'], "x") !== FALSE){
+				$num_sets = explode("x", $workout['rep_scheme']);
+				$num_sets = trim($num_sets[0]); 
+			}
+			elseif(strpos($workout['rep_scheme'], "-") !== FALSE){
+				$num_sets = explode("-", $workout['rep_scheme']);
+				$num_sets = sizeof($num_sets);
+			}
+			else {
+				form_set_error($workout['rep_scheme'], t('Unknown rep scheme'));
+			}
+			$percentage_scheme = explode("-", $weight['percentage']);
+			if($num_sets != sizeof($percentage_scheme)){
+				form_set_error($weight['percentage'], t('Must specify the same number of sets and percentages'));
 			}
 		}
-*/
+
 		if(!empty($weight['men'])){
 			if(!_validate_numeric($weight['men'])){
 				form_set_error($weight['men'], t('Workout #'. $i .': Men\'s weight field must be a number'));	
@@ -816,7 +837,9 @@ function _populate_strength_table(&$form_state, $wid){
 
 			if($workout['weight']['style'] == 'percentage'){
 				$record->wgt_style = 'percentage';
-				$record->wgt_percentage = $workout['weight']['percentage'];
+				$percentage = str_replace("%", "", $workout['weight']['percentage']);
+				$percentage = str_replace(",", "-", $percentage);
+				$record->wgt_percentage = $percentage;
 			}
 			elseif($workout['weight']['style'] == 'weight'){
 				$record->wgt_style = 'weight';				
