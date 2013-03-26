@@ -110,7 +110,8 @@ function workout_tracker_workout($form, &$form_state){
 //		drupal_set_message('<pre>' . print_r($strength_notes, TRUE) . '</pre>');
 	
 		// Loop through the different strength_id to populate the form
-		$all_lifts = array();	
+		$all_lifts = array();
+		$set_header = "";	
 		foreach($strength_data as $workout){
 			$form_state['strength_exists'] = TRUE;
 			// make the header string
@@ -164,9 +165,11 @@ function workout_tracker_workout($form, &$form_state){
 				for($i = 0; isset($workout[$i]); $i++){
 					if($i == 0){
 							$movement_str = $movement_str . ' ' . $workout[$i]->movement;
+							$set_header .= $workout[$i]->movement;
 					}
 					else{
 							$movement_str = $movement_str . ' + ' . $workout[$i]->movement;
+							$set_header .= ' + ' . $workout[$i]->movement;
 					}
 				}
 
@@ -174,9 +177,11 @@ function workout_tracker_workout($form, &$form_state){
 					switch($workout[0]->wgt_style){
 						case 'ahap':
 							$movement_str = $movement_str . ' AHAP';
+							$set_header .= ' AHAP';
 							break;
 						case 'percentage': 
 							$movement_str = $movement_str . ' at ' . $workout[0]->wgt_percentage . '%';
+							$set_header .= ' at ' . $workout[0]->wgt_percentage . '%';
 							break;
 						case 'weight':
 							if($workout[0]->wgt_units == 0){
@@ -188,17 +193,19 @@ function workout_tracker_workout($form, &$form_state){
 
 							if(isset($workout[0]->wgt_self_rx)){
 								$movement_str = $movement_str . ' at ' . $workout[0]->wgt_self_rx . ' ' . $units;
+								$set_header .= ' at ' . $workout[0]->wgt_self_rx . ' ' . $units;
 								break;
 							}
 							else{
 								$movement_str = $movement_str . ' at ' . $workout[0]->wgt_men . '/' . $workout[0]->wgt_women . ' ' . $units;
+								$set_header .= ' at ' . $workout[0]->wgt_men . '/' . $workout[0]->wgt_women . ' ' . $units;
 								break;	
 							}
 					}
 				}
 			}
 
-			if(isset($workout[0]->clock)){
+			if(isset($workout[0]->clock) && !empty($workout[0]->clock)){
 				if(strpos($workout[0]->clock, ":") !== FALSE){
 					$movement_str = $movement_str . ' on a ' . $workout[0]->clock . ' clock';
 				}
@@ -360,7 +367,7 @@ function workout_tracker_workout($form, &$form_state){
 						$prescribed = $pr * ($percentage_scheme[$k-1] / 100);
 						$form['strength'][$workout[0]->strength_id][$k]['work'] = array(
 							'#type' => 'textfield',
-							'#title' => t('@movement @ @percentage%', array('@movement' => $lift, '@percentage' => $percentage_scheme[$k-1])),
+							'#title' => t('@num_reps Reps, @movement @ @percentage%', array('@num_reps' => sizeof($reps_array),'@movement' => $lift, '@percentage' => $percentage_scheme[$k-1])),
 							'#size' => 10,
 							'#maxlength' => 20,
 							'#default_value' => ($prescribed > 0) ? $prescribed : '',
@@ -369,7 +376,8 @@ function workout_tracker_workout($form, &$form_state){
 					else {
 						$form['strength'][$workout[0]->strength_id][$k]['work'] = array(
 							'#type' => 'textfield',
-							'#title' => t('Set #@num Weight/Count: @percentage%', array('@num' => $k, '@percentage' => $percentage_scheme[$k-1])),
+							'#title' => t('@num_reps Reps, @movement @ @percentage%', array('@num_reps' => sizeof($reps_array),'@movement' => $lift, '@percentage' => $percentage_scheme[$k-1])),
+							//'#title' => t('Set #@num Weight/Count: @percentage%', array('@num' => $k, '@percentage' => $percentage_scheme[$k-1])),
 							'#size' => 10,
 							'#maxlength' => 20,
 						);
@@ -378,7 +386,8 @@ function workout_tracker_workout($form, &$form_state){
 				else {	
 					$form['strength'][$workout[0]->strength_id][$k]['work'] = array(
 						'#type' => 'textfield',
-						'#title' => t('Set #@num Weight/Count', array('@num' => $k)),
+						'#title' => t('@num_reps Reps: @movement', array('@num_reps' => sizeof($reps_array), '@movement' => $set_header)),
+						//'#title' => t('Set #@num Weight/Count', array('@num' => $k)),
 						'#size' => 10,
 						'#maxlength' => 20,
 					);
