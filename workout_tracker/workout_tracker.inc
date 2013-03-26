@@ -157,27 +157,39 @@ function workout_tracker_workout($form, &$form_state){
 					}
 				}
 
-				$movement_str .= $workout[0]->movement;
+				$movement_pretty = implode(' ', array_map('ucfirst', explode(' ', $workout[0]->movement)));
+				$movement_pretty = implode('-', array_map('ucfirst', explode('-', $movement_pretty)));
+				$movement_pretty = implode('[', array_map('ucfirst', explode('[', $movement_pretty)));
+				$movement_pretty = implode(']', array_map('ucfirst', explode(']', $movement_pretty)));
+				$movement_pretty = implode('+', array_map('ucfirst', explode('+', $movement_pretty)));
+				$movement_str .= $movement_pretty;
 			}
 
 			else{
-				$movement_str .= $workout[0]->rep_scheme . ',';
+				if(!empty($workout[0]->rep_scheme)){
+					$movement_str .= $workout[0]->rep_scheme . ',';
+				}
+				$movement_pretty = implode(' ', array_map('ucfirst', explode(' ', $workout[0]->movement)));
+				$movement_pretty = implode('-', array_map('ucfirst', explode('-', $movement_pretty)));
+				$movement_pretty = implode('[', array_map('ucfirst', explode('[', $movement_pretty)));
+				$movement_pretty = implode(']', array_map('ucfirst', explode(']', $movement_pretty)));
+				$movement_pretty = implode('+', array_map('ucfirst', explode('+', $movement_pretty)));
 				for($i = 0; isset($workout[$i]); $i++){
 					if($i == 0){
-							$movement_str = $movement_str . ' ' . $workout[$i]->movement;
-							$set_header .= $workout[$i]->movement;
+							$movement_str = $movement_str . ' ' . $movement_pretty;
+							$set_header .= $movement_pretty;
 					}
 					else{
-							$movement_str = $movement_str . ' + ' . $workout[$i]->movement;
-							$set_header .= ' + ' . $workout[$i]->movement;
+							$movement_str = $movement_str . ' + ' . $movement_pretty;
+							$set_header .= ' + ' . $movement_pretty;
 					}
 				}
 
 				if(isset($workout[0]->wgt_style)){
 					switch($workout[0]->wgt_style){
 						case 'ahap':
-							$movement_str = $movement_str . ' AHAP';
-							$set_header .= ' AHAP';
+							$movement_str = $movement_str . ', AHAP';
+							$set_header .= ', AHAP';
 							break;
 						case 'percentage': 
 							$movement_str = $movement_str . ' at ' . $workout[0]->wgt_percentage . '%';
@@ -239,7 +251,7 @@ function workout_tracker_workout($form, &$form_state){
 			// constuct boxes based on sets for weight/count input
 			$rep_scheme = $workout[0]->rep_scheme;
 			$pivot = strpos($rep_scheme, 'x');
-			if($pivot != FALSE){
+			if($pivot !== FALSE && !empty($rep_scheme)){
 				// set it up by 3x4
 				$sets = trim(substr($rep_scheme, 0, $pivot));
 				$rep = trim(substr($rep_scheme, $pivot+1));
@@ -247,7 +259,7 @@ function workout_tracker_workout($form, &$form_state){
 					$reps[] = $rep;
 				}
 			}
-			elseif($pivot === FALSE){ 	// triple equals is not a typo, if the str position is 0, 0 == FALSE will eval to true, use === instead
+			elseif($pivot === FALSE && !empty($rep_scheme)){ 	// triple equals is not a typo, if the str position is 0, 0 == FALSE will eval to true, use === instead
 				$pivot = strpos($rep_scheme, '-');
 				if($pivot === FALSE){
 					drupal_set_message('<pre>' . print_r("UNKNOWN REP SCHEME STYLE, VALIDATE FOR THIS IN BUILDER", TRUE) . '</pre>');
@@ -256,6 +268,10 @@ function workout_tracker_workout($form, &$form_state){
 				// Scheme is 5-3-2-2-1 style
 				$reps = explode("-", $rep_scheme);
 				$sets = count($reps);
+			}
+			else {
+				$sets = 1;
+				$reps = 0;
 			}
 
 			// This handles specifying failures with complex movements
@@ -367,7 +383,7 @@ function workout_tracker_workout($form, &$form_state){
 						$prescribed = $pr * ($percentage_scheme[$k-1] / 100);
 						$form['strength'][$workout[0]->strength_id][$k]['work'] = array(
 							'#type' => 'textfield',
-							'#title' => t('@num_reps Reps, @movement @ @percentage%', array('@num_reps' => sizeof($reps_array),'@movement' => $lift, '@percentage' => $percentage_scheme[$k-1])),
+							'#title' => t('@num_reps Reps: @movement @ @percentage%', array('@num_reps' => sizeof($reps_array),'@movement' => $lift, '@percentage' => $percentage_scheme[$k-1])),
 							'#size' => 10,
 							'#maxlength' => 20,
 							'#default_value' => ($prescribed > 0) ? $prescribed : '',
@@ -376,7 +392,7 @@ function workout_tracker_workout($form, &$form_state){
 					else {
 						$form['strength'][$workout[0]->strength_id][$k]['work'] = array(
 							'#type' => 'textfield',
-							'#title' => t('@num_reps Reps, @movement @ @percentage%', array('@num_reps' => sizeof($reps_array),'@movement' => $lift, '@percentage' => $percentage_scheme[$k-1])),
+							'#title' => t('@num_reps Reps: @movement @ @percentage%', array('@num_reps' => sizeof($reps_array),'@movement' => $lift, '@percentage' => $percentage_scheme[$k-1])),
 							//'#title' => t('Set #@num Weight/Count: @percentage%', array('@num' => $k, '@percentage' => $percentage_scheme[$k-1])),
 							'#size' => 10,
 							'#maxlength' => 20,
@@ -384,31 +400,43 @@ function workout_tracker_workout($form, &$form_state){
 					}
 				}
 				else {	
-					$form['strength'][$workout[0]->strength_id][$k]['work'] = array(
-						'#type' => 'textfield',
-						'#title' => t('@num_reps Reps: @movement', array('@num_reps' => sizeof($reps_array), '@movement' => $set_header)),
-						//'#title' => t('Set #@num Weight/Count', array('@num' => $k)),
-						'#size' => 10,
-						'#maxlength' => 20,
-					);
+					if($reps == 0){
+						$form['strength'][$workout[0]->strength_id][$k]['work'] = array(
+							'#type' => 'textfield',
+							'#title' => t('@movement', array('@num_reps' => sizeof($reps_array), '@movement' => $set_header)),
+							'#size' => 10,
+							'#maxlength' => 20,
+						);
+					}
+					else {
+						$form['strength'][$workout[0]->strength_id][$k]['work'] = array(
+							'#type' => 'textfield',
+							'#title' => t('@num_reps Reps: @movement', array('@num_reps' => sizeof($reps_array), '@movement' => $set_header)),
+							//'#title' => t('Set #@num Weight/Count', array('@num' => $k)),
+							'#size' => 10,
+							'#maxlength' => 20,
+						);
+					}
 				}				
-
-				$form['strength'][$workout[0]->strength_id][$k]['fail'] = array(
-					'#type' => 'checkbox',
-					'#title' => t('Fail on a rep?'),
-				);
-		
-				$form['strength'][$workout[0]->strength_id][$k]['fail_rep'] = array(
-					'#type' => 'radios',
-					'#title' => t('Failed on rep:'),
-					'#options' => $reps_array,
-					'#default_value' => key($reps_array),
-					'#states' => array(
-						'visible' => array(
-							':input[name="strength[' . $workout[0]->strength_id . '][' . $k . '][fail]"]' => array('checked' => TRUE),
+	
+				if($reps > 0){
+					$form['strength'][$workout[0]->strength_id][$k]['fail'] = array(
+						'#type' => 'checkbox',
+						'#title' => t('Fail on a rep?'),
+					);
+						
+					$form['strength'][$workout[0]->strength_id][$k]['fail_rep'] = array(
+						'#type' => 'radios',
+						'#title' => t('Failed on rep:'),
+						'#options' => $reps_array,
+						'#default_value' => key($reps_array),
+						'#states' => array(
+							'visible' => array(
+								':input[name="strength[' . $workout[0]->strength_id . '][' . $k . '][fail]"]' => array('checked' => TRUE),
+							),
 						),
-					),
-				);
+					);
+				}
 
 				// form items for failures of complex strength movements
 				if($complex_strength == TRUE){	
@@ -744,7 +772,7 @@ function _save_strength_results(&$form_state){
 				}
 			}
 	
-			//drupal_write_record($strength_table, $record);
+			drupal_write_record($strength_table, $record);
 		}
 	}
 	foreach(array_keys($lift_results) as $l){

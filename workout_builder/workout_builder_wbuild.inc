@@ -527,7 +527,7 @@ function workout_builder_wbuild_page_two($form, &$form_state){
 				),
       ),
 		);
-
+/*
     $form['cond_workout'][$k]['add_cond_movement'] = array(
       '#type' => 'submit',
       '#name' => $k,
@@ -553,6 +553,7 @@ function workout_builder_wbuild_page_two($form, &$form_state){
 				'#limit_validate_errors' => array(),
       );
     }
+*/
   }
 
   $form['back'] = array(
@@ -866,7 +867,7 @@ function _populate_strength_table(&$form_state, $wid){
 				break;
 			}	
 			else{
-				$record->movement = $movement['lift'];
+				$record->movement = strtolower($movement['lift']);
 			}
 //			drupal_set_message('<pre>' . print_r($record, TRUE) . '</pre>');
 
