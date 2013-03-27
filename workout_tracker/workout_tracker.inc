@@ -117,41 +117,47 @@ function workout_tracker_workout($form, &$form_state){
 			// make the header string
 			$movement_str = "";
 			if(isset($workout[0]->wgt_style) && $workout[0]->wgt_style == 'percentage' && (sizeof(explode("-", $workout[0]->wgt_percentage)) > 1)){
-				$percentage_scheme = explode("-", $workout[0]->wgt_percentage);
-				$rep_scheme = explode("-", $workout[0]->rep_scheme);
-			
+				$percentages = explode("-", $workout[0]->wgt_percentage);
+				for($r = 1; $r <= sizeof($percentages); $r++){
+					$percentage_scheme[$r] = $percentages[$r - 1];
+				}
+				
+				if(strpos($workout[0]->rep_scheme, "-") !== FALSE){
+					$scheme = explode("-", $workout[0]->rep_scheme);
+					for($r = 1; $r <= sizeof($scheme); $r++){
+						$rep_scheme[$r] = $scheme[$r - 1];
+					}
+				}			
+				elseif(strpos($workout[0]->rep_scheme, "x") !== FALSE){
+					$scheme = explode("x", $workout[0]->rep_scheme);
+					for($r = 1; $r <= intval(trim($scheme[0])); $r++){
+						$rep_scheme[$r] = $scheme[1];
+					}
+				}
+					//drupal_set_message('<pre>' . print_r($rep_scheme, TRUE) . '</pre>');
+
 				// try to coalesce sets together
-				for($p = 0; $p < sizeof($percentage_scheme); $p++){
+				for($p = 1; $p <= sizeof($percentage_scheme); $p++){
 					//drupal_set_message('<pre>' . print_r($p, TRUE) . '</pre>');
-					if($p == sizeof($percentage_scheme) - 1){
+					if($p == sizeof($percentage_scheme)){
 						// This hasn't been coalesced and won't be since it's the last one
 						// so print it out
 						$movement_str .= $rep_scheme[$p] . " @ " . $percentage_scheme[$p] . "%, ";
 					}
 
-					for($k = $p + 1; $k < sizeof($percentage_scheme); $k++){
+					for($k = $p + 1; $k <= sizeof($percentage_scheme); $k++){
 						if($percentage_scheme[$p] != $percentage_scheme[$k] || 
-								($percentage_scheme[$p] == $percentage_scheme[$k] && $k == sizeof($percentage_scheme) - 1) || 
-								($rep_scheme[$p] != $rep_scheme[$k])
-							){
+								($percentage_scheme[$p] == $percentage_scheme[$k] && $k == sizeof($percentage_scheme)) || 
+								($rep_scheme[$p] != $rep_scheme[$k])){
 							if($k == $p + 1 && ($rep_scheme[$p] != $rep_scheme[$k]  || $percentage_scheme[$p] != $percentage_scheme[$k])){
 								$movement_str .= $rep_scheme[$p] . " @ " . $percentage_scheme[$p] . "%, ";
 								break;
 							}
 							// This means we found some that are the same
-							if($k == sizeof($percentage_scheme) - 1){
-								$num_sets = $k + 1 - $p;
-							}
-							else {
-								$num_sets = $k - $p;
-							}
+							$num_sets = $k - $p;
 							$movement_str .= $num_sets . "x" . $rep_scheme[$p] . " @ " . $percentage_scheme[$p] . "%, ";
-							if($k == sizeof($percentage_scheme)-1){
-								$p = $k;
-							}
-							else {
-								$p = $k - 1;
-							}
+
+							$p = $k - 1;
 							break;
 						}
 					}
