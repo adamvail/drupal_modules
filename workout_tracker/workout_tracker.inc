@@ -56,7 +56,7 @@ function workout_tracker($form, &$form_state){
 
 	$form['description'] = array(
 		'#type' => 'item',
-		'#title' => t('Pick a Workout'), 
+//		'#title' => t('Pick a Workout'), 
 	);
 
 	$form['workout_choice'] = array(
@@ -699,7 +699,7 @@ function workout_tracker_workout($form, &$form_state){
 }
 
 function convert_timestamp($timestamp){
-	$format = 'D d M Y';
+	$format = 'l, n/j/Y';
 	return date($format, $timestamp);
 }
 

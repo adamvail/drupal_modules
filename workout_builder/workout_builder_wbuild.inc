@@ -37,6 +37,24 @@ function workout_builder_wbuilder($form, &$form_state){
     $form_state['num_strength'][$num_workouts] = 1;
   }  
 */
+	
+	$format = 'n/j/Y';
+	$default_date = date($format, time());
+
+	$form['date'] = array(
+		'#type' => 'fieldset',
+		'#title' => t('Workout Date'),
+		'#collapsible' => TRUE,
+		'#collapsed' => FALSE,
+	);
+
+	$form['date']['workout_date'] = array(
+		'#type' => 'date_select',
+		'#title' => t('Select a date for this workout'),
+		'#default_value' => $default_date,
+		'#date_format' => $format,
+		'#date_label_position' => 'within',	
+	);
 
 	for($k = 1; $k <= $form_state['num_strength_wo']; $k++){
 
@@ -779,8 +797,6 @@ function workout_builder_wbuild_page_two_build_validate($form, &$form_state){
 
 function workout_builder_wbuild_page_two_build_submit($form, &$form_state){
 	// Put data into the database
-
-
   
 	// get the highest wid in the table and use one more than it.
 	$wid_strength = db_query('SELECT MAX(wid) FROM {workout_builder_strength}')->fetchField();
@@ -808,16 +824,20 @@ function _populate_strength_table(&$form_state, $wid){
 	$table = 'workout_builder_strength';
 	$table_notes = 'workout_builder_strength_notes';
 
-//	$gym = db_query('SELECT gym from {workout_gym_affiliation} where uid=:uid', array(':uid' => $user->uid));
+	$gym = db_query('SELECT gym from {workout_gym_affiliation} where uid=:uid', array(':uid' => $user->uid))->fetchField();
 
 	for($i = 1; isset($form_state['page_values'][1]['strength_wo'][$i]); $i++){
 		$workout = $form_state['page_values'][1]['strength_wo'][$i];
 		$record = new stdClass();
 		$record->wid = $wid;
-		$record->date = time();
+		$record->date = strtotime($form_state['page_values'][1]['date']['workout_date']);
+		//drupal_set_message('<pre>' . print_r(date('n/j/Y', $record->date), TRUE) . '</pre>');
 		$record->strength_id = $i;
-	//	$record->gym = $gym;
 		$record->creator_id = $user->uid;
+
+		if(isset($gym) && !empty($gym)){
+			$record->gym = $gym;
+		}
 
 		$workout_exists = TRUE;
 
@@ -890,7 +910,7 @@ function _populate_conditioning_table(&$form_state, $wid){
 	$table = 'workout_builder_conditioning';
 	$table_notes = 'workout_builder_conditioning_notes';
 	// TODO there is something wrong with this query, investigate later
-	//$gym = db_query('SELECT gym from {workout_gym_affiliation} where uid=:uid', array(':uid' => $user->uid));
+	$gym = db_query('SELECT gym from {workout_gym_affiliation} where uid=:uid', array(':uid' => $user->uid))->fetchField();
 
 //	drupal_set_message('<pre>' . print_r($form_state['values'], TRUE) . '</pre>');
 	for($i = 1; isset($form_state['values']['cond_workout'][$i]); $i++){
@@ -906,10 +926,13 @@ function _populate_conditioning_table(&$form_state, $wid){
 			//$movement = $workout[$k];
 			$record = new stdClass();
 			$record->wid = $wid;
-			$record->date = time();
+			$record->date = strtotime($form_state['page_values'][1]['date']['workout_date']);
 			$record->conditioning_id = $i;
-		//	$record->gym = $gym;
 			$record->creator_id = $user->uid;
+
+			if(isset($gym) && !empty($gym)){
+				$record->gym = $gym;
+			}
 
 			$note->notes = $workout['notes'];
 
