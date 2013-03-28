@@ -686,12 +686,37 @@ function workout_tracker_workout($form, &$form_state){
 						'#type' => 'textfield',
 						'#title' => t('Time'),
 						'#size' => 5,
-						'#maxsize' => 5,
+						'#maxlength' => 5,
 					); 
 				}
 
-			// TODO add stuff for intervals
+			if($workout[0]->style = 'intervals'){
+				$rounds = $workout[0]->rounds;
+				$work = $workout[0]->workout;
 
+				$intervals = explode("<br>", $work);
+				$num_moves = sizeof($intervals);
+				$form_state['interval_rounds'] = $rounds;
+				$form_state['interval_num_moves'] = $num_moves;
+				//drupal_set_message('<pre>' . print_r($num_intervals, TRUE) . '</pre>');
+			
+				for($interval = 1; $interval <= $rounds; $interval++){
+					$form['conditioning'][$workout[0]->conditioning_id]['intervals'][$interval] = array(
+						'#type' => 'fieldset',
+						'#title' => t('Round #@int_num', array('@int_num' => $interval)),
+						'#collapsible' => TRUE,
+						'#collapsed' => TRUE,
+					);
+					for($move = 1; $move <= $num_moves; $move++){
+						$form['conditioning'][$workout[0]->conditioning_id]['intervals'][$interval][$move] = array(
+							'#type' => 'textfield',
+							'#title' => t($intervals[$move - 1]),
+							'#size' => 5,
+							'#maxlength' => 15,
+						);					
+					}
+				}
+			}
 		}
 	}
 
@@ -792,7 +817,7 @@ function _save_conditioning_results(&$form_state){
 	$conditioning_table = 'workout_tracker_conditioning';
 	$conditioning_notes_table = 'workout_tracker_conditioning_notes';
 
-	drupal_set_message('<pre>' . print_r($form_state['wid'], TRUE) . '</pre>');
+	//drupal_set_message('<pre>' . print_r($form_state['wid'], TRUE) . '</pre>');
 	$num_performed = db_query('SELECT MAX(num_performed) from {workout_tracker_conditioning} where wid=:wid', array(':wid' => $form_state['wid']))->fetchField();
 
 	if(empty($num_performed)){
@@ -832,6 +857,21 @@ function _save_conditioning_results(&$form_state){
 		
 		if(isset($workout['for_time'])){
 			$record->time = $workout['for_time'];
+		}
+		// TODO save interval numbers. Coalesce them all together?
+
+		if(isset($workout['intervals'])){
+			$results = '';
+			for($interval = 1; $interval <= $form_state['interval_rounds']; $interval++){
+				for($move = 1; $move <= $form_state['interval_num_moves']; $move++){		
+					($move > 1) ? $results .= ',' . $workout['intervals'][$interval][$move] : $results .= $workout['intervals'][$interval][$move];
+				}
+				if($interval < $form_state['interval_rounds']){
+					$results .= '-';
+				}
+			}
+			$record->interval_reps = $results;
+	//		drupal_set_message('<pre>' . print_r($record->interval_reps, TRUE) . '</pre>');
 		}
 		drupal_write_record($conditioning_table, $record);
 	}
