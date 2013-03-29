@@ -387,29 +387,58 @@ function workout_tracker_workout($form, &$form_state){
 						$lift = $workout[0]->movement;
 						$pr = db_query('SELECT pr from {workout_pr} where athlete_uid=:auid and movement=:movement', array(':auid' => $user->uid, ':movement' => $lift))->fetchField();
 						$prescribed = $pr * ($percentage_scheme[$k-1] / 100);
-						$form['strength'][$workout[0]->strength_id][$k]['work'] = array(
-							'#type' => 'textfield',
-							'#title' => t('@num_reps Reps: @movement @ @percentage%', array('@num_reps' => sizeof($reps_array),'@movement' => $lift, '@percentage' => $percentage_scheme[$k-1])),
-							'#size' => 10,
-							'#maxlength' => 20,
-							'#default_value' => ($prescribed > 0) ? $prescribed : '',
-						);
+						if(sizeof($reps_array == 1)){
+							$form['strength'][$workout[0]->strength_id][$k]['work'] = array(
+								'#type' => 'textfield',
+								'#title' => t('1 Rep: @movement @ @percentage%', array('@movement' => $lift, '@percentage' => $percentage_scheme[$k-1])),
+								'#size' => 10,
+								'#maxlength' => 20,
+								'#default_value' => ($prescribed > 0) ? $prescribed : '',
+							);
+						}
+						else {
+							$form['strength'][$workout[0]->strength_id][$k]['work'] = array(
+								'#type' => 'textfield',
+								'#title' => t('@num_reps Reps: @movement @ @percentage%', array('@num_reps' => sizeof($reps_array),'@movement' => $lift, '@percentage' => $percentage_scheme[$k-1])),
+								'#size' => 10,
+								'#maxlength' => 20,
+								'#default_value' => ($prescribed > 0) ? $prescribed : '',
+							);
+						}
 					}
 					else {
-						$form['strength'][$workout[0]->strength_id][$k]['work'] = array(
-							'#type' => 'textfield',
-							'#title' => t('@num_reps Reps: @movement @ @percentage%', array('@num_reps' => sizeof($reps_array),'@movement' => $lift, '@percentage' => $percentage_scheme[$k-1])),
-							//'#title' => t('Set #@num Weight/Count: @percentage%', array('@num' => $k, '@percentage' => $percentage_scheme[$k-1])),
-							'#size' => 10,
-							'#maxlength' => 20,
-						);
+						if(sizeof($reps_array == 1)){
+							$form['strength'][$workout[0]->strength_id][$k]['work'] = array(
+								'#type' => 'textfield',
+								'#title' => t('1 Rep: @movement @ @percentage%', array('@movement' => $lift, '@percentage' => $percentage_scheme[$k-1])),
+								'#size' => 10,
+								'#maxlength' => 20,
+							);
+						}
+						else {
+							$form['strength'][$workout[0]->strength_id][$k]['work'] = array(
+								'#type' => 'textfield',
+								'#title' => t('@num_reps Reps: @movement @ @percentage%', array('@num_reps' => sizeof($reps_array),'@movement' => $lift, '@percentage' => $percentage_scheme[$k-1])),
+								//'#title' => t('Set #@num Weight/Count: @percentage%', array('@num' => $k, '@percentage' => $percentage_scheme[$k-1])),
+								'#size' => 10,
+								'#maxlength' => 20,
+							);
+						}
 					}
 				}
 				else {	
-					if($reps == 0){
+					if(sizeof($reps_array) == 0){
 						$form['strength'][$workout[0]->strength_id][$k]['work'] = array(
 							'#type' => 'textfield',
-							'#title' => t('@movement', array('@num_reps' => sizeof($reps_array), '@movement' => $set_header)),
+							'#title' => t('@movement', array('@movement' => $set_header)),
+							'#size' => 10,
+							'#maxlength' => 20,
+						);
+					}
+					elseif(sizeof($reps_array) == 1) {
+						$form['strength'][$workout[0]->strength_id][$k]['work'] = array(
+							'#type' => 'textfield',
+							'#title' => t('1 Rep: @movement', array('@movement' => $set_header)),
 							'#size' => 10,
 							'#maxlength' => 20,
 						);
@@ -690,35 +719,35 @@ function workout_tracker_workout($form, &$form_state){
 					); 
 				}
 
-			if($workout[0]->style = 'intervals'){
-				$rounds = $workout[0]->rounds;
-				$work = $workout[0]->workout;
+				if($workout[0]->style == 'intervals'){
+					$rounds = $workout[0]->rounds;
+					$work = $workout[0]->workout;
 
-				$intervals = explode("<br>", $work);
-				$num_moves = sizeof($intervals);
-				$form_state['interval_rounds'] = $rounds;
-				$form_state['interval_num_moves'] = $num_moves;
-				//drupal_set_message('<pre>' . print_r($num_intervals, TRUE) . '</pre>');
-			
-				for($interval = 1; $interval <= $rounds; $interval++){
-					$form['conditioning'][$workout[0]->conditioning_id]['intervals'][$interval] = array(
-						'#type' => 'fieldset',
-						'#title' => t('Round #@int_num', array('@int_num' => $interval)),
-						'#collapsible' => TRUE,
-						'#collapsed' => TRUE,
-					);
-					for($move = 1; $move <= $num_moves; $move++){
-						$form['conditioning'][$workout[0]->conditioning_id]['intervals'][$interval][$move] = array(
-							'#type' => 'textfield',
-							'#title' => t($intervals[$move - 1]),
-							'#size' => 5,
-							'#maxlength' => 15,
-						);					
+					$intervals = explode("<br>", $work);
+					$num_moves = sizeof($intervals);
+					$form_state['interval_rounds'] = $rounds;
+					$form_state['interval_num_moves'] = $num_moves;
+					//drupal_set_message('<pre>' . print_r($num_intervals, TRUE) . '</pre>');
+				
+					for($interval = 1; $interval <= $rounds; $interval++){
+						$form['conditioning'][$workout[0]->conditioning_id]['intervals'][$interval] = array(
+							'#type' => 'fieldset',
+							'#title' => t('Round #@int_num', array('@int_num' => $interval)),
+							'#collapsible' => TRUE,
+							'#collapsed' => TRUE,
+						);
+						for($move = 1; $move <= $num_moves; $move++){
+							$form['conditioning'][$workout[0]->conditioning_id]['intervals'][$interval][$move] = array(
+								'#type' => 'textfield',
+								'#title' => t($intervals[$move - 1]),
+								'#size' => 5,
+								'#maxlength' => 15,
+							);					
+						}
 					}
 				}
 			}
 		}
-	}
 
 	$form['save'] = array(
 	'#type' => 'submit',
