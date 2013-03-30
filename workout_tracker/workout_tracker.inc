@@ -22,16 +22,16 @@ function workout_tracker($form, &$form_state){
 	$gym = db_query('SELECT gym FROM {workout_gym_affiliation} where uid=:uid', array(':uid' => $user->uid))->fetchField();
 
 	if(isset($gym) && !empty($gym)){
-		// TODO, don't grab everyone from the gym's workouts, only grab works from this gym where the coach created it.
+		// don't grab everyone from the gym's workouts, only grab works from this gym where the coach created it.
 		$coaches = db_query('SELECT uid from {workout_gym_affiliation} where gym=:gym and role=:role', array(':gym' => $gym, ':role' => 'coach'));
 		$creator_ids = array();
 		foreach($coaches as $c){
-			$creator_id[] = $c->uid;
+			$creator_ids[] = $c->uid;
 		}
-		$creator_id[] = $user->uid;
+		$creator_ids[] = $user->uid;
 
 		$top_strength = db_query("SELECT wid, date, creator_id FROM {workout_builder_strength} WHERE creator_id IN (:creator) ORDER BY wid DESC LIMIT 7", array(':creator' => $creator_ids));
-		$top_conditioning = db_query("SELECT wid, date, creator_id FROM {workout_builder_conditioning} WHERE creator_id IN (:creator) ORDER BY wid DESC LIMIT 7", array(':creator' => $user->uid));
+		$top_conditioning = db_query("SELECT wid, date, creator_id FROM {workout_builder_conditioning} WHERE creator_id IN (:creator) ORDER BY wid DESC LIMIT 7", array(':creator' => $creator_ids));
 	}
 	else {
 		$top_strength = db_query("SELECT wid, date, creator_id FROM {workout_builder_strength} WHERE creator_id=:creator ORDER BY wid DESC LIMIT 7", array(':creator' => $user->uid));
