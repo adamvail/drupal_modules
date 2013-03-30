@@ -19,9 +19,9 @@ function workout_tracker($form, &$form_state){
 	$strength_exists = FALSE;
 	$conditioning_exists = FALSE;
 
-
-	$top_strength = db_query('SELECT wid, date FROM {workout_builder_strength} ORDER BY wid DESC LIMIT 7');
-	$top_conditioning = db_query('SELECT wid, date FROM {workout_builder_conditioning} ORDER BY wid DESC LIMIT 7');
+	$gym = db_query('SELECT gym FROM {workout_gym_affiliation} where uid=:uid', array(':uid' => $user->uid))->fetchField();
+	$top_strength = db_query("SELECT wid, date FROM {workout_builder_strength} WHERE gym=:gym ORDER BY wid DESC LIMIT 7", array(':gym' => $gym));
+	$top_conditioning = db_query("SELECT wid, date FROM {workout_builder_conditioning} WHERE gym=:gym ORDER BY wid DESC LIMIT 7", array(':gym' => $gym));
 
 	if(empty($top_strength) && empty($top_conditioning)){
 		$form['header'] = array(
@@ -51,9 +51,11 @@ function workout_tracker($form, &$form_state){
 	}
 
 	krsort($top_ten);
-
-//	drupal_set_message('<pre>' . print_r($top_ten, TRUE) . '</pre>');
-
+/*
+	$week = array_slice($top_ten, 0, 7);
+	drupal_set_message('<pre>' . print_r($week, TRUE) . '</pre>');
+	drupal_set_message('<pre>' . print_r($top_ten, TRUE) . '</pre>');
+*/
 	$form['description'] = array(
 		'#type' => 'item',
 //		'#title' => t('Pick a Workout'), 
