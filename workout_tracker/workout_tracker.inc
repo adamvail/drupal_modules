@@ -763,6 +763,7 @@ function workout_tracker_save_submit($form, &$form_state){
 	if(isset($form_state['conditioning_exists']) && $form_state['conditioning_exists'] == TRUE){
 		_save_conditioning_results($form_state);
 	}
+	send_results_email($form_state);
 }
 
 function _save_strength_results(&$form_state){
@@ -927,3 +928,40 @@ function check_pr($lift, $weight){
 	}
 }
 
+function workout_tracker_mail($key, &$message, $params){
+	global $user;
+
+	$options = array(
+		'langcode' => $message['language']->language,
+	);
+
+	switch($key){
+		case 'workout_tracker_results':
+			$message['subject'] = t('Workout Results for @date', array('@date' => convert_timestamp(time())), $options);
+			$message['body'][] = t('Great work today @name!', array('@name' => $user->name));
+			$message['body'][] = t('Here are you results from today\'s workout:'));
+			$message['body'][] = $params; 
+			break;
+	}
+}
+
+function send_results_email($$form_state){
+	global $user;	
+
+	$module = 'workout_tracker';
+	$key = 'workout_tracker_results';
+
+	$to = $user->mail;
+	$from = 'WODology@wodology.com';
+	$params = $form_state['input'];
+	$language = language_default();
+	$send = TRUE;
+	$result = drupal_mail($module, $key, $to, $language, $params, $from, $send);
+	if($result['result'] == TRUE){
+		drupal_set_message('Message was sent');
+	}
+	else {
+		drupal_set_message('Message failed', 'error');
+	}
+
+}
