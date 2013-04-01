@@ -439,10 +439,10 @@ function workout_tracker_workout($form, &$form_state){
 				}
 
 				if(sizeof($percentage_scheme) > 1){
+					$lift = $workout[0]->movement;
 					if($complex_strength == FALSE){
 						// if there is only one movement, then populate the default with the % from the PR
 						global $user;
-						$lift = $workout[0]->movement;
 						$pr = db_query('SELECT pr from {workout_pr} where athlete_uid=:auid and movement=:movement', array(':auid' => $user->uid, ':movement' => $lift))->fetchField();
 						$prescribed = $pr * ($percentage_scheme[$k-1] / 100);
 						if(sizeof($reps_array) == 1){
