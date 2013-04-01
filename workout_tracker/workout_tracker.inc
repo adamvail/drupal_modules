@@ -179,15 +179,27 @@ function workout_tracker_workout($form, &$form_state){
 						if($percentage_scheme[$p] != $percentage_scheme[$k] || 
 								($percentage_scheme[$p] == $percentage_scheme[$k] && $k == sizeof($percentage_scheme)) || 
 								($rep_scheme[$p] != $rep_scheme[$k])){
-							if($k == $p + 1 && ($rep_scheme[$p] != $rep_scheme[$k]  || $percentage_scheme[$p] != $percentage_scheme[$k])){
+							if($k == ($p + 1) && ($rep_scheme[$p] != $rep_scheme[$k]  || $percentage_scheme[$p] != $percentage_scheme[$k])){
 								$movement_str .= $rep_scheme[$p] . " @ " . $percentage_scheme[$p] . "%, ";
 								break;
 							}
 							// This means we found some that are the same
-							$num_sets = $k - $p;
+							//drupal_set_message('<pre>' . print_r("p: " . $p . "\nk: " . $k, TRUE) . '</pre>');
+							if($k == sizeof($percentage_scheme)){	
+								$num_sets = $k + 1 - $p; 
+							}
+							else{
+								$num_sets = $k - $p;
+							}
+
 							$movement_str .= $num_sets . "x" . $rep_scheme[$p] . " @ " . $percentage_scheme[$p] . "%, ";
 
-							$p = $k - 1;
+							if($k == sizeof($percentage_scheme)){
+								$p = $k;
+							}			
+							else{
+								$p = $k - 1;
+							}
 							break;
 						}
 					}
@@ -586,132 +598,38 @@ function workout_tracker_workout($form, &$form_state){
 			}
 			elseif($workout[0]->style == 'intervals' && $workout[0]->rounds > 1){
 				$movement_str = $workout[0]->rounds . " Rounds of:<br>";
-				$fieldset_title = 'Intervals';
+				if($workout[0]->rounds == 1){
+					$fieldset_str = '1 Round: Intervals';
+				}
+				else{
+					$fieldset_title = $workout[0]->rounds . ' Rounds: Intervals';
+				}
+			}
+			elseif($workout[0]->style == 'rest'){
+				$fieldset_title = "Rest";
+				$movement_str = $workout[0]->duration . " Minutes Rest";
 			}
 			
 			// replace pipes with html new lines
-			$movement_str = $movement_str . str_replace("&", "<br>", $workout[0]->workout);
+			$movement_str .= $workout[0]->workout . "<br>"; //str_replace("\n", "<br>", $workout[0]->workout);
 
-			// build the workout string
-/*			for($i = 0; isset($workout[$i]); $i++){
-				if($workout[$i]->style == 'amrap' || $workout[$i]->style == 'for_time'){
-					if(!empty($workout[$i]->reps)){
-						$movement_str = $movement_str . $workout[$i]->reps . " "  . $workout[$i]->movement;
-					}
-					else{
-						$movement_str = $movement_str . $workout[$i]->movement;
-					}
-					if($workout[$i]->wgt_choice == 'weight'){
-						if($workout[$i]->wgt_style == 'weight'){
-							if($workout[$i]->wgt_units == 0){
-								$units = 'lbs';
-							}
-							else{
-								$units = 'kg';
-							}
-
-							if(!empty($workout[$i]->wgt_self_rx)){
-								$movement_str = $movement_str . ", " . $workout[$i]->wgt_self_prescribed . " " . $units . "<br>";
-							}
-							else{
-								$movement_str = $movement_str . ", " . $workout[$i]->wgt_men . '/' . $workout[$i]->wgt_women . " " . $units . "<br>";
-							}
-						}
-						elseif($workout[$i]->wgt_style == 'percentage'){					
-							$movement_str = $movement_str . ", " . $workout[$i]->wgt_percentage . "%<br>";
-						}
-					}	
-					elseif($workout[$i]->wgt_choice == 'distance'){
-						if(!empty($workout[$i]->distance_self_rx)){
-							switch($workout[$i]->distance_units){
-								case 0: // meters
-									$movement_str = $movement_str . ", " . $workout[$i]->distance_self_rx . " meters<br>";
-									break;
-								case 1: // inches
-									$movement_str = $movement_str . ", " . $workout[$i]->distance_self_rx . " inches<br>";
-									break;
-								case 2: // cal
-									$movement_str = $movement_str . ", " . $workout[$i]->distance_self_rx . " cal<br>";
-									break;
-							}
-						}
-						else {	
-							switch($workout[$i]->distance_units){
-								case 0: // meters
-									$movement_str = $movement_str . ", " . $workout[$i]->distance_men . '/' . $workout[$i]->distance_women . " meters<br>";
-									break;
-								case 1: // inches
-									$movement_str = $movement_str . ", " . $workout[$i]->distance_men . '/' . $workout[$i]->distance_women  . " inches<br>";
-									break;
-								case 2: // cal
-									$movement_str = $movement_str . ", " . $workout[$i]->distance_men . '/' . $workout[$i]->distance_women  . " cal<br>";
-									break;
-							}
-						}
-					}
-					else {
-						$movement_str = $movement_str . "<br>";
-					}
-				}
-
-				// TODO Interval workout building starts here -----
-				elseif($workout[$i]->style == 'intervals'){
-					$movement_str = $movement_str . $workout[$i]->interval_time . " seconds of " . $workout[$i]->movement;
-					if($workout[$i]->wgt_choice == 'weight'){					
-						if($workout[$i]->wgt_style == 'weight'){
-							if(!empty($workout[$i]->wgt_self_rx)){
-								$movement_str = $movement_str . ", " . $workout[$i]->wgt_self_prescribed . " lbs<br>";
-							}
-							else{
-								$movement_str = $movement_str . ", " . $workout[$i]->wgt_men . "/" . $workout[$i]->wgt_women . " lbs<br>";
-							}
-						}
-						elseif($workout[$i]->wgt_style == 'percentage'){					
-							$movement_str = $movement_str . ", " . $workout[$i]->wgt_percentage . "%<br>";
-						}
-					}
-					elseif($workout[$i]->wgt_choice == 'distance'){
-						if(!empty($workout[$i]->distance_self_rx)){
-							switch($workout[$i]->distance_units){
-								case 0: // meters
-									$movement_str = $movement_str . ", " . $workout[$i]->distance_self_rx . " meters<br>";
-									break;
-								case 1: // inches
-									$movement_str = $movement_str . ", " . $workout[$i]->distance_self_rx . " inches<br>";
-									break;
-								case 2: // cal
-									$movement_str = $movement_str . ", " . $workout[$i]->distance_self_rx . " cal<br>";
-									break;
-							}
-						}
-						else {	
-							switch($workout[$i]->distance_units){
-								case 0: // meters
-									$movement_str = $movement_str . ", " . $workout[$i]->distance_men . "/" . $workout[$i]->distance_women . " meters<br>";
-									break;
-								case 1: // inches
-									$movement_str = $movement_str . ", " . $workout[$i]->distance_men . "/" . $workout[$i]->distance_women  . " inches<br>";
-									break;
-								case 2: // cal
-									$movement_str = $movement_str . ", " . $workout[$i]->distance_men . "/" . $workout[$i]->distance_women  . " cal<br>";
-									break;
-							}
-						}
-					}
-					else {
-						$movement_str = $movement_str . "<br>";
-					}
-				}
-			}
-*/
 			//drupal_set_message('<pre>' . print_r($movement_str, TRUE) . '</pre>');
 			// Now that the string is done, build the fieldset to display it.
-			$form['conditioning'][$workout[0]->conditioning_id] = array(
-					'#type' => 'fieldset',
-					'#title' => t('@header', array('@header' => $fieldset_title)),
-					'#collapsible' => TRUE,
-					'#collapsed' => TRUE,
+			if($workout[0]->style == 'rest'){
+				$form['conditioning'][$workout[0]->conditioning_id] = array(
+						'#type' => 'fieldset',
+						'#title' => t('@header', array('@header' => $fieldset_title)),
+						'#collapsible' => FALSE,
 				);
+			}
+			else{
+				$form['conditioning'][$workout[0]->conditioning_id] = array(
+						'#type' => 'fieldset',
+						'#title' => t('@header', array('@header' => $fieldset_title)),
+						'#collapsible' => TRUE,
+						'#collapsed' => TRUE,
+				);
+			}
 
 				// print the workout line
 				$form['conditioning'][$workout[0]->conditioning_id]['header'] = array(
@@ -751,6 +669,9 @@ function workout_tracker_workout($form, &$form_state){
 
 				if($workout[0]->style == 'intervals'){
 					$rounds = $workout[0]->rounds;
+					if(empty($rounds) || !isset($rounds)){
+						$rounds = 1;
+					}
 					$work = $workout[0]->workout;
 
 					$intervals = explode("<br>", $work);
@@ -767,12 +688,14 @@ function workout_tracker_workout($form, &$form_state){
 							'#collapsed' => TRUE,
 						);
 						for($move = 1; $move <= $num_moves; $move++){
-							$form['conditioning'][$workout[0]->conditioning_id]['intervals'][$interval][$move] = array(
-								'#type' => 'textfield',
-								'#title' => t($intervals[$move - 1]),
-								'#size' => 5,
-								'#maxlength' => 15,
-							);					
+							if(substr_count($intervals[$move - 1], "rest") == 0){
+								$form['conditioning'][$workout[0]->conditioning_id]['intervals'][$interval][$move] = array(
+									'#type' => 'textfield',
+									'#title' => t($intervals[$move - 1]),
+									'#size' => 5,
+									'#maxlength' => 15,
+								);	
+							}				
 						}
 					}
 				}

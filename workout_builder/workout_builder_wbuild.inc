@@ -953,7 +953,7 @@ function _populate_conditioning_table(&$form_state, $wid){
 				$record->style = 'intervals';
 				$record->rounds = $workout['rounds'];
 			//	$record->interval_time = $movement['interval_time'];
-				$record->workout = str_replace("\n", "<br>", $workout['workout']);
+				$record->workout = strtolower(str_replace("\n", "<br>", $workout['workout']));
 			}
 			elseif($workout['style'] == 'rest'){
 				$record->style = 'rest';
