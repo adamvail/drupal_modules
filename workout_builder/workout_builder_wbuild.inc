@@ -124,7 +124,7 @@ function workout_builder_wbuilder($form, &$form_state){
 
 		$form['strength_wo'][$k]['weight']['percentage'] = array(
 			'#type' => 'textfield',
-			'#description' => t('Enter prescribed percentage of max.<br>If you want to specify a different percentage per set, seperate by commas.'),
+			'#description' => t('Enter prescribed percentage of max.<br>If you want to specify a different percentage per set, seperate by \'-\'.'),
 			'#size' => 10,
 			'#maxlength' => 50,
 			'#states' => array(

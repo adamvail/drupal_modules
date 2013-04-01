@@ -417,7 +417,7 @@ function workout_tracker_workout($form, &$form_state){
 						$lift = $workout[0]->movement;
 						$pr = db_query('SELECT pr from {workout_pr} where athlete_uid=:auid and movement=:movement', array(':auid' => $user->uid, ':movement' => $lift))->fetchField();
 						$prescribed = $pr * ($percentage_scheme[$k-1] / 100);
-						if(sizeof($reps_array == 1)){
+						if(sizeof($reps_array) == 1){
 							$form['strength'][$workout[0]->strength_id][$k]['work'] = array(
 								'#type' => 'textfield',
 								'#title' => t('1 Rep: @movement @ @percentage%', array('@movement' => $lift, '@percentage' => $percentage_scheme[$k-1])),
@@ -437,7 +437,7 @@ function workout_tracker_workout($form, &$form_state){
 						}
 					}
 					else {
-						if(sizeof($reps_array == 1)){
+						if(sizeof($reps_array) == 1){
 							$form['strength'][$workout[0]->strength_id][$k]['work'] = array(
 								'#type' => 'textfield',
 								'#title' => t('1 Rep: @movement @ @percentage%', array('@movement' => $lift, '@percentage' => $percentage_scheme[$k-1])),
