@@ -102,9 +102,8 @@ function workout_tracker_schema(){
 				'description' => t('The movement that was failed on. Only used for complex movements'),	
 			),
 			'fail_movement_rep' => array(
-				'type' => 'int',
-				'unsigned' => TRUE,
-				'size' => 'normal',
+				'type' => 'varchar',
+				'length' => 255,
 				'description' => t('The rep that was failed on from the movement. Only used for complex movements'),	
 			),
 		),

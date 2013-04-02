@@ -305,6 +305,8 @@ function workout_tracker_workout($form, &$form_state){
 			);	
 
 			if(isset($strength_notes[$workout[0]->strength_id]->notes)){
+				// TODO explode on line breaks and then format them as their own paragraph
+
 				$form['strength'][$workout[0]->strength_id]['strength_notes'] = array(
 					'#markup' => '<p>' . $strength_notes[$workout[0]->strength_id]->notes . '</p>',
 				);	
@@ -519,10 +521,10 @@ function workout_tracker_workout($form, &$form_state){
 					);
 						
 					$form['strength'][$workout[0]->strength_id][$k]['fail_rep'] = array(
-						'#type' => 'radios',
+						'#type' => 'checkboxes',
 						'#title' => t('Failed on rep:'),
 						'#options' => $reps_array,
-						'#default_value' => key($reps_array),
+						//'#default_value' => key($reps_array),
 						'#states' => array(
 							'visible' => array(
 								':input[name="strength[' . $workout[0]->strength_id . '][' . $k . '][fail]"]' => array('checked' => TRUE),
@@ -537,19 +539,21 @@ function workout_tracker_workout($form, &$form_state){
 					foreach(array_keys($combo) as $combo_key){
 						$lift_keys[$combo_key] = $combo_key;
 					}			
-		
+					for($rep_fail = 1; $rep_fail <= $reps; $rep_fail++){	
 						// use this info to build form elements
-						$form['strength'][$workout[0]->strength_id][$k]['fail_lift'] = array(
+						$form['strength'][$workout[0]->strength_id][$k]['fail_lift'][$rep_fail] = array(
 							'#type' => 'radios',
-							'#title' => t('Failed on move:'),
+							'#title' => t('Failed on rep @rep: movement', array('@rep' => $rep_fail)),
 							'#options' => $lift_keys,
 							'#default_value' => key($lift_keys),
 							'#states' => array(
 								'visible' => array(
 									':input[name="strength[' . $workout[0]->strength_id . '][' . $k . '][fail]"]' => array('checked' => TRUE),
+//									':input[name="strength[' . $workout[0]->strength_id . '][' . $k . '][fail_rep]"]' => array('value' => $rep_fail),
 								),
 							),
 						);
+					}
 						// This is supposed to build form elements to specify on which movement rep you failed
 						// for a complex movement....but it doesn't work...i'll come back to it
 				/*	
