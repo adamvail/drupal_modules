@@ -545,19 +545,21 @@ function workout_tracker_workout($form, &$form_state){
 					$lift_keys = array();
 					foreach(array_keys($combo) as $combo_key){
 						$lift_keys[$combo_key] = $combo_key;
-					}			
+					}	
+					for($nr = 1; $nr <= $reps_array[sizeof($reps_array)]; $nr++){
 						// use this info to build form elements
-						$form['strength'][$workout[0]->strength_id][$k]['fail_lift'] = array(
+						$form['strength'][$workout[0]->strength_id][$k]['fail_lift'][$nr] = array(
 							'#type' => 'radios',
-							'#title' => t('Failed on movement'),
+							'#title' => t('Failed on Rep @rep: movement', array('@rep' => $nr)),
 							'#options' => $lift_keys,
 							'#default_value' => key($lift_keys),
 							'#states' => array(
 								'visible' => array(
-									':input[name="strength[' . $workout[0]->strength_id . '][' . $k . '][fail]"]' => array('checked' => TRUE),
+									':input[name="strength[' . $workout[0]->strength_id . '][' . $k . '][fail_rep][' . $nr . ']"]' => array('checked' => TRUE),
 								),
 							),
 						);
+					}
 						// This is supposed to build form elements to specify on which movement rep you failed
 						// for a complex movement....but it doesn't work...i'll come back to it
 				/*	
