@@ -700,7 +700,13 @@ function workout_tracker_workout($form, &$form_state){
 					}
 					$work = $workout[0]->workout;
 
-					$intervals = explode("<br>", $work);
+					$intervals_full = explode("<br>", $work);
+					$intervals = array();
+					for($intervals_full as $invt){
+						if(substr_count($invt, "rest") == 0){
+							$intervals[] = $invt;
+						}
+					}
 					$num_moves = sizeof($intervals);
 					$form_state['interval_rounds'] = $rounds;
 					$form_state['interval_num_moves'] = $num_moves;
@@ -961,9 +967,9 @@ function _save_conditioning_results(&$form_state){
 		}
 		
 		if(isset($workout['intervals'])){
-			$workout_completed = TRUE;
 			$results = '';
 			for($interval = 1; $interval <= $form_state['interval_rounds']; $interval++){
+				$workout_completed = TRUE;
 				if(!empty($workout['intervals'][$interval]['split'])){
 					$results .= $workout['intervals'][$interval]['split'];
 				}
