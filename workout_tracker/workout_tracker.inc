@@ -295,7 +295,7 @@ function workout_tracker_workout($form, &$form_state){
 			);	
 
 			if(isset($strength_notes[$workout[0]->strength_id]->notes)){
-				// TODO explode on line breaks and then format them as their own paragraph
+				// explode on line breaks and then format them as their own paragraph
 
 				$paragraphs = explode("\n", $strength_notes[$workout[0]->strength_id]->notes);
 				for($sn = 0; $sn < sizeof($paragraphs); $sn++){
@@ -611,7 +611,13 @@ function workout_tracker_workout($form, &$form_state){
 				}
 			}
 			elseif($workout[0]->style == 'intervals' && $workout[0]->rounds > 1){
-				$movement_str = $workout[0]->rounds . " Rounds of:<br>";
+				if(!empty($workout[0]->duration)){
+					(strpos($workout[0]->duration, ':') !== FALSE) ? $clock = $workout[0]->duration : $clock = $workout[0]->duration . ":00";
+					$movement_str = $workout[0]->rounds . " Rounds on a " . $clock . " Minute Clock:<br>";
+				}
+				else {
+					$movement_str = $workout[0]->rounds . " Rounds of:<br>";
+				}
 				if($workout[0]->rounds == 1){
 					$fieldset_str = '1 Round: Intervals';
 				}
@@ -651,9 +657,12 @@ function workout_tracker_workout($form, &$form_state){
 				);	
 
 				if(isset($conditioning_notes[$workout[0]->conditioning_id]->notes)){
-					$form['conditioning'][$workout[0]->conditioning_id]['conditioning_notes'] = array(
-						'#markup' => '<p>' . $conditioning_notes[$workout[0]->conditioning_id]->notes . '</p>',
-					);	
+					$paragraphs = explode("\n", $conditioning_notes[$workout[0]->conditioning_id]->notes);
+					for($cn = 0; $cn < sizeof($paragraphs); $cn++){
+						$form['conditioning'][$workout[0]->conditioning_id]['conditioning_notes'][$cn] = array(
+							'#markup' => '<p>' . $paragraphs[$cn] . '</p>',
+						);
+					}	
 				}
 			
 				if($workout[0]->style == 'amrap'){	
@@ -695,21 +704,38 @@ function workout_tracker_workout($form, &$form_state){
 					//drupal_set_message('<pre>' . print_r($num_intervals, TRUE) . '</pre>');
 				
 					for($interval = 1; $interval <= $rounds; $interval++){
-						$form['conditioning'][$workout[0]->conditioning_id]['intervals'][$interval] = array(
-							'#type' => 'fieldset',
-							'#title' => t('Round #@int_num', array('@int_num' => $interval)),
-							'#collapsible' => TRUE,
-							'#collapsed' => TRUE,
-						);
-						for($move = 1; $move <= $num_moves; $move++){
-							if(substr_count($intervals[$move - 1], "rest") == 0){
-								$form['conditioning'][$workout[0]->conditioning_id]['intervals'][$interval][$move] = array(
+						if(!empty($workout[0]->duration)){
+							$form['conditioning'][$workout[0]->conditioning_id]['intervals'][$interval] = array(
+								'#type' => 'fieldset',
+								'#title' => t('Round #@int_num', array('@int_num' => $interval)),
+								'#collapsible' => TRUE,
+								'#collapsed' => TRUE,
+							);
+				
+							$form['conditioning'][$workout[0]->conditioning_id]['intervals'][$interval]['split'] = array(
 									'#type' => 'textfield',
-									'#title' => t($intervals[$move - 1]),
+									'#title' => t('Time'),
 									'#size' => 5,
 									'#maxlength' => 15,
-								);	
-							}				
+								);
+						}
+						else {
+							$form['conditioning'][$workout[0]->conditioning_id]['intervals'][$interval] = array(
+								'#type' => 'fieldset',
+								'#title' => t('Round #@int_num', array('@int_num' => $interval)),
+								'#collapsible' => TRUE,
+								'#collapsed' => TRUE,
+							);
+							for($move = 1; $move <= $num_moves; $move++){
+								if(substr_count($intervals[$move - 1], "rest") == 0){
+									$form['conditioning'][$workout[0]->conditioning_id]['intervals'][$interval][$move] = array(
+										'#type' => 'textfield',
+										'#title' => t($intervals[$move - 1]),
+										'#size' => 5,
+										'#maxlength' => 15,
+									);	
+								}				
+							}
 						}
 					}
 				}
@@ -927,19 +953,24 @@ function _save_conditioning_results(&$form_state){
 		if(isset($workout['for_time'])){
 			$record->time = $workout['for_time'];
 		}
+		
 		// TODO save interval numbers. Coalesce them all together?
-
 		if(isset($workout['intervals'])){
 			$results = '';
 			for($interval = 1; $interval <= $form_state['interval_rounds']; $interval++){
-				for($move = 1; $move <= $form_state['interval_num_moves']; $move++){		
-					($move > 1) ? $results .= ',' . $workout['intervals'][$interval][$move] : $results .= $workout['intervals'][$interval][$move];
+				if(!empty($workout['intervals'][$interval]['split'])){
+					$results .= $workout['intervals'][$interval]['split'];
+				}
+				else {
+					for($move = 1; $move <= $form_state['interval_num_moves']; $move++){		
+						($move > 1) ? $results .= ',' . $workout['intervals'][$interval][$move] : $results .= $workout['intervals'][$interval][$move];
+					}
 				}
 				if($interval < $form_state['interval_rounds']){
 					$results .= '-';
 				}
 			}
-			$record->interval_reps = $results;
+			$record->interval = $results;
 	//		drupal_set_message('<pre>' . print_r($record->interval_reps, TRUE) . '</pre>');
 		}
 		drupal_write_record($conditioning_table, $record);

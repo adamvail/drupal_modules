@@ -167,7 +167,7 @@ function workout_tracker_schema(){
 				'length' => 255,
 				'description' => t('Name of movement in interval'),
 			),
-			'interval_reps' => array(
+			'interval' => array(
 				'type' => 'varchar',
 				'length' => 255,
 				'description' => t('Comma delimited list of reps from each interval for this movement'),

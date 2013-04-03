@@ -504,6 +504,29 @@ function workout_builder_wbuild_page_two($form, &$form_state){
       ),
     );
 
+		$form['cond_workout'][$k]['condition_exercises']['interval_on_clock'] = array(
+			'#type' => 'checkbox',
+			'#title' => t('Start rounds on a clock?'),
+      '#states' => array(
+				'visible' => array(
+	    		':input[name="cond_workout[' . $k . '][condition_exercises][style]"]' => array('value' => 'intervals'),
+				),
+      ),
+		);
+
+		$form['cond_workout'][$k]['condition_exercises']['interval_clock'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Clock'),
+      '#description' => t('Enter timing in minutes'),
+      '#size' => 5,
+      '#maxlength' => 10,
+      '#states' => array(
+				'visible' => array(
+	    		':input[name="cond_workout[' . $k . '][condition_exercises][interval_on_clock]"]' => array('checked' => TRUE),
+				),
+      ),
+		);
+
     $form['cond_workout'][$k]['condition_exercises']['cutoff'] = array(
       '#type' => 'textfield',
       '#title' => t('Time Cutoff'),
@@ -954,6 +977,9 @@ function _populate_conditioning_table(&$form_state, $wid){
 				$record->rounds = $workout['rounds'];
 			//	$record->interval_time = $movement['interval_time'];
 				$record->workout = strtolower(str_replace("\n", "<br>", $workout['workout']));
+				if(isset($workout['interval_clock']) && !empty($workout['interval_clock'])){
+					$record->duration = $workout['interval_clock'];
+				}
 			}
 			elseif($workout['style'] == 'rest'){
 				$record->style = 'rest';
