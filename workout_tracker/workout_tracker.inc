@@ -4,6 +4,7 @@ function workout_tracker($form, &$form_state){
 	global $user;
 
 	$form['#tree'] = TRUE;
+	$cur_time = time();
 
 	if(isset($_GET['wid'])){
 		$form_state['values']['workout_choice'] = $_GET['wid'];
@@ -30,12 +31,12 @@ function workout_tracker($form, &$form_state){
 		}
 		$creator_ids[] = $user->uid;
 
-		$top_strength = db_query("SELECT wid, date, creator_id FROM {workout_builder_strength} WHERE creator_id IN (:creator) ORDER BY wid DESC LIMIT 7", array(':creator' => $creator_ids));
-		$top_conditioning = db_query("SELECT wid, date, creator_id FROM {workout_builder_conditioning} WHERE creator_id IN (:creator) ORDER BY wid DESC LIMIT 7", array(':creator' => $creator_ids));
+		$top_strength = db_query("SELECT wid, date, creator_id FROM {workout_builder_strength} WHERE date<:date AND creator_id IN (:creator) ORDER BY wid DESC LIMIT 7", array(':date' => time(), ':creator' => $creator_ids));
+		$top_conditioning = db_query("SELECT wid, date, creator_id FROM {workout_builder_conditioning} WHERE date<:date AND creator_id IN (:creator) ORDER BY wid DESC LIMIT 7", array(':date' => time(), ':creator' => $creator_ids));
 	}
 	else {
-		$top_strength = db_query("SELECT wid, date, creator_id FROM {workout_builder_strength} WHERE creator_id=:creator ORDER BY wid DESC LIMIT 7", array(':creator' => $user->uid));
-		$top_conditioning = db_query("SELECT wid, date, creator_id FROM {workout_builder_conditioning} WHERE creator_id=:creator ORDER BY wid DESC LIMIT 7", array(':creator' => $user->uid));
+		$top_strength = db_query("SELECT wid, date, creator_id FROM {workout_builder_strength} WHERE date<:date AND creator_id=:creator ORDER BY wid DESC LIMIT 7", array(':date' => time(), ':creator' => $user->uid));
+		$top_conditioning = db_query("SELECT wid, date, creator_id FROM {workout_builder_conditioning} WHERE date<:date AND creator_id=:creator ORDER BY wid DESC LIMIT 7", array(':date' => time(), ':creator' => $user->uid));
 	}
 
 	if(empty($top_strength) && empty($top_conditioning)){
@@ -702,7 +703,7 @@ function workout_tracker_workout($form, &$form_state){
 
 					$intervals_full = explode("<br>", $work);
 					$intervals = array();
-					for($intervals_full as $invt){
+					foreach($intervals_full as $invt){
 						if(substr_count($invt, "rest") == 0){
 							$intervals[] = $invt;
 						}
@@ -820,10 +821,12 @@ function _save_strength_results(&$form_state){
 	$all_lifts = $form_state['lifts'];
 	$lift_results = array();
 	$reps_array = $form_state['reps_array'];
+	$strength_summary = array();
 
 	for($i = 1; isset($form_state['input']['strength'][$i]); $i++){
 		$workout = $form_state['input']['strength'][$i];
 		$lifts = array_keys($all_lifts[$i]);
+		$set_summary = '';
 		for($s = 1; isset($workout[$s]); $s++){
 			$set = $workout[$s];
 
@@ -833,8 +836,10 @@ function _save_strength_results(&$form_state){
 			$record->athlete_uid = $user->uid;
 			$record->num_performed = $num_performed;
 			$record->set_num = $s;
+			$set_summary = "Set #" . $s . ":";
 			if(isset($set['work'])){
 				$record->work = $set['work'];
+				$set_summary .= " " . $set['work'] . "\n";
 			}
 //			drupal_set_message('<pre>' . print_r($set, TRUE) . '</pre>');
 			if(isset($set['fail'])){
@@ -844,11 +849,14 @@ function _save_strength_results(&$form_state){
 				for($f = 1; $f <= $reps_array[$s - 1]; $f++){
 					if(!empty($set['fail_rep'][$f])){
 						($failed_reps == '') ? $failed_reps .= $set['fail_rep'][$f] : $failed_reps .= ':' . $set['fail_rep'][$f];
+						$set_summary .= "     Failed on rep #" . $set['fail_rep'][$f];
 						if(sizeof($lifts) == 1){ 
 							($failed_movements == '') ? $failed_movements .= $lifts[0] : $failed_movements .= ':' . $lifts[0];
+//							$set_summary .= $lifts[0] . "\n";
 						}
 						else {
 							($failed_movements == '') ? $failed_movements .= $set['fail_lift'][$f] : $failed_movements .= ':' . $set['fail_lift'][$f];
+							$set_summary .= ": " . $set['fail_lift'][$f] . "\n";
 						}
 					} 
 				}
@@ -882,23 +890,6 @@ function _save_strength_results(&$form_state){
 					$record->fail = $failed_reps;
 					$record->fail_movement = $failed_movements;
 				}
-/*
-				$record->fail = $set['fail_rep'];
-				if(sizeof($lifts) == 1){
-					$set['fail_lift'] = $lifts[0];
-				}
-				if(isset($set['fail_lift'])){
-					$record->fail_movement = $set['fail_lift'];
-					foreach($lifts as $lift){
-						if($lift != $set['fail_lift'] || $set['fail_rep'] > 1){
-							$lift_results[$lift] = $set['work'];
-						}
-						else{
-							break;
-						}
-					}
-				}
-*/
 			}
 			else{
 				// didn't fail, so map weights to lifts
@@ -906,7 +897,7 @@ function _save_strength_results(&$form_state){
 					$lift_results[$lift] = $set['work'];
 				}
 			}
-	
+			$strength_summary[$i][$s] = $set_summary;	
 			drupal_write_record($strength_table, $record);
 		}
 	}
@@ -914,6 +905,7 @@ function _save_strength_results(&$form_state){
 		//drupal_set_message('<pre>' . print_r($l, TRUE) . '</pre>');
 		check_pr($l, $lift_results[$l]);
 	}
+	$form_state['strength_summary'] = $strength_summary;
 }
 
 function _save_conditioning_results(&$form_state){
@@ -969,13 +961,16 @@ function _save_conditioning_results(&$form_state){
 		if(isset($workout['intervals'])){
 			$results = '';
 			for($interval = 1; $interval <= $form_state['interval_rounds']; $interval++){
-				$workout_completed = TRUE;
 				if(!empty($workout['intervals'][$interval]['split'])){
+					$workout_completed = TRUE;
 					$results .= $workout['intervals'][$interval]['split'];
 				}
 				else {
 					for($move = 1; $move <= $form_state['interval_num_moves']; $move++){		
-						($move > 1) ? $results .= ',' . $workout['intervals'][$interval][$move] : $results .= $workout['intervals'][$interval][$move];
+						if(!empty($workout['intervals'][$interval][$move])){
+							$workout_completed = TRUE;
+							($move > 1) ? $results .= ',' . $workout['intervals'][$interval][$move] : $results .= $workout['intervals'][$interval][$move];
+						}
 					}
 				}
 				if($interval < $form_state['interval_rounds']){
@@ -1038,11 +1033,17 @@ function workout_tracker_mail($key, &$message, $params){
 			$message['subject'] = t('Workout Results for @date', array('@date' => convert_timestamp(time())), $options);
 			$message['body'][] = t('Great work today @name!', array('@name' => $user->name));
 			$message['body'][] = t('Here are you results from today\'s workout:');
-			$message['body'][] = t("Strength Workout:\n");
+			$message['body'][] = t("-----------------------------------\n");
 			for($i = 1; isset($params['strength_print'][$i]); $i++){
-				$message['body'][] = t($params['strength_print'][$i]); 
+				$message['body'][] = t($params['strength_print'][$i]);
+				$message['body'][] = t("\nResults:");
+				$workout = '';
+				for($s = 1; isset($params['strength_summary'][$i][$s]); $s++){ 
+					$workout .= t($params['strength_summary'][$i][$s]);
+				}
+				$message['body'][] = $workout;
+				$message['body'][] = t("-----------------------------------\n");
 			}
-			$message['body'][] = t("\nResults:");
 			
 
 			break;
