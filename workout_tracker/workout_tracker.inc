@@ -929,6 +929,7 @@ function _save_conditioning_results(&$form_state){
 
 	for($i = 1; isset($form_state['input']['conditioning'][$i]); $i++){
 		$workout = $form_state['input']['conditioning'][$i];
+		$workout_completed = FALSE;
 		//$movements = db_query('SELECT workout FROM {workout_builder_conditioning} where wid=:wid and conditioning_id=:cid', array(':wid' => $form_state['wid'], ':cid' => $i))->fetchField();
 		//drupal_set_message('<pre>' . print_r($movements, TRUE) . '</pre>');
 		$record = new stdClass();
@@ -937,7 +938,8 @@ function _save_conditioning_results(&$form_state){
 		$record->athlete_uid = $user->uid;
 		$record->num_performed = $num_performed;	
 
-		if(isset($workout['amrap_rounds']) || isset($workout['amrap_reps'])){
+		if(!empty($workout['amrap_rounds']) || !empty($workout['amrap_reps'])){
+			$workout_completed = TRUE;
 			if(isset($workout['amrap_rounds'])){
 				$record->amrap_rounds = $workout['amrap_rounds'];
 			}
@@ -953,12 +955,13 @@ function _save_conditioning_results(&$form_state){
 			}
 		}
 		
-		if(isset($workout['for_time'])){
+		if(!empty($workout['for_time'])){
+			$workout_completed = TRUE;
 			$record->time = $workout['for_time'];
 		}
 		
-		// TODO save interval numbers. Coalesce them all together?
 		if(isset($workout['intervals'])){
+			$workout_completed = TRUE;
 			$results = '';
 			for($interval = 1; $interval <= $form_state['interval_rounds']; $interval++){
 				if(!empty($workout['intervals'][$interval]['split'])){
@@ -976,7 +979,9 @@ function _save_conditioning_results(&$form_state){
 			$record->interval = $results;
 	//		drupal_set_message('<pre>' . print_r($record->interval_reps, TRUE) . '</pre>');
 		}
-		drupal_write_record($conditioning_table, $record);
+		if($workout_completed == TRUE){
+			drupal_write_record($conditioning_table, $record);
+		}
 	}
 }
 
