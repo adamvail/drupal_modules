@@ -287,7 +287,7 @@ function workout_tracker_workout($form, &$form_state){
 					'#collapsed' => TRUE,
 				);
 			}
-			$total_workout = $movement_str;
+			$workout_print = $movement_str;
 			// print the workout line
 			$form['strength'][$workout[0]->strength_id]['header'] = array(
 				'#markup' => '<p>' . $movement_str . '</p>',
@@ -302,11 +302,11 @@ function workout_tracker_workout($form, &$form_state){
 					$form['strength'][$workout[0]->strength_id]['strength_notes'][$sn] = array(
 						'#markup' => '<p>' . $paragraphs[$sn] . '</p>',
 					);	
-					$total_workout .= "\n" . $paragraphs[$sn];
+					$workout_print .= "\n\n" . $paragraphs[$sn];
 				}
 			}
 
-			$form_state['strength_print'][$workout[0]->strength_id] = $total_workout;
+			$form_state['strength_print'][$workout[0]->strength_id] = $workout_print;
 	
 			//drupal_set_message('<pre>' . print_r($movement_str, TRUE) . '</pre>');
 
@@ -982,7 +982,7 @@ function _save_conditioning_results(&$form_state){
 
 function check_pr($lift, $weight){
 	global $user;
-	drupal_set_message('<pre>' . print_r($lift . ':' . $weight, TRUE) . '</pre>');
+//	drupal_set_message('<pre>' . print_r($lift . ':' . $weight, TRUE) . '</pre>');
 	$pr_table = 'workout_pr';
 	$movement = strtolower($lift);
 
@@ -1024,14 +1024,16 @@ function workout_tracker_mail($key, &$message, $params){
 
 	switch($key){
 		case 'workout_tracker_results':
-			$strength_print = "Strength:\n";
-			for($i = 0; isset($params['strength_print'][$i])){
-				$strength_print .= $params['strength_print'][$i] . "\n";
-			}
 			$message['subject'] = t('Workout Results for @date', array('@date' => convert_timestamp(time())), $options);
 			$message['body'][] = t('Great work today @name!', array('@name' => $user->name));
 			$message['body'][] = t('Here are you results from today\'s workout:');
-			$message['body'][] = $strength_print; 
+			$message['body'][] = t("Strength Workout:\n");
+			for($i = 1; isset($params['strength_print'][$i]); $i++){
+				$message['body'][] = t($params['strength_print'][$i]); 
+			}
+			$message['body'][] = t("\nResults:");
+			
+
 			break;
 	}
 }
@@ -1049,9 +1051,9 @@ function send_results_email(&$form_state){
 	$send = TRUE;
 	$result = drupal_mail($module, $key, $to, $language, $params, $from, $send);
 	if($result['result'] == TRUE){
-		drupal_set_message('Message was sent');
+//		drupal_set_message('Message was sent');
 	}
 	else {
-		drupal_set_message('Message failed', 'error');
+//		drupal_set_message('Message failed', 'error');
 	}
 }
