@@ -287,7 +287,7 @@ function workout_tracker_workout($form, &$form_state){
 					'#collapsed' => TRUE,
 				);
 			}
-
+			$total_workout = $movement_str;
 			// print the workout line
 			$form['strength'][$workout[0]->strength_id]['header'] = array(
 				'#markup' => '<p>' . $movement_str . '</p>',
@@ -302,8 +302,11 @@ function workout_tracker_workout($form, &$form_state){
 					$form['strength'][$workout[0]->strength_id]['strength_notes'][$sn] = array(
 						'#markup' => '<p>' . $paragraphs[$sn] . '</p>',
 					);	
+					$total_workout .= "\n" . $paragraphs[$sn];
 				}
 			}
+
+			$form_state['strength_print'][$workout[0]->strength_id] = $total_workout;
 	
 			//drupal_set_message('<pre>' . print_r($movement_str, TRUE) . '</pre>');
 
@@ -441,7 +444,7 @@ function workout_tracker_workout($form, &$form_state){
 						// if there is only one movement, then populate the default with the % from the PR
 						global $user;
 						$pr = db_query('SELECT pr from {workout_pr} where athlete_uid=:auid and movement=:movement', array(':auid' => $user->uid, ':movement' => $lift))->fetchField();
-						$prescribed = $pr * ($percentage_scheme[$k-1] / 100);
+						$prescribed = round(($pr * ($percentage_scheme[$k-1] / 100)) / 5) * 5;
 						if(sizeof($reps_array) == 1){
 							$form['strength'][$workout[0]->strength_id][$k]['work'] = array(
 								'#type' => 'textfield',
@@ -787,7 +790,7 @@ function workout_tracker_save_submit($form, &$form_state){
 	if(isset($form_state['conditioning_exists']) && $form_state['conditioning_exists'] == TRUE){
 		_save_conditioning_results($form_state);
 	}
-	//send_results_email($form_state);
+	send_results_email($form_state);
 }
 
 function _save_strength_results(&$form_state){
@@ -1021,10 +1024,14 @@ function workout_tracker_mail($key, &$message, $params){
 
 	switch($key){
 		case 'workout_tracker_results':
+			$strength_print = "Strength:\n";
+			for($i = 0; isset($params['strength_print'][$i])){
+				$strength_print .= $params['strength_print'][$i] . "\n";
+			}
 			$message['subject'] = t('Workout Results for @date', array('@date' => convert_timestamp(time())), $options);
 			$message['body'][] = t('Great work today @name!', array('@name' => $user->name));
 			$message['body'][] = t('Here are you results from today\'s workout:');
-			//$message['body'][] = $params; 
+			$message['body'][] = $strength_print; 
 			break;
 	}
 }
@@ -1037,7 +1044,7 @@ function send_results_email(&$form_state){
 
 	$to = $user->mail;
 	$from = 'WODology@wodology.com';
-	$params = $form_state['input'];
+	$params = $form_state;
 	$language = language_default();
 	$send = TRUE;
 	$result = drupal_mail($module, $key, $to, $language, $params, $from, $send);
