@@ -207,13 +207,6 @@ function workout_tracker_workout($form, &$form_state){
 					}
 				}
 
-/*				$movement_pretty = implode(' ', array_map('ucfirst', explode(' ', $workout[0]->movement)));
-				$movement_pretty = implode('-', array_map('ucfirst', explode('-', $movement_pretty)));
-				$movement_pretty = implode('[', array_map('ucfirst', explode('[', $movement_pretty)));
-				$movement_pretty = implode(']', array_map('ucfirst', explode(']', $movement_pretty)));
-				$movement_pretty = implode('+', array_map('ucfirst', explode('+', $movement_pretty)));
-				$movement_str .= $movement_pretty;
-*/
 				$movement_str .= pretty_print_movement($workout[0]->movement);
 			}
 
@@ -221,13 +214,6 @@ function workout_tracker_workout($form, &$form_state){
 				if(!empty($workout[0]->rep_scheme)){
 					$movement_str .= $workout[0]->rep_scheme . ',';
 				}
-/*
-				$movement_pretty = implode(' ', array_map('ucfirst', explode(' ', $workout[0]->movement)));
-				$movement_pretty = implode('-', array_map('ucfirst', explode('-', $movement_pretty)));
-				$movement_pretty = implode('[', array_map('ucfirst', explode('[', $movement_pretty)));
-				$movement_pretty = implode(']', array_map('ucfirst', explode(']', $movement_pretty)));
-				$movement_pretty = implode('+', array_map('ucfirst', explode('+', $movement_pretty)));
-*/
 				$movement_pretty = pretty_print_movement($workout[0]->movement);
 				for($i = 0; isset($workout[$i]); $i++){
 					if($i == 0){
@@ -446,6 +432,8 @@ function workout_tracker_workout($form, &$form_state){
 				for($j = 1; $j <= $reps[$k-1]; $j++){
 					$reps_array[$j] = $j;
 				}
+				// save this to be used when submitting
+				$form_state['reps_array'] = $reps;
 
 				if(sizeof($percentage_scheme) > 1){
 					$lift = $workout[0]->movement;
@@ -796,6 +784,7 @@ function _save_strength_results(&$form_state){
 
 	$all_lifts = $form_state['lifts'];
 	$lift_results = array();
+	$reps_array = $form_state['reps_array'];
 
 	for($i = 1; isset($form_state['input']['strength'][$i]); $i++){
 		$workout = $form_state['input']['strength'][$i];
@@ -808,11 +797,57 @@ function _save_strength_results(&$form_state){
 			$record->sid = $i;
 			$record->athlete_uid = $user->uid;
 			$record->num_performed = $num_performed;
-			$record->set = $s;
+			$record->set_num = $s;
 			if(isset($set['work'])){
 				$record->work = $set['work'];
 			}
+//			drupal_set_message('<pre>' . print_r($set, TRUE) . '</pre>');
 			if(isset($set['fail'])){
+				$num_failed = 0;
+				$failed_reps = '';
+				$failed_movements = '';
+				for($f = 1; $f <= $reps_array[$s - 1]; $f++){
+					if(!empty($set['fail_rep'][$f])){
+						($failed_reps == '') ? $failed_reps .= $set['fail_rep'][$f] : $failed_reps .= ':' . $set['fail_rep'][$f];
+						if(sizeof($lifts) == 1){ 
+							($failed_movements == '') ? $failed_movements .= $lifts[0] : $failed_movements .= ':' . $lifts[0];
+						}
+						else {
+							($failed_movements == '') ? $failed_movements .= $set['fail_lift'][$f] : $failed_movements .= ':' . $set['fail_lift'][$f];
+						}
+					} 
+				}
+				if($failed_reps != ''){
+					// TODO fill in lift_results excluding failed movements
+					$failed = explode(":", $failed_reps);
+					if(sizeof($failed) < $reps_array[$s - 1]){
+						// this means at least one rep was completed, find it and set it if its bigger than what's already there
+						foreach($lifts as $lift){
+							if($set['work'] > $lift_results[$lift]){
+								$lift_results[$lift] = $set['work'];
+							}
+						}
+					}
+					else {
+						// check to see if any movements were successful
+						for($j = 1; $j <= $reps_array[sizeof($reps_array) - 1]; $j++){
+							$failed_moves = explode(":", $failed_movements);
+							foreach($lifts as $lift){
+								if($lift != $failed_moves[0] && $set['work'] > $lift_results[$lift]){
+									$lift_results[$lift] = $set['work'];
+								}
+								else{
+									break;
+								}
+							}
+						}
+					}
+					//drupal_set_message('<pre>' . print_r("Failed Rep String " . $failed_reps, TRUE) . '</pre>');
+					//drupal_set_message('<pre>' . print_r("Failed Movement String " . $failed_movements, TRUE) . '</pre>');
+					$record->fail = $failed_reps;
+					$record->fail_movement = $failed_movements;
+				}
+/*
 				$record->fail = $set['fail_rep'];
 				if(sizeof($lifts) == 1){
 					$set['fail_lift'] = $lifts[0];
@@ -828,6 +863,7 @@ function _save_strength_results(&$form_state){
 						}
 					}
 				}
+*/
 			}
 			else{
 				// didn't fail, so map weights to lifts
@@ -912,7 +948,7 @@ function _save_conditioning_results(&$form_state){
 
 function check_pr($lift, $weight){
 	global $user;
-//	drupal_set_message('<pre>' . print_r($lift . ':' . $weight, TRUE) . '</pre>');
+	drupal_set_message('<pre>' . print_r($lift . ':' . $weight, TRUE) . '</pre>');
 	$pr_table = 'workout_pr';
 	$movement = strtolower($lift);
 
@@ -924,8 +960,15 @@ function check_pr($lift, $weight){
 
 	if(!empty($cur_pr)){
 		if($weight > $cur_pr){
-			$result = db_query('UPDATE {workout_pr} SET pr=:pr WHERE athlete_uid=:auid and movement=:movement', array(':pr' => $weight, ':auid' => $user->uid, ':movement' => $movement));
-			if($result != 1){
+			$num_updated = db_update($pr_table)
+				->fields(array(
+					'pr' => $weight,
+				))
+				->condition('athlete_uid', $user->uid, '=')
+				->condition('movement', $movement, '=')
+				->execute();
+			//$result = db_query('UPDATE {workout_pr} SET pr=:pr WHERE athlete_uid=:auid and movement=:movement', array(':pr' => $weight, ':auid' => $user->uid, ':movement' => $movement));
+			if($num_updated != 1){
 				drupal_set_message('<pre>' . print_r("RESULT from PR UPDATE was NOT a single row!", TRUE) . '</pre>');
 			}	
 		}
