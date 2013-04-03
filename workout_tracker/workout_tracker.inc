@@ -517,7 +517,7 @@ function workout_tracker_workout($form, &$form_state){
 						
 					$form['strength'][$workout[0]->strength_id][$k]['fail_rep'] = array(
 						'#type' => 'checkboxes',
-						'#title' => t('Failed on rep:'),
+						'#title' => t('Select ALL missed reps:'),
 						'#options' => $reps_array,
 						//'#default_value' => key($reps_array),
 						'#states' => array(
