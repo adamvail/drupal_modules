@@ -637,6 +637,7 @@ function workout_tracker_workout($form, &$form_state){
 			// replace pipes with html new lines
 			$movement_str .= $workout[0]->workout . "<br>"; //str_replace("\n", "<br>", $workout[0]->workout);
 
+
 			//drupal_set_message('<pre>' . print_r($movement_str, TRUE) . '</pre>');
 			// Now that the string is done, build the fieldset to display it.
 			if($workout[0]->style == 'rest'){
@@ -660,15 +661,19 @@ function workout_tracker_workout($form, &$form_state){
 					'#markup' => '<p>' . $movement_str . '</p>',
 				);	
 
+				$notes = '';
 				if(isset($conditioning_notes[$workout[0]->conditioning_id]->notes)){
 					$paragraphs = explode("\n", $conditioning_notes[$workout[0]->conditioning_id]->notes);
 					for($cn = 0; $cn < sizeof($paragraphs); $cn++){
 						$form['conditioning'][$workout[0]->conditioning_id]['conditioning_notes'][$cn] = array(
 							'#markup' => '<p>' . $paragraphs[$cn] . '</p>',
 						);
+						$notes .= $paragraphs[$cn];
 					}	
 				}
 			
+			$form_state['conditioning_print'][$workout[0]->conditioning_id] = $movement_str . "\n" . $notes;
+
 				if($workout[0]->style == 'amrap'){	
 					$form['conditioning'][$workout[0]->conditioning_id]['amrap_rounds'] = array(
 						'#type' => 'textfield',
@@ -925,9 +930,12 @@ function _save_conditioning_results(&$form_state){
 		$num_performed += 1;
 	}
 
+	$conditioning_summary = '';
+
 	for($i = 1; isset($form_state['input']['conditioning'][$i]); $i++){
 		$workout = $form_state['input']['conditioning'][$i];
 		$workout_completed = FALSE;
+		$workout_summary = '';
 		//$movements = db_query('SELECT workout FROM {workout_builder_conditioning} where wid=:wid and conditioning_id=:cid', array(':wid' => $form_state['wid'], ':cid' => $i))->fetchField();
 		//drupal_set_message('<pre>' . print_r($movements, TRUE) . '</pre>');
 		$record = new stdClass();
@@ -938,8 +946,10 @@ function _save_conditioning_results(&$form_state){
 
 		if(!empty($workout['amrap_rounds']) || !empty($workout['amrap_reps'])){
 			$workout_completed = TRUE;
+			$workout_summary .= "Finished: ";
 			if(isset($workout['amrap_rounds'])){
 				$record->amrap_rounds = $workout['amrap_rounds'];
+				$workout_summary .= $record->amrap_rounds . " rounds";
 			}
 			else{
 				$record->amrap_round = 0;
@@ -947,6 +957,7 @@ function _save_conditioning_results(&$form_state){
 
 			if(isset($workout['amrap_reps'])){
 				$record->amrap_reps = $workout['amrap_reps'];
+				$workout_summary .= " " . $record->amrap_reps . " reps";
 			}
 			else {
 				$record->amrap_reps = 0;
@@ -956,6 +967,7 @@ function _save_conditioning_results(&$form_state){
 		if(!empty($workout['for_time'])){
 			$workout_completed = TRUE;
 			$record->time = $workout['for_time'];
+			(strpos(":", $record->time) !== FALSE) ? $workout_summary .= "Finished in " . $record->time . " minutes" : $workout_summary .= "Finished in " . $record->time . ":00 minutes";
 		}
 		
 		if(isset($workout['intervals'])){
@@ -981,9 +993,11 @@ function _save_conditioning_results(&$form_state){
 	//		drupal_set_message('<pre>' . print_r($record->interval_reps, TRUE) . '</pre>');
 		}
 		if($workout_completed == TRUE){
+			$conditioning_summary[$i] = $workout_summary;
 			drupal_write_record($conditioning_table, $record);
 		}
 	}
+	$form_state['conditioning_summary'] = $conditioning_summary;
 }
 
 function check_pr($lift, $weight){
@@ -1033,8 +1047,8 @@ function workout_tracker_mail($key, &$message, $params){
 			$message['subject'] = t('Workout Results for @date', array('@date' => convert_timestamp(time())), $options);
 			$message['body'][] = t('Great work today @name!', array('@name' => $user->name));
 			$message['body'][] = t('Here are you results from today\'s workout:');
-			$message['body'][] = t("-----------------------------------\n");
 			for($i = 1; isset($params['strength_print'][$i]); $i++){
+				$message['body'][] = t("-----------------------------------\n");
 				$message['body'][] = t($params['strength_print'][$i]);
 				$message['body'][] = t("\nResults:");
 				$workout = '';
@@ -1044,7 +1058,14 @@ function workout_tracker_mail($key, &$message, $params){
 				$message['body'][] = $workout;
 				$message['body'][] = t("-----------------------------------\n");
 			}
-			
+			for($i = 1; isset($params['conditioning_print'][$i]; $i++)){
+				$message['body'][] = $params['conditioning_print'][$i];			
+				$message['body'][] = t("\nResults:");
+				$message['body'][] = $params['conditioning_summary'][$i];
+//				for($w = 1; isset($params['conditioning_summary'][$i][$w]; $w++)){
+
+//				}
+			}
 
 			break;
 	}
