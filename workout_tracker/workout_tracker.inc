@@ -671,8 +671,9 @@ function workout_tracker_workout($form, &$form_state){
 						$notes .= $paragraphs[$cn];
 					}	
 				}
-			
-			$form_state['conditioning_print'][$workout[0]->conditioning_id] = $movement_str . "\n" . $notes;
+			if(substr_count($movement_str, "Rest") != 1){	
+				$form_state['conditioning_print'][$workout[0]->conditioning_id] = $movement_str . "\n" . $notes;
+			}
 
 				if($workout[0]->style == 'amrap'){	
 					$form['conditioning'][$workout[0]->conditioning_id]['amrap_rounds'] = array(
@@ -830,6 +831,7 @@ function _save_strength_results(&$form_state){
 
 	for($i = 1; isset($form_state['input']['strength'][$i]); $i++){
 		$workout = $form_state['input']['strength'][$i];
+		$workout_completed = FALSE;
 		$lifts = array_keys($all_lifts[$i]);
 		$set_summary = '';
 		for($s = 1; isset($workout[$s]); $s++){
@@ -842,7 +844,8 @@ function _save_strength_results(&$form_state){
 			$record->num_performed = $num_performed;
 			$record->set_num = $s;
 			$set_summary = "Set #" . $s . ":";
-			if(isset($set['work'])){
+			if(isset($set['work']) && !empty($set['work'])){
+				$workout_completed = TRUE;
 				$record->work = $set['work'];
 				$set_summary .= " " . $set['work'] . "\n";
 			}
@@ -902,8 +905,10 @@ function _save_strength_results(&$form_state){
 					$lift_results[$lift] = $set['work'];
 				}
 			}
-			$strength_summary[$i][$s] = $set_summary;	
-			drupal_write_record($strength_table, $record);
+			if($workout_completed == TRUE){
+				$strength_summary[$i][$s] = $set_summary;	
+				drupal_write_record($strength_table, $record);
+			}
 		}
 	}
 	foreach(array_keys($lift_results) as $l){
@@ -931,13 +936,17 @@ function _save_conditioning_results(&$form_state){
 	}
 
 	$conditioning_summary = '';
+	$workout_summary = '';
+	//drupal_set_message('<pre>' . print_r($form_state['input']['conditioning'], TRUE) . '</pre>');
 
-	for($i = 1; isset($form_state['input']['conditioning'][$i]); $i++){
+	$cids = array_keys($form_state['input']['conditioning']);
+
+	for($iter = 0; $iter < sizeof($cids); $iter++){
+		$i = $cids[$iter];
 		$workout = $form_state['input']['conditioning'][$i];
+		//drupal_set_message('<pre>' . print_r($workout, TRUE) . '</pre>');
 		$workout_completed = FALSE;
 		$workout_summary = '';
-		//$movements = db_query('SELECT workout FROM {workout_builder_conditioning} where wid=:wid and conditioning_id=:cid', array(':wid' => $form_state['wid'], ':cid' => $i))->fetchField();
-		//drupal_set_message('<pre>' . print_r($movements, TRUE) . '</pre>');
 		$record = new stdClass();
 		$record->wid = $form_state['wid'];
 		$record->cid = $i;
@@ -976,28 +985,39 @@ function _save_conditioning_results(&$form_state){
 				if(!empty($workout['intervals'][$interval]['split'])){
 					$workout_completed = TRUE;
 					$results .= $workout['intervals'][$interval]['split'];
+					if(strpos(":", $workout['intervals'][$interval]['split']) !== FALSE){
+						$workout_summary .= "Round #" . $interval . ": " . $workout['intervals'][$interval]['split'] . " minutes\n";
+					}
+					else {
+						$workout_summary .= "Round #" . $interval . ": " . $workout['intervals'][$interval]['split'] . ":00 minutes\n";
+					}
 				}
 				else {
+					$workout_summary .= "Round #" . $interval . ":";
 					for($move = 1; $move <= $form_state['interval_num_moves']; $move++){		
 						if(!empty($workout['intervals'][$interval][$move])){
 							$workout_completed = TRUE;
 							($move > 1) ? $results .= ',' . $workout['intervals'][$interval][$move] : $results .= $workout['intervals'][$interval][$move];
+							$workout_summary .= " " . $workout['intervals'][$interval][$move];
 						}
 					}
+					$workout_summary .= "\n";
 				}
 				if($interval < $form_state['interval_rounds']){
 					$results .= '-';
 				}
 			}
-			$record->interval = $results;
+			$record->interval_reps = $results;
 	//		drupal_set_message('<pre>' . print_r($record->interval_reps, TRUE) . '</pre>');
 		}
+
 		if($workout_completed == TRUE){
-			$conditioning_summary[$i] = $workout_summary;
+		//	drupal_set_message('<pre>' . print_r($workout_summary, TRUE) . '</pre>');
 			drupal_write_record($conditioning_table, $record);
+			$form_state['conditioning_summary'][$i] = $workout_summary;
 		}
 	}
-	$form_state['conditioning_summary'] = $conditioning_summary;
+	//drupal_set_message('<pre>' . print_r($form_state['conditioning_summary'], TRUE) . '</pre>');
 }
 
 function check_pr($lift, $weight){
@@ -1058,13 +1078,14 @@ function workout_tracker_mail($key, &$message, $params){
 				$message['body'][] = $workout;
 				$message['body'][] = t("-----------------------------------\n");
 			}
-			for($i = 1; isset($params['conditioning_print'][$i]); $i++){
+			$cids = array_keys($params['conditioning_print']);
+			for($iter = 0; $iter < sizeof($cids); $iter++){
+				$i = $cids[$iter];
 				$message['body'][] = $params['conditioning_print'][$i];			
-				$message['body'][] = t("\nResults:");
+				$message['body'][] = t("\n\nResults:");
 				$message['body'][] = $params['conditioning_summary'][$i];
-//				for($w = 1; isset($params['conditioning_summary'][$i][$w]; $w++)){
-
-//				}
+				for($j = 1; isset($params['conditioning_summary'][$i][$j]); $j++){
+				}
 			}
 
 			break;
