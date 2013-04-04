@@ -1058,7 +1058,7 @@ function workout_tracker_mail($key, &$message, $params){
 				$message['body'][] = $workout;
 				$message['body'][] = t("-----------------------------------\n");
 			}
-			for($i = 1; isset($params['conditioning_print'][$i]; $i++)){
+			for($i = 1; isset($params['conditioning_print'][$i]); $i++){
 				$message['body'][] = $params['conditioning_print'][$i];			
 				$message['body'][] = t("\nResults:");
 				$message['body'][] = $params['conditioning_summary'][$i];
