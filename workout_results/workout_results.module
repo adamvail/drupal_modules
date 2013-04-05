@@ -1,0 +1,56 @@
+<?php
+
+/**
+* @file
+* Allows a user to see their workout history and search
+* for all the instances of a movement that they have
+* performed.
+*/
+
+
+/**
+* Implements hook_menu().
+*
+* Set up URL so building a workout
+* can be chosen right from the menu.
+*/
+
+function workout_results_menu() {
+
+  $items = array();
+  $items['workout_results'] = array(
+    'title' => 'Workout Results',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('workout_results'),
+    'access callback' => 'user_is_logged_in',
+    'description' => 'View Workout History',
+    'file' => 'workout_results.inc',
+    'type' => MENU_NORMAL_ITEM, 
+  );
+
+  return $items;
+}
+/**
+* Page callback for out general info page
+*/
+function workout_results_intro(){
+  $markup = t('This module allows a user to see their workout history');
+  return array('#markup' => $markup);
+}
+
+/**
+* Implements hook_help()
+*/
+
+function workout_results_help($path, $arg){
+  switch($path) {
+ /*   case 'workout_results/wbuild':
+      $help = t('This form is where the workout\'s movements are constructed');
+      break;
+*/
+  }
+
+  if (!empty($help)){
+    return '<p>' . $help . '</p>';
+  }
+}
