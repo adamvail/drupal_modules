@@ -1081,10 +1081,10 @@ function workout_tracker_mail($key, &$message, $params){
 			$cids = array_keys($params['conditioning_print']);
 			for($iter = 0; $iter < sizeof($cids); $iter++){
 				$i = $cids[$iter];
-				$message['body'][] = $params['conditioning_print'][$i];			
-				$message['body'][] = t("\n\nResults:");
-				$message['body'][] = $params['conditioning_summary'][$i];
-				for($j = 1; isset($params['conditioning_summary'][$i][$j]); $j++){
+				if(!empty($params['conditioning_summary'][$i])){
+					$message['body'][] = $params['conditioning_print'][$i];			
+					$message['body'][] = t("\n\nResults:");
+					$message['body'][] = $params['conditioning_summary'][$i];
 				}
 			}
 
