@@ -1068,16 +1068,19 @@ function workout_tracker_mail($key, &$message, $params){
 			$message['body'][] = t('Great work today @name!', array('@name' => $user->name));
 			$message['body'][] = t('Here are you results from today\'s workout:');
 			for($i = 1; isset($params['strength_print'][$i]); $i++){
-				$message['body'][] = t("-----------------------------------\n");
-				$message['body'][] = t($params['strength_print'][$i]);
-				$message['body'][] = t("\nResults:");
 				$workout = '';
 				for($s = 1; isset($params['strength_summary'][$i][$s]); $s++){ 
 					$workout .= t($params['strength_summary'][$i][$s]);
 				}
-				$message['body'][] = $workout;
-				$message['body'][] = t("-----------------------------------\n");
+				if($workout != ''){
+					$message['body'][] = t("-----------------------------------\n");
+					$message['body'][] = t($params['strength_print'][$i]);
+					$message['body'][] = t("\nResults:");
+					$message['body'][] = $workout;
+					$message['body'][] = t("-----------------------------------\n");
+				}
 			}
+
 			$cids = array_keys($params['conditioning_print']);
 			for($iter = 0; $iter < sizeof($cids); $iter++){
 				$i = $cids[$iter];
