@@ -842,6 +842,7 @@ function _save_strength_results(&$form_state){
 			$record->sid = $i;
 			$record->athlete_uid = $user->uid;
 			$record->num_performed = $num_performed;
+			$record->date = time();
 			$record->set_num = $s;
 			$set_summary = "Set #" . $s . ":";
 			if(isset($set['work']) && !empty($set['work'])){
@@ -952,6 +953,7 @@ function _save_conditioning_results(&$form_state){
 		$record->cid = $i;
 		$record->athlete_uid = $user->uid;
 		$record->num_performed = $num_performed;	
+		$record->date = time();
 
 		if(!empty($workout['amrap_rounds']) || !empty($workout['amrap_reps'])){
 			$workout_completed = TRUE;

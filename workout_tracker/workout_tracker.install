@@ -79,6 +79,13 @@ function workout_tracker_schema(){
 				'size' => 'normal',
 				'description' => t('Which time this workout has been performed, since workouts can be redone'),	
 			),
+			'date' => array(
+				'type' => 'int',
+				'unsigned' => TRUE,
+				'not null' => TRUE,
+				'size' => 'normal',
+				'description' => t('Date the workout was performed'),	
+			),
 			'set_num' => array(
 				'type' => 'int',
 				'unsigned' => TRUE,
@@ -144,6 +151,13 @@ function workout_tracker_schema(){
 				'not null' => TRUE,
 				'size' => 'normal',
 				'description' => t('Which time this workout has been performed, since workouts can be redone'),	
+			),
+			'date' => array(
+				'type' => 'int',
+				'unsigned' => TRUE,
+				'not null' => TRUE,
+				'size' => 'normal',
+				'description' => t('Date the workout was performed'),	
 			),
 			'time' => array(
 				'type' => 'varchar',
