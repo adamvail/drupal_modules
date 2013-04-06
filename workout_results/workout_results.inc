@@ -138,16 +138,18 @@ function pretty_print_movement($movement){
 }
 
 function create_strength_string($wid){
+	global $user;
 
 	$headers = assemble_strength_headers($wid);
 	$sids = array_keys($headers);
 	for($i = 0; $i < sizeof($sids); $i++){
+		$workout_result = '';
 		$sid = $sids[$i];
 		$results_headers = create_results_array($wid, $sid);
 		$strength_results = fillin_strength_results($results_headers, $wid, $sid);
-		$workout_result = $headers[$sid];
+		$workout_result .= $headers[$sid] . "\n";
 		foreach($strength_results as $sr){
-			$workout_result .= "\n" . $sr;
+			$workout_result .= "\n" . $sr . "\n";
 		}
 		drupal_set_message('<pre>' . print_r($workout_result, TRUE) . '</pre>');
 	}
@@ -155,16 +157,48 @@ function create_strength_string($wid){
 
 function fillin_strength_results($headers, $wid, $sid){
 	global $user;
+	
+	// TODO Show all the performances
+//	$latest_performance = db_query('SELECT MAX(num_performed) from {workout_tracker_strength} where wid=:wid AND athlete_uid=:aid AND sid=:sid', array(':wid' => $wid, ':aid' => $user->uid, ':sid' => $sid))->fetchField();
+
 	$strength_results = db_query('SELECT * from {workout_tracker_strength} where wid=:wid AND athlete_uid=:aid AND sid=:sid', array(':wid' => $wid, ':aid' => $user->uid, ':sid' => $sid))->fetchAll();
 	
 	//drupal_set_message('<pre>' . print_r($strength_results, TRUE) . '</pre>');
 	//drupal_set_message('<pre>' . print_r($headers, TRUE) . '</pre>');
-
+/*
 	if(sizeof($strength_results) != sizeof($headers)){
 		drupal_set_message('<pre>' . print_r("Results are not the same size as the headers!", TRUE) . '</pre>');
 		return;
 	}	
+*/
 
+	// group the results by num_performed
+	$strength = array();
+	foreach($strength_results as $sr){
+		$strength[$sr->num_performed][] = $sr;
+	}
+
+	$results = array();
+	$keys = array_keys($strength);
+	foreach($keys as $key){
+		$results[$key] = "Performed on " . convert_timestamp($strength[$key][0]->date);
+		for($i = 0; $i < sizeof($strength[$key]); $i++){
+			$results[$key] .= "\n" . $headers[$i] . $strength[$key][$i]->work; 
+			if(!empty($strength[$key][$i]->fail)){
+				// There was a fail on this set
+				$failed_reps = explode(":", $strength[$key][$i]->fail);
+				$failed_movements = explode(":", $strength[$key][$i]->fail_movement);
+				for($k = 0; $k < sizeof($failed_reps); $k++){
+					$results[$key] .= "\n     " . "Failed on rep " . $failed_reps[$k];
+					if(isset($failed_movements[$k])){
+						$results[$key] .= ": Movement: " . pretty_print_movement($failed_movements[$k]);
+					}
+				}
+			}
+		}
+	}
+
+/*
 	for($i = 0; $i < sizeof($strength_results); $i++){
 		if(($i + 1) != $strength_results[$i]->set_num){
 			drupal_set_message('<pre>' . print_r("Results are out of order!", TRUE) . '</pre>');
@@ -183,8 +217,9 @@ function fillin_strength_results($headers, $wid, $sid){
 			}
 		}
 	}
-//	drupal_set_message('<pre>' . print_r($headers, TRUE) . '</pre>');
-	return $headers;
+*/
+//	drupal_set_message('<pre>' . print_r($results, TRUE) . '</pre>');
+	return $results;
 }
 
 function create_results_array($wid, $sid){
