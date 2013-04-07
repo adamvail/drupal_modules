@@ -419,10 +419,23 @@ function assemble_strength_headers($wid){
 
 function create_conditioning_string($wid){
 
-			assemble_conditioning_headers($wid);
+	$headers = assemble_conditioning_headers($wid);
+	$results = fill_in_conditioning_results($wid);
 
-			fill_in_conditioning_results($wid);
-			//drupal_set_message('<pre>' . print_r($movement_str, TRUE) . '</pre>');
+	$cids = array_keys($headers);
+	$workout_str = "";
+	for($i = 0; $i < sizeof($cids); $i++){
+		$cid = $cids[$i];
+		$workout_str .= $headers[$cid] . "\n";
+		if(substr_count($headers[$cid], "Rest") == 0){
+			$workout_str .= "\n" .  $results[$cid] . "\n";
+		}
+		else{
+			$workout_str .= "\n";
+		}
+	}
+
+	drupal_set_message('<pre>' . print_r($workout_str, TRUE) . '</pre>');
 
 }
 
@@ -448,9 +461,10 @@ function create_interval_strings($wid, $cid){
 		//drupal_set_message('<pre>' . print_r($num_intervals, TRUE) . '</pre>');
 	
 		for($interval = 1; $interval <= $rounds; $interval++){
+			$movement_str = '';
 			for($move = 1; $move <= $num_moves; $move++){
 				if(substr_count($intervals[$move - 1], "rest") == 0){
-					$movement_str .= "\n     " . $intervals[$move - 1] . ":";
+					$movement_str .= "     " . trim(str_replace("\n", "", $intervals[$move - 1])) . ":\n";
 				}				
 			}
 			$results[] = $movement_str;
@@ -466,21 +480,32 @@ function fill_in_conditioning_results($wid){
 	$conditioning_results = db_query("SELECT * FROM {workout_tracker_conditioning} where wid=:wid AND athlete_uid=:aid", array(':wid' => $wid, ':aid' => $user->uid))->fetchAll();
 
 	$conditioning = array();
+/*
 	foreach($conditioning_results as $cr){
 		$conditioning[$cr->num_performed][] = $cr;
+	}
+*/
+	foreach($conditioning_results as $cr){
+		$conditioning[$cr->cid][] = $cr;
 	}
 
 	$results = array();
 	$keys = array_keys($conditioning);
+	//drupal_set_message('<pre>' . print_r($keys, TRUE) . '</pre>');
 	foreach($keys as $key){
 		$results[$key] = "Performed on " . convert_timestamp($conditioning[$key][0]->date) . "\n";
 		for($i = 0; $i < sizeof($conditioning[$key]); $i++){
 			$workout = $conditioning[$key][$i];
 			// check to see what kind of conditioning workout it is
 			if(isset($workout->time) && !empty($workout->time)){
-				drupal_set_message('<pre>' . print_r("Rounds for time:\n" . $workout, TRUE) . '</pre>');
+				//drupal_set_message('<pre>' . print_r("Rounds for time:\n" . $workout, TRUE) . '</pre>');
 				// rounds for time
-				$results[$key] .= "     Time: " . $workout->time;
+				if(strpos($workout->time, ":") !== FALSE){
+					$results[$key] .= "     Time: " . $workout->time . " minutes\n";
+				}
+				else {
+					$results[$key] .= "     Time: " . $workout->time . ":00 minutes\n";
+				}
 			}
 			elseif(!empty($workout->amrap_rounds) || !empty($workout->amrap_reps)){
 				// amrap
@@ -498,12 +523,27 @@ function fill_in_conditioning_results($wid){
 				if(strpos($workout->interval_reps, ":") !== FALSE){
 					$intervals = explode("-", $workout->interval_reps);
 					for($k = 0; $k < sizeof($intervals); $k++){
-						$results[$key] .= "Round #" . $k . ' ' . $intervals[$k] . "\n";
+						if(strpos($intervals[$k], ":") !== FALSE){
+							$results[$key] .= "Round #" . ($k + 1) . ' ' . $intervals[$k] . " minutes\n";
+						}
+						else {
+							$results[$key] .= "Round #" . ($k + 1) . ' ' . $intervals[$k] . ":00 minutes\n";
+						}
 					}
 				}
 				else{
 					$moves = create_interval_strings($wid, $key);	
-					$intervals = explode("-", $workout->interval_reps); // still need to split each movement
+					//drupal_set_message('<pre>' . print_r($moves, TRUE) . '</pre>');
+					$intervals = explode("-", $workout->interval_reps); 
+					for($k = 0; $k < sizeof($intervals); $k++){
+						$values = explode(",", $intervals[$k]);
+						$interval_moves = explode("\n", $moves[$k]);
+						//drupal_set_message('<pre>' . print_r($values, TRUE) . '</pre>');
+						$results[$key] .= "Round #" . ($k + 1) . ":\n";
+						for($j = 0; $j < sizeof($values); $j++){
+							$results[$key] .= $interval_moves[$j] . $values[$j] . "\n";
+						}
+					}
 
 				}
 //				drupal_set_message('<pre>' . print_r($moves, TRUE) . '</pre>');
@@ -511,7 +551,8 @@ function fill_in_conditioning_results($wid){
 		}
 	}
 	
-	drupal_set_message('<pre>' . print_r($results, TRUE) . '</pre>');
+	//drupal_set_message('<pre>' . print_r($results, TRUE) . '</pre>');
+	return $results;
 
 }
 
@@ -539,7 +580,8 @@ function assemble_conditioning_headers($wid){
 			$form_state['conditioning_exists'] = TRUE;
 			// $workout is an array of movements all with the same conditioning_id
 
-			$movement_str = "Performed on " . convert_timestamp($workout[0]->date) . "\n";
+			//$movement_str = "Performed on " . convert_timestamp($workout[0]->date) . "\n";
+			$movement_str = '';
 
 			if($workout[0]->style == 'amrap'){
 				$movement_str .= $workout[0]->duration . " minute AMRAP:<br>";
@@ -567,7 +609,7 @@ function assemble_conditioning_headers($wid){
 			}
 			
 			// replace pipes with html new lines
-			$movement_str .= $workout[0]->workout . "<br>"; //str_replace("\n", "<br>", $workout[0]->workout);
+			$movement_str .= str_replace("<br>", "", $workout[0]->workout);
 
 			if(isset($conditioning_notes[$workout[0]->conditioning_id]->notes)){
 				$movement_str .= "\n" . $conditioning_notes[$workout[0]->conditioning_id]->notes;
@@ -576,7 +618,7 @@ function assemble_conditioning_headers($wid){
 			$results[$workout[0]->conditioning_id] = $movement_str;
 		}
 	}
-	drupal_set_message('<pre>' . print_r($results, TRUE) . '</pre>');
+	//drupal_set_message('<pre>' . print_r($results, TRUE) . '</pre>');
 	return $results;
 }
 
