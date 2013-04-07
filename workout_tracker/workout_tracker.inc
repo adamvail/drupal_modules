@@ -842,6 +842,7 @@ function _save_strength_results(&$form_state){
 			$record->sid = $i;
 			$record->athlete_uid = $user->uid;
 			$record->num_performed = $num_performed;
+			$record->date = time();
 			$record->set_num = $s;
 			$set_summary = "Set #" . $s . ":";
 			if(isset($set['work']) && !empty($set['work'])){
@@ -952,6 +953,7 @@ function _save_conditioning_results(&$form_state){
 		$record->cid = $i;
 		$record->athlete_uid = $user->uid;
 		$record->num_performed = $num_performed;	
+		$record->date = time();
 
 		if(!empty($workout['amrap_rounds']) || !empty($workout['amrap_reps'])){
 			$workout_completed = TRUE;
@@ -1068,23 +1070,26 @@ function workout_tracker_mail($key, &$message, $params){
 			$message['body'][] = t('Great work today @name!', array('@name' => $user->name));
 			$message['body'][] = t('Here are you results from today\'s workout:');
 			for($i = 1; isset($params['strength_print'][$i]); $i++){
-				$message['body'][] = t("-----------------------------------\n");
-				$message['body'][] = t($params['strength_print'][$i]);
-				$message['body'][] = t("\nResults:");
 				$workout = '';
 				for($s = 1; isset($params['strength_summary'][$i][$s]); $s++){ 
 					$workout .= t($params['strength_summary'][$i][$s]);
 				}
-				$message['body'][] = $workout;
-				$message['body'][] = t("-----------------------------------\n");
+				if($workout != ''){
+					$message['body'][] = t("-----------------------------------\n");
+					$message['body'][] = t($params['strength_print'][$i]);
+					$message['body'][] = t("\nResults:");
+					$message['body'][] = $workout;
+					$message['body'][] = t("-----------------------------------\n");
+				}
 			}
+
 			$cids = array_keys($params['conditioning_print']);
 			for($iter = 0; $iter < sizeof($cids); $iter++){
 				$i = $cids[$iter];
-				$message['body'][] = $params['conditioning_print'][$i];			
-				$message['body'][] = t("\n\nResults:");
-				$message['body'][] = $params['conditioning_summary'][$i];
-				for($j = 1; isset($params['conditioning_summary'][$i][$j]); $j++){
+				if(!empty($params['conditioning_summary'][$i])){
+					$message['body'][] = $params['conditioning_print'][$i];			
+					$message['body'][] = t("\n\nResults:");
+					$message['body'][] = $params['conditioning_summary'][$i];
 				}
 			}
 

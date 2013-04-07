@@ -1,0 +1,7 @@
+name = Workout Results
+description = Allows a user to see their workout history
+package = WOD Modules
+core = 7.x
+
+files[] = utils.inc
+files[] = workout_results.inc

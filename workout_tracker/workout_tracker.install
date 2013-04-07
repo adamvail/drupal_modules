@@ -79,6 +79,13 @@ function workout_tracker_schema(){
 				'size' => 'normal',
 				'description' => t('Which time this workout has been performed, since workouts can be redone'),	
 			),
+			'date' => array(
+				'type' => 'int',
+				'unsigned' => TRUE,
+				'not null' => TRUE,
+				'size' => 'normal',
+				'description' => t('Date the workout was performed'),	
+			),
 			'set_num' => array(
 				'type' => 'int',
 				'unsigned' => TRUE,
@@ -91,9 +98,8 @@ function workout_tracker_schema(){
 				'description' => t('Weight/count for this movement on this set'),
 			),
 			'fail' => array(
-				'type' => 'int',
-				'unsigned' => TRUE,
-				'size' => 'normal',
+				'type' => 'varchar',
+				'length' => '255',
 				'description' => t('The rep that was failed on'),	
 			),
 			'fail_movement' => array(
@@ -145,6 +151,13 @@ function workout_tracker_schema(){
 				'size' => 'normal',
 				'description' => t('Which time this workout has been performed, since workouts can be redone'),	
 			),
+			'date' => array(
+				'type' => 'int',
+				'unsigned' => TRUE,
+				'not null' => TRUE,
+				'size' => 'normal',
+				'description' => t('Date the workout was performed'),	
+			),
 			'time' => array(
 				'type' => 'varchar',
 				'length' => 5,
@@ -177,6 +190,7 @@ function workout_tracker_schema(){
 			'athlete_uid' => array('athlete_uid'),
 			'wid' => array('wid'),
 			'cid' => array('cid'),
+			'sid' => array('sid'),
 			'num_performed' => array('num_performed'),
 		),
 	);
@@ -213,6 +227,7 @@ function workout_tracker_schema(){
 		),
 		'indexes' => array(
 			'wid' => array('wid'),
+			'sid' => array('sid'),
 			'num_performed' => array('num_performed'),
 		),
 	);
