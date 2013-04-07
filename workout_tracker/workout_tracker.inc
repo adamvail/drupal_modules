@@ -144,8 +144,8 @@ function workout_tracker_workout($form, &$form_state){
 	
 		// Loop through the different strength_id to populate the form
 		$all_lifts = array();
-		$set_header = "";	
 		foreach($strength_data as $workout){
+			$set_header = "";	
 			$form_state['strength_exists'] = TRUE;
 			// make the header string
 			$movement_str = "";
@@ -978,7 +978,7 @@ function _save_conditioning_results(&$form_state){
 		if(!empty($workout['for_time'])){
 			$workout_completed = TRUE;
 			$record->time = $workout['for_time'];
-			(strpos(":", $record->time) !== FALSE) ? $workout_summary .= "Finished in " . $record->time . " minutes" : $workout_summary .= "Finished in " . $record->time . ":00 minutes";
+			(strpos($record->time, ":") !== FALSE) ? $workout_summary .= "Finished in " . $record->time . " minutes" : $workout_summary .= "Finished in " . $record->time . ":00 minutes";
 		}
 		
 		if(isset($workout['intervals'])){
@@ -987,7 +987,7 @@ function _save_conditioning_results(&$form_state){
 				if(!empty($workout['intervals'][$interval]['split'])){
 					$workout_completed = TRUE;
 					$results .= $workout['intervals'][$interval]['split'];
-					if(strpos(":", $workout['intervals'][$interval]['split']) !== FALSE){
+					if(strpos($workout['intervals'][$interval]['split'], ":") !== FALSE){
 						$workout_summary .= "Round #" . $interval . ": " . $workout['intervals'][$interval]['split'] . " minutes\n";
 					}
 					else {
@@ -1014,7 +1014,7 @@ function _save_conditioning_results(&$form_state){
 		}
 
 		if($workout_completed == TRUE){
-		//	drupal_set_message('<pre>' . print_r($workout_summary, TRUE) . '</pre>');
+			//drupal_set_message('<pre>' . print_r($record, TRUE) . '</pre>');
 			drupal_write_record($conditioning_table, $record);
 			$form_state['conditioning_summary'][$i] = $workout_summary;
 		}
