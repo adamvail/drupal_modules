@@ -180,7 +180,7 @@ function workout_tracker_schema(){
 				'length' => 255,
 				'description' => t('Name of movement in interval'),
 			),
-			'interval' => array(
+			'interval_reps' => array(
 				'type' => 'varchar',
 				'length' => 255,
 				'description' => t('Comma delimited list of reps from each interval for this movement'),
@@ -190,7 +190,6 @@ function workout_tracker_schema(){
 			'athlete_uid' => array('athlete_uid'),
 			'wid' => array('wid'),
 			'cid' => array('cid'),
-			'sid' => array('sid'),
 			'num_performed' => array('num_performed'),
 		),
 	);
@@ -205,7 +204,7 @@ function workout_tracker_schema(){
 				'size' => 'normal',
 				'description' => t('The workout id, group workouts from the same form together'),	
 			),
-			'strength_id' => array(
+			'sid' => array(
 				'type' => 'int',
 				'unsigned' => TRUE,
 				'not null' => TRUE,

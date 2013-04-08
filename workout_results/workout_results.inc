@@ -121,6 +121,7 @@ function workout_results_print_results($form, &$form_state){
 
 	$mobile = detect_mobile();
 	create_strength_string($wid);
+	create_conditioning_string($wid);
 }
 
 function convert_timestamp($timestamp){
@@ -158,20 +159,9 @@ function create_strength_string($wid){
 function fillin_strength_results($headers, $wid, $sid){
 	global $user;
 	
-	// TODO Show all the performances
-//	$latest_performance = db_query('SELECT MAX(num_performed) from {workout_tracker_strength} where wid=:wid AND athlete_uid=:aid AND sid=:sid', array(':wid' => $wid, ':aid' => $user->uid, ':sid' => $sid))->fetchField();
 
 	$strength_results = db_query('SELECT * from {workout_tracker_strength} where wid=:wid AND athlete_uid=:aid AND sid=:sid', array(':wid' => $wid, ':aid' => $user->uid, ':sid' => $sid))->fetchAll();
 	
-	//drupal_set_message('<pre>' . print_r($strength_results, TRUE) . '</pre>');
-	//drupal_set_message('<pre>' . print_r($headers, TRUE) . '</pre>');
-/*
-	if(sizeof($strength_results) != sizeof($headers)){
-		drupal_set_message('<pre>' . print_r("Results are not the same size as the headers!", TRUE) . '</pre>');
-		return;
-	}	
-*/
-
 	// group the results by num_performed
 	$strength = array();
 	foreach($strength_results as $sr){
@@ -198,26 +188,6 @@ function fillin_strength_results($headers, $wid, $sid){
 		}
 	}
 
-/*
-	for($i = 0; $i < sizeof($strength_results); $i++){
-		if(($i + 1) != $strength_results[$i]->set_num){
-			drupal_set_message('<pre>' . print_r("Results are out of order!", TRUE) . '</pre>');
-			return;
-		}
-		$headers[$i] .= $strength_results[$i]->work;
-		if(!empty($strength_results[$i]->fail)){
-			// There was a fail on this set
-			$failed_reps = explode(":", $strength_results[$i]->fail);
-			$failed_movements = explode(":", $strength_results[$i]->fail_movement);
-			for($k = 0; $k < sizeof($failed_reps); $k++){
-				$headers[$i] .= "\n     " . "Failed on rep " . $failed_reps[$k];
-				if(isset($failed_movements[$k])){
-					$headers[$i] .= ": Movement: " . pretty_print_movement($failed_movements[$k]);
-				}
-			}
-		}
-	}
-*/
 //	drupal_set_message('<pre>' . print_r($results, TRUE) . '</pre>');
 	return $results;
 }
@@ -448,8 +418,208 @@ function assemble_strength_headers($wid){
 }
 
 function create_conditioning_string($wid){
+
+	$headers = assemble_conditioning_headers($wid);
+	$results = fill_in_conditioning_results($wid);
+
+	$cids = array_keys($headers);
+	$workout_str = "";
+	for($i = 0; $i < sizeof($cids); $i++){
+		$cid = $cids[$i];
+		$workout_str .= $headers[$cid] . "\n";
+		if(substr_count($headers[$cid], "Rest") == 0){
+			$workout_str .= "\n" .  $results[$cid] . "\n";
+		}
+		else{
+			$workout_str .= "\n";
+		}
+	}
+
+	drupal_set_message('<pre>' . print_r($workout_str, TRUE) . '</pre>');
+
+}
+
+function create_interval_strings($wid, $cid){
+	$conditioning = db_query('SELECT * FROM {workout_builder_conditioning} where wid=:wid AND conditioning_id=:cid', array(':wid' => $wid, ':cid' => $cid));
+	$workout = $conditioning->fetchAll();
+	$results = array();
+	if($workout[0]->style == 'intervals'){
+		$rounds = $workout[0]->rounds;
+		if(empty($rounds) || !isset($rounds)){
+			$rounds = 1;
+		}
+		$work = $workout[0]->workout;
+
+		$intervals_full = explode("<br>", $work);
+		$intervals = array();
+		foreach($intervals_full as $invt){
+			if(substr_count($invt, "rest") == 0){
+				$intervals[] = $invt;
+			}
+		}
+		$num_moves = sizeof($intervals);
+		//drupal_set_message('<pre>' . print_r($num_intervals, TRUE) . '</pre>');
+	
+		for($interval = 1; $interval <= $rounds; $interval++){
+			$movement_str = '';
+			for($move = 1; $move <= $num_moves; $move++){
+				if(substr_count($intervals[$move - 1], "rest") == 0){
+					$movement_str .= "     " . trim(str_replace("\n", "", $intervals[$move - 1])) . ":\n";
+				}				
+			}
+			$results[] = $movement_str;
+		}
+	}
+//	drupal_set_message('<pre>' . print_r($results, TRUE) . '</pre>');
+	return $results;
+}
+
+function fill_in_conditioning_results($wid){
+	global $user;
+
+	$conditioning_results = db_query("SELECT * FROM {workout_tracker_conditioning} where wid=:wid AND athlete_uid=:aid", array(':wid' => $wid, ':aid' => $user->uid))->fetchAll();
+
+	$conditioning = array();
+/*
+	foreach($conditioning_results as $cr){
+		$conditioning[$cr->num_performed][] = $cr;
+	}
+*/
+	foreach($conditioning_results as $cr){
+		$conditioning[$cr->cid][] = $cr;
+	}
+
+	$results = array();
+	$keys = array_keys($conditioning);
+	//drupal_set_message('<pre>' . print_r($keys, TRUE) . '</pre>');
+	foreach($keys as $key){
+		$results[$key] = "Performed on " . convert_timestamp($conditioning[$key][0]->date) . "\n";
+		for($i = 0; $i < sizeof($conditioning[$key]); $i++){
+			$workout = $conditioning[$key][$i];
+			// check to see what kind of conditioning workout it is
+			if(isset($workout->time) && !empty($workout->time)){
+				//drupal_set_message('<pre>' . print_r("Rounds for time:\n" . $workout, TRUE) . '</pre>');
+				// rounds for time
+				if(strpos($workout->time, ":") !== FALSE){
+					$results[$key] .= "     Time: " . $workout->time . " minutes\n";
+				}
+				else {
+					$results[$key] .= "     Time: " . $workout->time . ":00 minutes\n";
+				}
+			}
+			elseif(!empty($workout->amrap_rounds) || !empty($workout->amrap_reps)){
+				// amrap
+				if(!empty($workout->amrap_rounds)){
+					$results[$key] .= "     " . $workout->amrap_rounds . " Rounds, ";
+					if(!empty($workout->amrap_reps)){
+						$results[$key] .= $workout->amrap_reps . " Reps";
+					}
+				}
+				else{
+					$results[$key] .= "     " . $workout->amrap_reps . " Reps" ;
+				}
+			}
+			elseif(!empty($workout->interval_reps)){
+				if(strpos($workout->interval_reps, ":") !== FALSE){
+					$intervals = explode("-", $workout->interval_reps);
+					for($k = 0; $k < sizeof($intervals); $k++){
+						if(strpos($intervals[$k], ":") !== FALSE){
+							$results[$key] .= "Round #" . ($k + 1) . ' ' . $intervals[$k] . " minutes\n";
+						}
+						else {
+							$results[$key] .= "Round #" . ($k + 1) . ' ' . $intervals[$k] . ":00 minutes\n";
+						}
+					}
+				}
+				else{
+					$moves = create_interval_strings($wid, $key);	
+					//drupal_set_message('<pre>' . print_r($moves, TRUE) . '</pre>');
+					$intervals = explode("-", $workout->interval_reps); 
+					for($k = 0; $k < sizeof($intervals); $k++){
+						$values = explode(",", $intervals[$k]);
+						$interval_moves = explode("\n", $moves[$k]);
+						//drupal_set_message('<pre>' . print_r($values, TRUE) . '</pre>');
+						$results[$key] .= "Round #" . ($k + 1) . ":\n";
+						for($j = 0; $j < sizeof($values); $j++){
+							$results[$key] .= $interval_moves[$j] . $values[$j] . "\n";
+						}
+					}
+
+				}
+//				drupal_set_message('<pre>' . print_r($moves, TRUE) . '</pre>');
+			}
+		}
+	}
+	
+	//drupal_set_message('<pre>' . print_r($results, TRUE) . '</pre>');
+	return $results;
+
+}
+
+function assemble_conditioning_headers($wid){
 	$conditioning = db_query('SELECT * FROM {workout_builder_conditioning} where wid=:wid', array(':wid' => $wid));
 	$conditioning_notes_results = db_query('SELECT * FROM {workout_builder_conditioning_notes} where wid=:wid', array(':wid' => $wid));
+	$results = array();
+
+	if(!empty($conditioning) && isset($conditioning)){
+		$conditioning_data = array();	
+	
+		// put the rows from the db into an array for looping by conditioning_id
+		foreach($conditioning as $movement){
+			// group by the conditioning id for form building
+			$conditioning_data[$movement->conditioning_id][] = $movement;
+		}
+
+		// group notes for each workout
+		foreach($conditioning_notes_results as $note){
+			$conditioning_notes[$note->conditioning_id] = $note;
+		}
+
+		// Loop through the different strength_id to populate the form	
+		foreach($conditioning_data as $workout){
+			$form_state['conditioning_exists'] = TRUE;
+			// $workout is an array of movements all with the same conditioning_id
+
+			//$movement_str = "Performed on " . convert_timestamp($workout[0]->date) . "\n";
+			$movement_str = '';
+
+			if($workout[0]->style == 'amrap'){
+				$movement_str .= $workout[0]->duration . " minute AMRAP:<br>";
+			}
+			elseif($workout[0]->style == 'for_time'){
+				$movement_str .= $workout[0]->rounds . " Rounds For Time";
+				if(!empty($workout[0]->cutoff)){
+					$movement_str .= ", " . $workout[0]->cutoff . " minute cutoff:<br>";	
+				}
+				else{
+					$movement_str .= ":<br>";
+				}
+			}
+			elseif($workout[0]->style == 'intervals' && $workout[0]->rounds > 1){
+				if(!empty($workout[0]->duration)){
+					(strpos($workout[0]->duration, ':') !== FALSE) ? $clock = $workout[0]->duration : $clock = $workout[0]->duration . ":00";
+					$movement_str .= $workout[0]->rounds . " Rounds on a " . $clock . " Minute Clock:<br>";
+				}
+				else {
+					$movement_str .= $workout[0]->rounds . " Rounds of:<br>";
+				}
+			}
+			elseif($workout[0]->style == 'rest'){
+				$movement_str .= $workout[0]->duration . " Minutes Rest";
+			}
+			
+			// replace pipes with html new lines
+			$movement_str .= str_replace("<br>", "", $workout[0]->workout);
+
+			if(isset($conditioning_notes[$workout[0]->conditioning_id]->notes)){
+				$movement_str .= "\n" . $conditioning_notes[$workout[0]->conditioning_id]->notes;
+			}
+// insert header here
+			$results[$workout[0]->conditioning_id] = $movement_str;
+		}
+	}
+	//drupal_set_message('<pre>' . print_r($results, TRUE) . '</pre>');
+	return $results;
 }
 
 function detect_mobile(){
