@@ -39,29 +39,58 @@ function build_strength_text($wid){
 					}
 
 					for($k = $p + 1; $k < sizeof($percentage_scheme); $k++){
-						if($percentage_scheme[$p] != $percentage_scheme[$k] || 
-								($percentage_scheme[$p] == $percentage_scheme[$k] && $k == sizeof($percentage_scheme) - 1) || 
-								($rep_scheme[$p] != $rep_scheme[$k])
+						if((isset($percentage_scheme[$p],$percentage_scheme[$k],$rep_scheme[$p],$rep_scheme[$k]))){
+							if( ($percentage_scheme[$p] != $percentage_scheme[$k] || 
+									($percentage_scheme[$p] == $percentage_scheme[$k] && $k == sizeof($percentage_scheme) - 1) || 
+									($rep_scheme[$p] != $rep_scheme[$k]))
 							){
-							if($k == $p + 1 && ($rep_scheme[$p] != $rep_scheme[$k]  || $percentage_scheme[$p] != $percentage_scheme[$k])){
-								$movement_str .= $rep_scheme[$p] . " @ " . $percentage_scheme[$p] . "%, ";
+								if($k == $p + 1 && ($rep_scheme[$p] != $rep_scheme[$k]  || $percentage_scheme[$p] != $percentage_scheme[$k])){
+									$movement_str .= $rep_scheme[$p] . " @ " . $percentage_scheme[$p] . "%, ";
+									break;
+								}
+							
+								// This means we found some that are the same
+								if($k == sizeof($percentage_scheme) - 1){
+									$num_sets = $k + 1 - $p;
+								}
+								else {
+									$num_sets = $k - $p;
+								}
+								$movement_str .= $num_sets . "x" . $rep_scheme[$p] . " @ " . $percentage_scheme[$p] . "%, ";
+								if($k == sizeof($percentage_scheme)-1){
+									$p = $k;
+								}
+								else {
+									$p = $k - 1;
+								}
 								break;
 							}
-							// This means we found some that are the same
-							if($k == sizeof($percentage_scheme) - 1){
-								$num_sets = $k + 1 - $p;
+						}
+						else {
+							if( ($percentage_scheme[$p] != $percentage_scheme[$k] || 
+									($percentage_scheme[$p] == $percentage_scheme[$k] && $k == sizeof($percentage_scheme) - 1))
+							){
+								if($k == $p + 1 && ($percentage_scheme[$p] != $percentage_scheme[$k])){
+									$movement_str .= $rep_scheme[$p] . " @ " . $percentage_scheme[$p] . "%, ";
+									break;
+								}
+							
+								// This means we found some that are the same
+								if($k == sizeof($percentage_scheme) - 1){
+									$num_sets = $k + 1 - $p;
+								}
+								else {
+									$num_sets = $k - $p;
+								}
+								$movement_str .= $num_sets . "x" . $rep_scheme[$p] . " @ " . $percentage_scheme[$p] . "%, ";
+								if($k == sizeof($percentage_scheme)-1){
+									$p = $k;
+								}
+								else {
+									$p = $k - 1;
+								}
+								break;
 							}
-							else {
-								$num_sets = $k - $p;
-							}
-							$movement_str .= $num_sets . "x" . $rep_scheme[$p] . " @ " . $percentage_scheme[$p] . "%, ";
-							if($k == sizeof($percentage_scheme)-1){
-								$p = $k;
-							}
-							else {
-								$p = $k - 1;
-							}
-							break;
 						}
 					}
 				}
@@ -116,10 +145,10 @@ function build_strength_text($wid){
 					$movement_str = $movement_str . ' on a ' . $workout[0]->clock . ':00 clock';
 				}
 			}
-
+		}
+	}
 	return $movement_str;
 }
-
 
 function build_conditioning_text($wid){
 
@@ -127,8 +156,8 @@ function build_conditioning_text($wid){
 	$conditioning_notes_results = db_query('SELECT * FROM {workout_builder_conditioning_notes} where wid=:wid', array(':wid' => $wid));
 
 	if(!empty($conditioning)){
-		$conditioning_data = array();	
-	
+		$conditioning_data = array();
+
 		// put the rows from the db into an array for looping by conditioning_id
 		foreach($conditioning as $movement){
 			// group by the conditioning id for form building
@@ -140,7 +169,7 @@ function build_conditioning_text($wid){
 			$conditioning_notes[$note->conditioning_id] = $note;
 		}
 
-		// Loop through the different strength_id to populate the form	
+		// Loop through the different strength_id to populate the form
 		foreach($conditioning_data as $workout){
 			// $workout is an array of movements all with the same conditioning_id
 
@@ -152,7 +181,7 @@ function build_conditioning_text($wid){
 			elseif($workout[0]->style == 'for_time'){
 				$movement_str = $workout[0]->rounds . " Rounds For Time";
 				if(!empty($workout[0]->cutoff)){
-					$movement_str = $movement_str . ", " . $workout[0]->cutoff . " minute cutoff:<br>";	
+					$movement_str = $movement_str . ", " . $workout[0]->cutoff . " minute cutoff:<br>";
 				}
 				else{
 					$movement_str = $movement_str . ":<br>";
@@ -163,9 +192,10 @@ function build_conditioning_text($wid){
 				$movement_str = $workout[0]->rounds . " Rounds of:<br>";
 				$fieldset_title = 'Intervals';
 			}
-			
+
 			// replace pipes with html new lines
 			$movement_str = $movement_str . str_replace("&", "<br>", $workout[0]->workout);
-
+		}
+	}
 	return $movement_str;
 }
