@@ -52,7 +52,6 @@ body {
 
 
 <?php
-	include 'C:\wamp\www\drupal\sites\all\modules\workout_tracker\utils.inc';
 	include 'C:\wamp\www\drupal\sites\all\modules\workout_results\workout_results.inc';
 	global $user;
 
