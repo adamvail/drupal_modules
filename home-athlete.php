@@ -53,7 +53,7 @@ body {
 
 <?php
 	//require_once '/var/www/includes/utils.inc';
-	//require_once '/var/www/sites/all/modules/workout_results/workout_results.inc';
+	require_once '/var/www/sites/all/modules/workout_results/workout_results.inc';
 	global $user;
 
 	if ( $user->uid ) {
@@ -117,7 +117,7 @@ body {
 					print '<th colspan="0" class="centered-cell"> WOD History </th>'; 
 				print '</tr>';
 				print '<tr>';
-					//print '<td>' . drupal_render(drupal_get_form('workout_results')) . '</td>'; 
+					print '<td>' . drupal_render(drupal_get_form('workout_results')) . '</td>'; 
 				print '</tr>';
 			print '</table>';
 		print '</div>'; //end prev div
