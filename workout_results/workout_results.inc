@@ -152,7 +152,8 @@ function create_strength_string($wid){
 		foreach($strength_results as $sr){
 			$workout_result .= "\n" . $sr . "\n";
 		}
-		drupal_set_message('<pre>' . print_r($workout_result, TRUE) . '</pre>');
+		//drupal_set_message('<pre>' . print_r($workout_result, TRUE) . '</pre>');
+		return $workout_result;
 	}
 }
 
@@ -435,8 +436,8 @@ function create_conditioning_string($wid){
 		}
 	}
 
-	drupal_set_message('<pre>' . print_r($workout_str, TRUE) . '</pre>');
-
+//	drupal_set_message('<pre>' . print_r($workout_str, TRUE) . '</pre>');
+	return $workout_str;
 }
 
 function create_interval_strings($wid, $cid){
