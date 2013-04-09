@@ -52,8 +52,8 @@ body {
 
 
 <?php
-	include '/var/www/includes/utils.inc';
-	include '/var/www/sites/all/modules/workout_results/workout_results.inc';
+	require_once '/var/www/includes/utils.inc';
+	require_once '/var/www/sites/all/modules/workout_results/workout_results.inc';
 	global $user;
 
 	if ( $user->uid ) {
