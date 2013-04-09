@@ -70,7 +70,9 @@ body {
 				print 'Gym: ' . $usr->gym;
 			}
 			print '<div id="prpic">';
-				print '<img src="' . base_path() . drupal_get_path('theme', 'skeletontheme') . '/mockup/user.png">';
+				$picture_uri = db_query("SELECT uri FROM {file_managed} where uid=:uid", array(':uid' => $user->uid))->fetchField();
+				print '<img src="' . file_create_url($picture_uri) . '">';
+				//print '<img src="' . base_path() . drupal_get_path('theme', 'skeletontheme') . '/mockup/user.png">';
 			print '</div>'; //end prpic div
 		print '</div>'; //end prof div
 		print '<div id="wod">';
