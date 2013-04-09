@@ -52,7 +52,7 @@ body {
 
 
 <?php
-	include 'C:\wamp\www\drupal\sites\all\modules\workout_tracker\utils.inc';
+	include '/var/www/includes/utils.inc';
 	global $user;
 
 	if ( $user->uid ) {
