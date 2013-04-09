@@ -52,8 +52,8 @@ body {
 
 
 <?php
-	require_once '/var/www/includes/utils.inc';
-	require_once '/var/www/sites/all/modules/workout_results/workout_results.inc';
+	//require_once '/var/www/includes/utils.inc';
+	//require_once '/var/www/sites/all/modules/workout_results/workout_results.inc';
 	global $user;
 
 	if ( $user->uid ) {
@@ -90,9 +90,9 @@ body {
 				$ret = db_query('SELECT * FROM {workout_builder_strength} WHERE wid = @last_id AND gym LIKE :gym', array(':gym' => $name->gym));
 				//print out the strength portion of the workout
 				foreach($ret as $row){
-					$output = create_strength_string($row->wid);
+					//$output = create_strength_string($row->wid);
 					print '<tr>';
-						print '<td>' . $output . '</td>';
+						//print '<td>' . $output . '</td>';
 					print '</tr>';
 				}
 				//conditioning portion of the wod
@@ -102,9 +102,9 @@ body {
 				$ret = db_query('SELECT * FROM {workout_builder_conditioning} WHERE wid = @last_id AND gym LIKE :gym', array(':gym' => $name->gym));
 				//print out the conditioning portion of the workout
 				foreach($ret as $row){
-					$output = create_conditioning_string($row->wid);
+					//$output = create_conditioning_string($row->wid);
 					print '<tr>';
-						print '<td>' . $output . '</td>';
+						//print '<td>' . $output . '</td>';
 					print '</tr>';
 				}
 			print '</table>';		
@@ -117,7 +117,7 @@ body {
 					print '<th colspan="0" class="centered-cell"> WOD History </th>'; 
 				print '</tr>';
 				print '<tr>';
-					print '<td>' . drupal_render(drupal_get_form('workout_results')) . '</td>'; 
+					//print '<td>' . drupal_render(drupal_get_form('workout_results')) . '</td>'; 
 				print '</tr>';
 			print '</table>';
 		print '</div>'; //end prev div
