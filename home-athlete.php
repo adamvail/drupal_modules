@@ -90,7 +90,7 @@ body {
 				$ret = db_query('SELECT * FROM {workout_builder_strength} WHERE wid = @last_id AND gym LIKE :gym', array(':gym' => $name->gym));
 				//print out the strength portion of the workout
 				foreach($ret as $row){
-					$output = build_strength_text($row->wid);
+					$output = create_strength_string($row->wid);
 					print '<tr>';
 						print '<td>' . $output . '</td>';
 					print '</tr>';
@@ -102,7 +102,7 @@ body {
 				$ret = db_query('SELECT * FROM {workout_builder_conditioning} WHERE wid = @last_id AND gym LIKE :gym', array(':gym' => $name->gym));
 				//print out the conditioning portion of the workout
 				foreach($ret as $row){
-					$output = build_conditioning_text($row->wid);
+					$output = create_conditioning_string($row->wid);
 					print '<tr>';
 						print '<td>' . $output . '</td>';
 					print '</tr>';
