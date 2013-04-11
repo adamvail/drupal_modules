@@ -40,7 +40,7 @@ function workout_tracker_schema(){
 				'unsigned' => TRUE,
 				'not null' => TRUE,
 				'size' => 'normal',
-				'description' => t('The date that this workout was created'),	
+				'description' => t('The date that this pr was set'),	
 			),
 		),
 		'indexes' => array(
