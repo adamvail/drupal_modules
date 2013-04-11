@@ -1,6 +1,14 @@
 <?php
 
-function build_strength_text($wid){
+$drupal_root_dir = '/var/www';
+chdir($drupal_root_dir);
+
+//define('DRUPAL_ROOT', $drupal_root_dir);
+
+require_once "/var/www/includes/bootstrap.inc";
+drupal_bootstrap(DRUPAL_BOOTSTRAP_DATABASE);
+
+function create_strength_string($wid){
 
 	$strength = db_query('SELECT * FROM {workout_builder_strength} where wid=:wid', array(':wid' => $wid));
 	$strength_notes_results = db_query('SELECT * FROM {workout_builder_strength_notes} where wid=:wid', array(':wid' => $wid));
@@ -150,7 +158,7 @@ function build_strength_text($wid){
 	return $movement_str;
 }
 
-function build_conditioning_text($wid){
+function create_conditioning_string($wid){
 
 	$conditioning = db_query('SELECT * FROM {workout_builder_conditioning} where wid=:wid', array(':wid' => $wid));
 	$conditioning_notes_results = db_query('SELECT * FROM {workout_builder_conditioning_notes} where wid=:wid', array(':wid' => $wid));

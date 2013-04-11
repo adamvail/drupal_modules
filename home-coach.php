@@ -52,7 +52,10 @@ body {
 
 
 <?php
+
 	include 'C:\wamp\www\drupal\sites\all\modules\workout_results\workout_results.inc';
+	//include '/var/www/includes/utils.inc';
+
 	global $user;
 
 	if ( $user->uid ) {
@@ -94,7 +97,7 @@ body {
 			$ret = db_query('SELECT * FROM {workout_builder_strength} WHERE wid = @last_id');
 			//print out the strength portion of the workout
 			foreach($ret as $workout){
-				$output = build_strength_text($workout->wid);
+				$output = create_strength_string($workout->wid);
 				print '<tr>';
 					print '<td>' . $output . '</td>';
 				print '</tr>';
@@ -107,7 +110,7 @@ body {
 			$ret = db_query('SELECT * FROM {workout_builder_conditioning} WHERE wid = @last_id');
 			//print out the conditioning portion of the workout
 			foreach($ret as $workout){
-				$output = build_conditioning_text($workout->wid);
+				$output = create_conditioning_string($workout->wid);
 				print '<tr>';
 					print '<td>' . $output . '</td>';
 				print '</tr>';

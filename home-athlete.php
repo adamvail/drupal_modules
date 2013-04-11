@@ -35,7 +35,13 @@
 	border-style:solid;
 	border-width:2px;
 	border-color:#D4D4D4;
-	border-radius: 10px;
+	width:128px;
+}
+#prpic img {
+	max-width:100%; 
+	max-height:100%;
+	margin:auto;
+	display:block;
 }
 td{
 	text-align:center;
@@ -53,6 +59,9 @@ body {
 
 <?php
 	include 'C:\wamp\www\drupal\sites\all\modules\workout_results\workout_results.inc';
+	//include '/var/www/sites/all/modules/workout_results/workout_results.inc';
+
+
 	global $user;
 
 	if ( $user->uid ) {
@@ -68,7 +77,9 @@ body {
 				print 'Gym: ' . $usr->gym;
 			}
 			print '<div id="prpic">';
-				print '<img src="' . base_path() . drupal_get_path('theme', 'skeletontheme') . '/mockup/user.png">';
+				$picture_uri = db_query("SELECT uri FROM {file_managed} where uid=:uid", array(':uid' => $user->uid))->fetchField();
+				print '<img src="' . file_create_url($picture_uri) . '">';
+				//print '<img src="' . base_path() . drupal_get_path('theme', 'skeletontheme') . '/mockup/user.png">';
 			print '</div>'; //end prpic div
 		print '</div>'; //end prof div
 		print '<div id="wod">';
@@ -89,7 +100,7 @@ body {
 				$ret = db_query('SELECT * FROM {workout_builder_strength} WHERE wid = @last_id AND gym LIKE :gym', array(':gym' => $name->gym));
 				//print out the strength portion of the workout
 				foreach($ret as $row){
-					$output = build_strength_text($row->wid);
+					$output = create_strength_string($row->wid);
 					print '<tr>';
 						print '<td>' . $output . '</td>';
 					print '</tr>';
@@ -101,7 +112,7 @@ body {
 				$ret = db_query('SELECT * FROM {workout_builder_conditioning} WHERE wid = @last_id AND gym LIKE :gym', array(':gym' => $name->gym));
 				//print out the conditioning portion of the workout
 				foreach($ret as $row){
-					$output = build_conditioning_text($row->wid);
+					$output = create_conditioning_string($row->wid);
 					print '<tr>';
 						print '<td>' . $output . '</td>';
 					print '</tr>';
