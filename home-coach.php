@@ -35,7 +35,13 @@
 	border-style:solid;
 	border-width:2px;
 	border-color:#D4D4D4;
-	border-radius: 10px;
+	width:128px;
+}
+#prpic img {
+	max-width:100%; 
+	max-height:100%;
+	margin:auto;
+	display:block;
 }
 td{
 	text-align:center;
@@ -43,16 +49,16 @@ td{
 .centered-cell {
   text-align: center;
 } 
-body {
-	font-family:Verdana;
-}
 </style>
 
 
 
 
 <?php
-	include '/var/www/includes/utils.inc';
+
+	include 'C:\wamp\www\drupal\sites\all\modules\workout_results\workout_results.inc';
+	//include '/var/www/includes/utils.inc';
+
 	global $user;
 
 	if ( $user->uid ) {
@@ -69,7 +75,8 @@ body {
 			}
 			
 			print '<div id="prpic">';
-				print '<img src="' . base_path() . drupal_get_path('theme', 'skeletontheme') . '/mockup/user.png">';
+				$picture_uri = db_query("SELECT uri FROM {file_managed} where uid=:uid", array(':uid' => $user->uid))->fetchField();
+				print '<img src="' . file_create_url($picture_uri) . '">';
 			print '</div>'; //end prpic div
 			
 		print '</div>'; //end prof div
@@ -80,37 +87,62 @@ body {
 		print '<table>';
 		
 			print '<tr>';
-				$wid = db_query('SELECT MAX(wid) FROM {workout_builder_strength} WHERE creator_id = :uid', array(':uid' => $user->uid))->fetchField();
+				$wid = 0;
+				$swid = db_query('SELECT MAX(wid) FROM {workout_builder_strength} WHERE creator_id = :uid', array(':uid' => $user->uid))->fetchField();
+				$cwid = db_query('SELECT MAX(wid) FROM {workout_builder_conditioning} WHERE creator_id = :uid', array(':uid' => $user->uid))->fetchField();
+				//print (int)$swid . ' ' . (int)$cwid;
+				if((int)$swid != 0 || (int)$cwid != 0) {
+					if($swid > $cwid) {
+						//print 'here';
+						$wid = $swid;
+					}
+					else {
+						//print 'here1';
+						$wid = $cwid;
+					}
+				}
+
 				print '<th colspan="0" class="centered-cell"><a  href="?q=workout_tracker&wid=' . (int)$wid . '">' . 'Workout of the Day' . '</a></th>';	
 			print '</tr>';
 			
 			//strength portion of the wod
-			print '<tr>';
-				print '<th colspan="0">' . 'Strength Portion:' . '</th>';	
-			print '</tr>';
-			
-			//gather the strength portion of the last built workout for gym user is in
-			db_query('SELECT @last_id := MAX(wid) FROM {workout_builder_strength} WHERE creator_id = :uid', array(':uid' => $user->uid));
-			$ret = db_query('SELECT * FROM {workout_builder_strength} WHERE wid = @last_id');
-			//print out the strength portion of the workout
-			foreach($ret as $workout){
-				$output = build_strength_text($workout->wid);
-				print '<tr>';
-					print '<td>' . $output . '</td>';
+			if($wid == 0) {
+				print '<tr>';			
+							print '<td> No workouts exist: Use workout builder to create one.</td>';					
 				print '</tr>';
 			}
-			
-			//conditioning portion of the wod
-			print '<tr>';
-				print '<th colspan="0">' . 'Conditioning Portion:' . '</th>';	
-			print '</tr>';
-			$ret = db_query('SELECT * FROM {workout_builder_conditioning} WHERE wid = @last_id');
-			//print out the conditioning portion of the workout
-			foreach($ret as $workout){
-				$output = build_conditioning_text($workout->wid);
-				print '<tr>';
-					print '<td>' . $output . '</td>';
-				print '</tr>';
+			else {
+				//strength portion of the wod
+				if($wid == $swid) {
+					print '<tr>';			
+							print '<th colspan="0">' . 'Strength Portion:' . '</th>';					
+					print '</tr>';
+					
+					//print out the strength portion of the workout
+					$output = assemble_strength_headers($wid);
+					//print sizeof($output);
+					for ($i=1; $i<=sizeof($output); $i++) {
+						print '<tr>';
+							print '<td>' . $output[$i] . '</td>';
+						print '</tr>';
+					}
+				}
+				
+				
+				//conditioning portion of the wod
+				if($wid == $cwid) {
+					print '<tr>';
+						print '<th colspan="0">' . 'Conditioning Portion:' . '</th>';	
+					print '</tr>';
+					
+					//print out the conditioning portion of the workout
+					$output = assemble_conditioning_headers($wid);
+					for ($i=1; $i<=sizeof($output); $i++) {
+						print '<tr>';
+							print '<td>' . $output[$i] . '</td>';
+						print '</tr>';
+					}			
+				}
 			}
 		print '</table>';		
 	
@@ -146,8 +178,7 @@ body {
 						//print whether a workout has been completed or not
 						$auid = db_query('SELECT uid FROM {workout_gym_affiliation} WHERE name LIKE :name', array(':name' => $usr->name))->fetchField();
 						$currwid = db_query('SELECT MAX(wid) FROM {workout_tracker_strength} WHERE athlete_uid = :auid', array(':auid' => $auid))->fetchField();
-						$lwid = db_query('SELECT MAX(wid) FROM {workout_builder_strength} WHERE creator_id = :myuid', array(':myuid' => $user->uid))->fetchField();
-						if($currwid == $lwid && $lwid != NULL){
+						if($currwid == $wid && $wid != NULL){
 							print '<td>Completed</td>';
 						}
 						else{
