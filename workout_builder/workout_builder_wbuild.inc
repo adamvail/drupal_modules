@@ -932,7 +932,6 @@ function _populate_conditioning_table(&$form_state, $wid){
 	global $user;
 	$table = 'workout_builder_conditioning';
 	$table_notes = 'workout_builder_conditioning_notes';
-	// TODO there is something wrong with this query, investigate later
 	$gym = db_query('SELECT gym from {workout_gym_affiliation} where uid=:uid', array(':uid' => $user->uid))->fetchField();
 
 //	drupal_set_message('<pre>' . print_r($form_state['values'], TRUE) . '</pre>');
