@@ -55,7 +55,7 @@ function workout_results($form, &$form_state){
 				$movement_str .= pretty_print_movement($movements[$i]->movement);
 			}
 			else {
-				$movement_str .= pretty_print_movement($movements[$i]->movement) . '<br>';
+				$movement_str .= pretty_print_movement($movements[$i]->movement) . '+ ';
 			}
 		}
 
@@ -63,18 +63,18 @@ function workout_results($form, &$form_state){
 		foreach($cond as $c){
 			if($c->style == 'amrap'){
 				$duration = db_query("SELECT duration from {workout_builder_conditioning} where wid=:wid AND style=:style", array(':wid' => $w, ':style' => $c->style))->fetchField();
-				($movement_str == '') ? $movement_str .= $duration . ' Minute AMRAP' : $movement_str .= '<br>     ' . $duration . ' Minute AMRAP';
+				($movement_str == '') ? $movement_str .= $duration . ' Minute AMRAP' : $movement_str .= ', ' . $duration . ' Minute AMRAP';
 			}
 			elseif($c->style == 'for_time'){
 				$rounds= db_query("SELECT rounds from {workout_builder_conditioning} where wid=:wid AND style=:style", array(':wid' => $w, ':style' => $c->style))->fetchField();
-				($movement_str == '') ? $movement_str .= $rounds . " Rounds for Time" : $movement_str .= '<br>     ' . $rounds . " Rounds for Time";
+				($movement_str == '') ? $movement_str .= $rounds . " Rounds for Time" : $movement_str .= ', ' . $rounds . " Rounds for Time";
 			}
 			elseif($c->style == 'intervals'){
-				($movement_str == '') ? $movement_str .= "Intervals" : $movement_str .= "<br>Intervals";
+				($movement_str == '') ? $movement_str .= "Intervals" : $movement_str .= ", Intervals";
 			}
 		}
 
-		$workout_strength = convert_timestamp($dates[$w]) . ":<br>" . $movement_str;
+		$workout_strength = convert_timestamp($dates[$w]) . ": " . $movement_str;
 		$wids[$w] = $workout_strength;
 	}
 
@@ -110,34 +110,63 @@ function workout_results_next_submit($form, &$form_state){
 }
 
 function workout_results_print_results($form, &$form_state){
+	global $user;
 	// Build this form based off the workout they just chose
 	$wid = $form_state['values']['workout_choice'];
 	$form_state['wid'] = $wid;
 
 	$mobile = detect_mobile();
-	$strength_str = create_strength_string($wid);
-	$conditioning_str = create_conditioning_string($wid);
 
-	if(!empty($strength_str)){
-		$form['strength'] = array(
-			'#type' => 'fieldset',
-			'#title' => t('Strength'),
-		);
+	$strength_np = db_query("SELECT MAX(num_performed) FROM {workout_tracker_strength} WHERE wid=:wid", array(':wid' => $wid))->fetchField();
+	$conditioning_np = db_query("SELECT MAX(num_performed) FROM {workout_tracker_conditioning} WHERE wid=:wid", array(':wid' => $wid))->fetchField();
 
-		$form['strength']['results'] = array(
-			'#markup' => $strength_str, 
-		);
+	if($strength_np > $conditioning_np){
+		$max_performed = $strength_np;
+	}
+	else {
+		$max_performed = $conditioning_np;
 	}
 
-	if(!empty($conditioning_str)){
-		$form['conditioning'] = array(
-			'#type' => 'fieldset',
-			'#title' => t('Conditioning'),
-		);
+	for($i = 1; $i <= $max_performed; $i++){
 
-		$form['conditioning']['results'] = array(
-			'#markup' => $conditioning_str, 
-		);
+		$strength_str = create_strength_string($wid, $i);
+		$conditioning_str = create_conditioning_string($wid, $i);
+
+		$date = db_query("SELECT DISTINCT(date) FROM {workout_tracker_strength} where wid=:wid AND athlete_uid=:aid AND num_performed=:np", array(':wid' => $wid, ':aid' => $user->uid, ':np' => $i))->fetchField();
+
+		if(empty($date)){
+			$date = db_query("SELECT DISTINCT(date) FROM {workout_tracker_conditioning} where wid=:wid AND athlete_uid=:aid AND num_performed=:np", array(':wid' => $wid, ':aid' => $user->uid, ':np' => $i))->fetchField();
+
+		}
+
+		if(!empty($strength_str) || !empty($conditioning_str)){
+			$form['workout'][$i] = array(
+				'#type' => 'fieldset',
+				'#title' => t("Performed on @date", array('@date' => convert_timestamp($date))),
+			);
+		}
+
+		if(!empty($strength_str)){
+			$form['workout'][$i]['strength'] = array(
+				'#type' => 'fieldset',
+				'#title' => t('Strength'),
+			);
+
+			$form['workout'][$i]['strength']['results'] = array(
+				'#markup' => $strength_str, 
+			);
+		}
+
+		if(!empty($conditioning_str)){
+			$form['workout'][$i]['conditioning'] = array(
+				'#type' => 'fieldset',
+				'#title' => t('Conditioning'),
+			);
+
+			$form['workout'][$i]['conditioning']['results'] = array(
+				'#markup' => $conditioning_str, 
+			);
+		}
 	}
 
 	return $form;
@@ -157,7 +186,7 @@ function pretty_print_movement($movement){
 	return $movement_pretty;
 }
 
-function create_strength_string($wid){
+function create_strength_string($wid, $num_performed){
 	global $user;
 
 	$headers = assemble_strength_headers($wid);
@@ -166,7 +195,10 @@ function create_strength_string($wid){
 		$workout_result = '';
 		$sid = $sids[$i];
 		$results_headers = create_results_array($wid, $sid);
-		$strength_results = fillin_strength_results($results_headers, $wid, $sid);
+		$strength_results = fillin_strength_results($results_headers, $wid, $sid, $num_performed);
+		if($strength_results == ''){
+			return '';
+		}
 		$workout_result .= $headers[$sid] . "<br>";
 		foreach($strength_results as $sr){
 			$workout_result .= "<br>" . $sr . "<br>";
@@ -176,11 +208,15 @@ function create_strength_string($wid){
 	}
 }
 
-function fillin_strength_results($headers, $wid, $sid){
+function fillin_strength_results($headers, $wid, $sid, $num_performed){
 	global $user;
 	
 
-	$strength_results = db_query('SELECT * from {workout_tracker_strength} where wid=:wid AND athlete_uid=:aid AND sid=:sid', array(':wid' => $wid, ':aid' => $user->uid, ':sid' => $sid))->fetchAll();
+	$strength_results = db_query('SELECT * from {workout_tracker_strength} where wid=:wid AND athlete_uid=:aid AND sid=:sid AND num_performed=:np', array(':wid' => $wid, ':aid' => $user->uid, ':sid' => $sid, ':np' => $num_performed))->fetchAll();
+
+	if(empty($strength_results)){
+		return '';
+	}
 	
 	// group the results by num_performed
 	$strength = array();
@@ -191,9 +227,9 @@ function fillin_strength_results($headers, $wid, $sid){
 	$results = array();
 	$keys = array_keys($strength);
 	foreach($keys as $key){
-		$results[$key] = "Performed on " . convert_timestamp($strength[$key][0]->date);
+		$results[$key] = ''; //"Performed on " . convert_timestamp($strength[$key][0]->date);
 		for($i = 0; $i < sizeof($strength[$key]); $i++){
-			$results[$key] .= "<br>" . $headers[$i] . $strength[$key][$i]->work; 
+			($i == 0) ? $results[$key] .= $headers[$i] . $strength[$key][$i]->work : $results[$key] .= '<br>' . $headers[$i] . $strength[$key][$i]->work; 
 			if(!empty($strength[$key][$i]->fail)){
 				// There was a fail on this set
 				$failed_reps = explode(":", $strength[$key][$i]->fail);
@@ -437,10 +473,14 @@ function assemble_strength_headers($wid){
 	return $headers;
 }
 
-function create_conditioning_string($wid){
+function create_conditioning_string($wid, $num_performed){
 
 	$headers = assemble_conditioning_headers($wid);
-	$results = fill_in_conditioning_results($wid);
+	$results = fill_in_conditioning_results($wid, $num_performed);
+
+	if(empty($results)){
+		return '';
+	}
 
 	$cids = array_keys($headers);
 	$workout_str = "";
@@ -484,7 +524,7 @@ function create_interval_strings($wid, $cid){
 			$movement_str = '';
 			for($move = 1; $move <= $num_moves; $move++){
 				if(substr_count($intervals[$move - 1], "rest") == 0){
-					$movement_str .= "     " . trim(str_replace("\n", "", $intervals[$move - 1])) . ":<br>";
+					$movement_str .= "     " . trim(str_replace("\n", "<br>", $intervals[$move - 1])) . ":<br>";
 				}				
 			}
 			$results[] = $movement_str;
@@ -494,10 +534,10 @@ function create_interval_strings($wid, $cid){
 	return $results;
 }
 
-function fill_in_conditioning_results($wid){
+function fill_in_conditioning_results($wid, $num_performed){
 	global $user;
 
-	$conditioning_results = db_query("SELECT * FROM {workout_tracker_conditioning} where wid=:wid AND athlete_uid=:aid", array(':wid' => $wid, ':aid' => $user->uid))->fetchAll();
+	$conditioning_results = db_query("SELECT * FROM {workout_tracker_conditioning} where wid=:wid AND athlete_uid=:aid AND num_performed=:np", array(':wid' => $wid, ':aid' => $user->uid, ':np' => $num_performed))->fetchAll();
 
 	$conditioning = array();
 /*
@@ -513,7 +553,7 @@ function fill_in_conditioning_results($wid){
 	$keys = array_keys($conditioning);
 	//drupal_set_message('<pre>' . print_r($keys, TRUE) . '</pre>');
 	foreach($keys as $key){
-		$results[$key] = "Performed on " . convert_timestamp($conditioning[$key][0]->date) . "<br>";
+		$results[$key] = ''; //"Performed on " . convert_timestamp($conditioning[$key][0]->date) . "<br>";
 		for($i = 0; $i < sizeof($conditioning[$key]); $i++){
 			$workout = $conditioning[$key][$i];
 			// check to see what kind of conditioning workout it is
@@ -544,10 +584,10 @@ function fill_in_conditioning_results($wid){
 					$intervals = explode("-", $workout->interval_reps);
 					for($k = 0; $k < sizeof($intervals); $k++){
 						if(strpos($intervals[$k], ":") !== FALSE){
-							$results[$key] .= "Round #" . ($k + 1) . ' ' . $intervals[$k] . " minutes<br>";
+							$results[$key] .= "Round #" . ($k + 1) . ': ' . $intervals[$k] . " minutes<br>";
 						}
 						else {
-							$results[$key] .= "Round #" . ($k + 1) . ' ' . $intervals[$k] . ":00 minutes<br>";
+							$results[$key] .= "Round #" . ($k + 1) . ': ' . $intervals[$k] . ":00 minutes<br>";
 						}
 					}
 				}
@@ -629,10 +669,10 @@ function assemble_conditioning_headers($wid){
 			}
 			
 			// replace pipes with html new lines
-			$movement_str .= str_replace("<br>", "", $workout[0]->workout);
+			$movement_str .= $workout[0]->workout;
 
 			if(isset($conditioning_notes[$workout[0]->conditioning_id]->notes)){
-				$movement_str .= "<br>" . $conditioning_notes[$workout[0]->conditioning_id]->notes;
+				$movement_str .= "<br><br>" . $conditioning_notes[$workout[0]->conditioning_id]->notes;
 			}
 // insert header here
 			$results[$workout[0]->conditioning_id] = $movement_str;

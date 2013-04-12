@@ -986,7 +986,7 @@ function _save_conditioning_results(&$form_state){
 			for($interval = 1; $interval <= $form_state['interval_rounds']; $interval++){
 				if(!empty($workout['intervals'][$interval]['split'])){
 					$workout_completed = TRUE;
-					$results .= $workout['intervals'][$interval]['split'];
+					(strpos(":", $workout['intervals'][$interval]['split']) !== FALSE) ? $results .= $workout['intervals'][$interval]['split'] : $results .= $workout['intervals'][$interval]['split'] . ":00";
 					if(strpos($workout['intervals'][$interval]['split'], ":") !== FALSE){
 						$workout_summary .= "Round #" . $interval . ": " . $workout['intervals'][$interval]['split'] . " minutes\n";
 					}
