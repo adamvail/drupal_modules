@@ -24,18 +24,24 @@
 	border-width:2px;
 	border-color:grey;*/
 	margin:5px;
-	width:60%
+	width:60%;
 }
 #hist {
 	clear:both;
-	margin:10px;
+	float:left;
+	margin:5px;
+	width:50%;
+}
+#graph {
+	float:right;
+	margin:5px;
 }
 #prpic {
 	float:right;
 	border-style:solid;
 	border-width:2px;
 	border-color:#D4D4D4;
-	width:128px;
+	width:40%;
 }
 #prpic img {
 	max-width:100%; 
@@ -174,26 +180,25 @@ td{
 					print '<td>' . drupal_render(drupal_get_form('workout_results')) . '</td>'; 
 				print '</tr>';
 			print '</table>';
+		print '</div>'; //end hist div
+		
+		print '<div id="graph">';
+			//*-------------------------------------------------
 			
-		/*-------------------------------------------------
-		
-		$values = array(1, 2, 3, 4);
+			$chart = array(
+				'#chart_id' => 'test_chart',
+				'#title' => t('Weight Lifted'),
+				'#type' => 'lc',
+			);
 
-		$chart = array(
-		  '#plugin'    => 'google', // Google Charts API will be used
-		  '#type'     => 'line2D', // A simple line chart
-		  '#height'   => 100, // in pixels
-		  '#width'    => 200, // in pixels
+			$chart['#data']['fruits'] = 30;
+			$chart['#data']['meats']  = 20;
+			$chart['#data']['dairy']  = 50;
 
-		   $values, // This is the contents of the array build above
-		);
-		return charts_chart($chart);
-		
-		
-		//--------------------------------------------------*/
+			print theme('chart', array('chart' => $chart));
 
-			
-		print '</div>'; //end prev div
+			//--------------------------------------------------*/
+		print '</div>'; //end graph div
 	}
 ?>
 
