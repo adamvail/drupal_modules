@@ -1,0 +1,6 @@
+name = Workout Search 
+description = Allows a user to search their workouts for a specific movement
+package = WOD Modules
+core = 7.x
+
+files[] = workout_results.inc
