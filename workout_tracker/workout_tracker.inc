@@ -813,7 +813,7 @@ function _save_strength_results(&$form_state){
 	$strength_table_notes = 'workout_tracker_strength_notes';
 
 	// figure out how many times this workout has been done before
-	$num_performed = db_query('SELECT MAX(num_performed) from {workout_tracker_strength} where wid=:wid', array(':wid' => $form_state['wid']))->fetchField();
+	$num_performed = db_query('SELECT MAX(num_performed) from {workout_tracker_strength} where wid=:wid AND athlete_uid=:aid', array(':wid' => $form_state['wid'], ':aid' => $user->uid))->fetchField();
 
 	if(empty($num_performed)){
 		// workout has never been done
@@ -925,7 +925,7 @@ function _save_conditioning_results(&$form_state){
 	$conditioning_notes_table = 'workout_tracker_conditioning_notes';
 
 	//drupal_set_message('<pre>' . print_r($form_state['wid'], TRUE) . '</pre>');
-	$num_performed = db_query('SELECT MAX(num_performed) from {workout_tracker_conditioning} where wid=:wid', array(':wid' => $form_state['wid']))->fetchField();
+	$num_performed = db_query('SELECT MAX(num_performed) from {workout_tracker_conditioning} where wid=:wid AND athlete_uid=:aid', array(':wid' => $form_state['wid'], ':aid' => $user->uid))->fetchField();
 
 	if(empty($num_performed)){
 		// workout has never been done
