@@ -76,7 +76,12 @@ td{
 			
 			print '<div id="prpic">';
 				$picture_uri = db_query("SELECT uri FROM {file_managed} where uid=:uid", array(':uid' => $user->uid))->fetchField();
-				print '<img src="' . file_create_url($picture_uri) . '">';
+				if($picture_uri != NULL){
+					print '<img src="' . file_create_url($picture_uri) . '">';			
+				}
+				else {		
+					print '<a href="?q=user/' . $user->uid . '/edit"><img src="' . base_path() . 'misc/druplicon.png"></a>';
+				}
 			print '</div>'; //end prpic div
 			
 		print '</div>'; //end prof div

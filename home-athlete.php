@@ -35,6 +35,11 @@
 #graph {
 	float:right;
 	margin:5px;
+	//border-style:solid;
+	//border-width:2px;
+	//border-color:#D4D4D4;
+	//border-radius: 10px;
+	padding:20px;
 }
 #prpic {
 	float:right;
@@ -86,7 +91,12 @@ td{
 			//disply the users profile picture
 			print '<div id="prpic">';
 				$picture_uri = db_query("SELECT uri FROM {file_managed} where uid=:uid", array(':uid' => $user->uid))->fetchField();
-				print '<img src="' . file_create_url($picture_uri) . '">';
+				if($picture_uri != NULL){
+					print '<img src="' . file_create_url($picture_uri) . '">';			
+				}
+				else {		
+					print '<a href="?q=user/' . $user->uid . '/edit"><img src="' . base_path() . 'misc/druplicon.png"></a>';
+				}
 			print '</div>'; //end prpic div
 			
 		print '</div>'; //end prof div
@@ -122,7 +132,7 @@ td{
 			print '<table>';	
 				//print the table header
 				print '<tr>';
-					print '<th colspan="0" class="centered-cell"><a  href="?q=workout_tracker&wid=' . (int)$wid . '">' . 'Workout of the Day' . '</a></th>';	
+					print '<th colspan="0" class="centered-cell"><a href="?q=workout_tracker&wid=' . (int)$wid . '">' . 'Workout of the Day' . '</a></th>';	
 				print '</tr>';
 				
 				//print that no workouts exist and one should be created.
@@ -186,14 +196,43 @@ td{
 			//*-------------------------------------------------
 			
 			$chart = array(
-				'#chart_id' => 'test_chart',
-				'#title' => t('Weight Lifted'),
-				'#type' => 'lc',
+				'#chart_id' => 'weight_chart',
+				'#title' => chart_title(t('Weight Lifted per Movement'), 15),
+				'#type' => CHART_TYPE_BAR_V_GROUPED,
+				'#size' => chart_size(300, 200),
+				'#adjust_resolution' => TRUE,
+				'#grid_lines' => chart_grid_lines(10, 20), 
+				'#bar_size' => chart_bar_size(35, 15), 
 			);
+			
+			//gather data for the chart
+			$chart['#data']['clean'] = array(1);
+			$chart['#data']['jerk']  = array(2);
+			$chart['#data']['squat']  = array(5);
+			$chart['#data']['Deadlift']  = array(2);
 
-			$chart['#data']['fruits'] = 30;
-			$chart['#data']['meats']  = 20;
-			$chart['#data']['dairy']  = 50;
+			//create the legend
+			$chart['#legends'][] = t('Clean');
+			$chart['#legends'][] = t('Jerk');
+			$chart['#legends'][] = t('Squat');
+			$chart['#legends'][] = t('Deadlift');
+
+			//set chart bar line colors
+			$chart['#data_colors'][] = '00ff00';
+			$chart['#data_colors'][] = 'ff0000';
+			$chart['#data_colors'][] = '0000ff';
+			$chart['#data_colors'][] = 'FBEC5D';
+			
+			$chart['#mixed_axis_labels'][CHART_AXIS_Y_LEFT][0][] = chart_mixed_axis_range_label(0, 5);
+			$chart['#mixed_axis_labels'][CHART_AXIS_Y_LEFT][1][] = chart_mixed_axis_label(t('Weight'), 95);
+
+			
+			$chart['#mixed_axis_labels'][CHART_AXIS_X_BOTTOM][1][] = chart_mixed_axis_label(t(''));
+			//$chart['#mixed_axis_labels'][CHART_AXIS_X_BOTTOM][1][] = chart_mixed_axis_label(t('Jerk'));
+			//$chart['#mixed_axis_labels'][CHART_AXIS_X_BOTTOM][1][] = chart_mixed_axis_label(t('Squat'));
+			//$chart['#mixed_axis_labels'][CHART_AXIS_X_BOTTOM][1][] = chart_mixed_axis_label(t('Deadlift'));  
+			$chart['#mixed_axis_labels'][CHART_AXIS_X_BOTTOM][2][] = chart_mixed_axis_label(t('Movement'), 50);
+
 
 			print theme('chart', array('chart' => $chart));
 
