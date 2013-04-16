@@ -36,6 +36,11 @@ function role_dec_form_alter(&$form, &$form_state, $form_id) {
 	$form['account']['affiliation_dec'] = array(
 			'#type' => 'fieldset',
 			'#title' => t('Gym Affiliation'),
+			'#states' => array(
+				'visible' => array(
+					':input[name="role"]' => array(array('value' => 'coach'), array('value' => 'athlete')),
+				),
+			),
 	);
 	
 	$form['account']['affiliation_dec']['coach_gym'] = array(

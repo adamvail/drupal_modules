@@ -56,8 +56,8 @@ td{
 
 <?php
 
-	include 'C:\wamp\www\drupal\sites\all\modules\workout_results\workout_results.inc';
-	//include '/var/www/includes/utils.inc';
+	//include 'C:\wamp\www\drupal\sites\all\modules\workout_results\workout_results.inc';
+	include '/var/www/includes/utils.inc';
 
 	global $user;
 

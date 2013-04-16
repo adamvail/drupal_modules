@@ -107,7 +107,14 @@ function workout_results($form, &$form_state){
 }
 
 function workout_results_next_submit($form, &$form_state){
-//	drupal_set_message('<pre>' . print_r($form_state, TRUE) . '</pre>');
+	//drupal_set_message('<pre>' . print_r(	, TRUE) . '</pre>');
+
+	// If you're on the home page, redirect to the actual page
+	if($_SERVER["REQUEST_URI"] == '/'){
+		// Redirect
+		header("Location: " . base_path() . "?q=workout_results&wid=" . $form_state['values']['workout_choice']);
+		exit();
+	}
 
 	$form_state['page_num'] = 2;
 	$form_state['rebuild'] = TRUE;
