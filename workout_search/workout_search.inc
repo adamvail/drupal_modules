@@ -1,140 +1,102 @@
 <?php
 
-function workout_results($form, &$form_state){
+function workout_search($form, &$form_state){
 	global $user;
 
-	$form['#tree'] = TRUE;
-	$cur_time = time();
-
-	if(isset($_GET['wid'])){
-		$form_state['values']['workout_choice'] = $_GET['wid'];
-		return workout_results_print_results($form, $form_state);
-	}
-
 	if(!empty($form_state['page_num']) && $form_state['page_num'] == 2){
-		return workout_results_print_results($form, $form_state);
+		return workout_search_find_workouts($form, $form_state);
 	}
 
 	$form_state['page_num'] = 1;
 
-	$strength_exists = FALSE;
-	$conditioning_exists = FALSE;
-	$wids = array();
-	$dates = array();
-
-	$recent_strength = db_query("SELECT DISTINCT(wid) FROM {workout_tracker_strength} where athlete_uid=:aid ORDER BY wid DESC LIMIT 7", array(':aid' => $user->uid))->fetchAll();
-	foreach($recent_strength as $rs){
-		$wids[$rs->wid] = $rs->wid;
-		$d = db_query("SELECT MAX(date) FROM {workout_tracker_strength} where wid=:wid AND athlete_uid=:aid", array(':wid' => $rs->wid, ':aid' => $user->uid))->fetchField();
-		$dates[$rs->wid] = $d;
-	}
-
-	if(!empty($wids)){
-		$recent_conditioning = db_query("SELECT DISTINCT(wid) FROM {workout_tracker_conditioning} where athlete_uid=:aid AND wid NOT IN (:swids) ORDER BY wid DESC LIMIT 7", array(':aid' => $user->uid, ':swids' => $wids))->fetchAll();
-	}
-	else {
-		$recent_conditioning = db_query("SELECT DISTINCT(wid) FROM {workout_tracker_conditioning} where athlete_uid=:aid ORDER BY wid DESC LIMIT 7", array(':aid' => $user->uid))->fetchAll();
-	}
-
-	foreach($recent_conditioning as $rc){
-		$wids[$rc->wid] = $rc->wid;
-		$d = db_query("SELECT MAX(date) FROM {workout_tracker_conditioning} where wid=:wid AND athlete_uid=:aid", array(':wid' => $rc->wid, ':aid' => $user->uid))->fetchField();
-		$dates[$rc->wid] = $d;
-	}
-
-	if(empty($wids)){
-		$form['header'] = array(
-			'#markup' => '<p>There are no completed, please use the Workout Builder to create a workout</p>',
-		);	
-		return $form;
-	}
-
-	foreach($wids as $w){
-		$movement_str = '';
-
-		$movements = db_query("SELECT movement FROM {workout_builder_strength} WHERE wid=:wid", array(':wid' => $w))->fetchAll();
-		for($i = 0; $i < sizeof($movements); $i++){
-			if($i == sizeof($movements) - 1){
-				$movement_str .= pretty_print_movement($movements[$i]->movement);
-			}
-			else {
-				$movement_str .= pretty_print_movement($movements[$i]->movement) . '+ ';
-			}
-		}
-
-		$cond = db_query("SELECT DISTINCT(style) from {workout_builder_conditioning} where wid=:wid", array(':wid' => $w))->fetchAll();
-		foreach($cond as $c){
-			if($c->style == 'amrap'){
-				$duration = db_query("SELECT duration from {workout_builder_conditioning} where wid=:wid AND style=:style", array(':wid' => $w, ':style' => $c->style))->fetchField();
-				($movement_str == '') ? $movement_str .= $duration . ' Minute AMRAP' : $movement_str .= ', ' . $duration . ' Minute AMRAP';
-			}
-			elseif($c->style == 'for_time'){
-				$rounds= db_query("SELECT rounds from {workout_builder_conditioning} where wid=:wid AND style=:style", array(':wid' => $w, ':style' => $c->style))->fetchField();
-				($movement_str == '') ? $movement_str .= $rounds . " Rounds for Time" : $movement_str .= ', ' . $rounds . " Rounds for Time";
-			}
-			elseif($c->style == 'intervals'){
-				($movement_str == '') ? $movement_str .= "Intervals" : $movement_str .= ", Intervals";
-			}
-		}
-
-		$workout_strength = convert_timestamp($dates[$w]) . ": " . $movement_str;
-		$wids[$w] = $workout_strength;
-	}
-
-	krsort($wids);
-//	drupal_set_message('<pre>' . print_r($wids, TRUE) . '</pre>');
-
-	$form['description'] = array(
-		'#type' => 'item',
-//		'#title' => t('Pick a Workout'), 
-	);
-
-	$form['workout_choice'] = array(
-		'#type' => 'radios',
-		'#options' => $wids,
-		'#title' => t('Choose a workout'),
-		'#default_value' => key($wids),
+	$form['search'] = array(
+		'#type' => 'textfield',
+		'#title' => t('Movement'),
+		'#size' => 15,
+		'#maxlength' => 30, 
 	);	
 
 	$form['next'] = array(
 		'#type' => 'submit',
-		'#value' => t('View Performance'),
-		'#submit' => array('workout_results_next_submit'),
+		'#value' => t('Search'),
+		'#submit' => array('workout_search_next_submit'),
 	);
 
 	return $form;
 
 }
 
-function workout_results_next_submit($form, &$form_state){
+function workout_search_next_submit($form, &$form_state){
 //	drupal_set_message('<pre>' . print_r($form_state, TRUE) . '</pre>');
 
+	$form_state['search_term'] = $form_state['input']['search'];
 	$form_state['page_num'] = 2;
 	$form_state['rebuild'] = TRUE;
 }
 
-function workout_results_print_results($form, &$form_state){
+function workout_search_find_workouts($form, &$form_state){
 	global $user;
-	// Build this form based off the workout they just chose
-	$wid = $form_state['values']['workout_choice'];
+	$search_term = $form_state['input']['search'];
+
+	$gym = db_query('SELECT gym FROM {workout_gym_affiliation} where uid=:uid', array(':uid' => $user->uid))->fetchField();
+
+	if(isset($gym) && !empty($gym)){
+		// don't grab everyone from the gym's workouts, only grab works from this gym where the coach created it.
+		$coaches = db_query('SELECT uid from {workout_gym_affiliation} where gym=:gym and role=:role', array(':gym' => $gym, ':role' => 'coach'));
+		$creator_ids = array();
+		foreach($coaches as $c){
+			$creator_ids[] = $c->uid;
+		}
+		$creator_ids[] = $user->uid;
+		$workouts_strength = db_query("SELECT wid, strength_id FROM {workout_builder_strength} WHERE creator_id IN (:cid) AND movement LIKE :mvmt", array(':cid' => $creator_ids, ':mvmt' => '%' . db_like($search_term) . '%'))->fetchAll();
+		$workouts_conditioning = db_query("SELECT wid, conditioning_id FROM {workout_builder_conditioning} WHERE creator_id IN (:cid) AND workout LIKE :mvmt", array(':cid' => $creator_ids, ':mvmt' => '%' . db_like($search_term) . '%'))->fetchAll();
+	}
+	else {
+		$workouts_strength = db_query("SELECT wid, strength_id FROM {workout_builder_strength} WHERE creator_id=:cid AND movement LIKE :mvmt", array(':cid' => $user->uid, ':mvmt' => '%' . db_like($search_term) . '%'))->fetchAll();
+		$workouts_conditioning = db_query("SELECT wid, conditioning_id FROM {workout_builder_conditioning} WHERE creator_id=:cid AND workout LIKE :mvmt", array(':cid' => $user->uid, ':mvmt' => '%' . db_like($search_term) . '%'))->fetchAll();
+	}
+
+	krsort($workouts_strength);
+	krsort($workouts_conditioning);
+
+	// figure out which portions need to be printed
+
+	foreach($workouts_strength as $workout){
+		workout_search_print_results($form, $form_state, $workout->wid, $workout->strength_id, 'strength');
+		//drupal_set_message('<pre>' . print_r($s, TRUE) . '</pre>');
+	}
+
+	foreach($workouts_conditioning as $workout){
+		workout_search_print_results($form, $form_state, $workout->wid, $workout->conditioning_id, 'conditioning');
+	}
+	return $form;
+}
+
+function workout_search_print_results(&$form, &$form_state, $wid, $sub_id, $which){
+	global $user;
 	$form_state['wid'] = $wid;
+
+	if($which != 'strength' && $which != 'conditioning'){
+		return;
+	}
 
 	$mobile = detect_mobile();
 
-	$strength_np = db_query("SELECT MAX(num_performed) FROM {workout_tracker_strength} WHERE wid=:wid", array(':wid' => $wid))->fetchField();
-	$conditioning_np = db_query("SELECT MAX(num_performed) FROM {workout_tracker_conditioning} WHERE wid=:wid", array(':wid' => $wid))->fetchField();
+	($which == 'strength') ? $max_performed = db_query("SELECT MAX(num_performed) FROM {workout_tracker_strength} WHERE wid=:wid AND athlete_uid=:aid", array(':wid' => $wid, ':aid' => $user->uid))->fetchField() : 
+			$max_performed = db_query("SELECT MAX(num_performed) FROM {workout_tracker_conditioning} WHERE wid=:wid AND athlete_uid=:aid", array(':wid' => $wid, ':aid' => $user->uid))->fetchField();
 
-	if($strength_np > $conditioning_np){
-		$max_performed = $strength_np;
-	}
-	else {
-		$max_performed = $conditioning_np;
-	}
+	(isset($form['workout'])) ? $initial_size = sizeof($form['workout']) : $initial_size = 0;
+	for($i = $initial_size + 1; $i <= $max_performed + $initial_size; $i++){
 
-	for($i = 1; $i <= $max_performed; $i++){
+		$strength_str = '';
+		$conditioning_str = '';
 
-		$strength_str = create_strength_string($wid, $i);
-		$conditioning_str = create_conditioning_string($wid, $i);
+		if($which == 'strength'){
+			$strength_str = create_strength_string($wid, $sub_id, $i);
+		}
+		elseif($which == 'conditioning'){
+			$conditioning_str = create_conditioning_string($wid, $sub_id, $i);
+		}
 
 		$date = db_query("SELECT DISTINCT(date) FROM {workout_tracker_strength} where wid=:wid AND athlete_uid=:aid AND num_performed=:np", array(':wid' => $wid, ':aid' => $user->uid, ':np' => $i))->fetchField();
 
@@ -147,27 +109,29 @@ function workout_results_print_results($form, &$form_state){
 			$form['workout'][$i] = array(
 				'#type' => 'fieldset',
 				'#title' => t("Performed on @date", array('@date' => convert_timestamp($date))),
+				'#collapsible' => TRUE,
+				'#collapsed' => TRUE,
 			);
 		}
 
 		if(!empty($strength_str)){
-			$form['workout'][$i]['strength'] = array(
+		/*	$form['workout'][$i]['strength'] = array(
 				'#type' => 'fieldset',
 				'#title' => t('Strength'),
 			);
-
-			$form['workout'][$i]['strength']['results'] = array(
+*/
+			$form['workout'][$i]['strength'] = array(
 				'#markup' => $strength_str, 
 			);
 		}
 
 		if(!empty($conditioning_str)){
-			$form['workout'][$i]['conditioning'] = array(
+/*			$form['workout'][$i]['conditioning'] = array(
 				'#type' => 'fieldset',
 				'#title' => t('Conditioning'),
 			);
-
-			$form['workout'][$i]['conditioning']['results'] = array(
+*/
+			$form['workout'][$i]['conditioning'] = array(
 				'#markup' => $conditioning_str, 
 			);
 		}
@@ -190,10 +154,10 @@ function pretty_print_movement($movement){
 	return $movement_pretty;
 }
 
-function create_strength_string($wid, $num_performed){
+function create_strength_string($wid, $strength_id, $num_performed){
 	global $user;
 
-	$headers = assemble_strength_headers($wid);
+	$headers = assemble_strength_headers($wid, $strength_id);
 	$sids = array_keys($headers);
 	for($i = 0; $i < sizeof($sids); $i++){
 		$workout_result = '';
@@ -330,9 +294,9 @@ function create_results_array($wid, $sid){
 	return $results_headers;
 }
 
-function assemble_strength_headers($wid){
-	$strength = db_query('SELECT * FROM {workout_builder_strength} where wid=:wid', array(':wid' => $wid));
-	$strength_notes_results = db_query('SELECT * FROM {workout_builder_strength_notes} where wid=:wid', array(':wid' => $wid));
+function assemble_strength_headers($wid, $sid){
+	$strength = db_query('SELECT * FROM {workout_builder_strength} where wid=:wid AND strength_id=:sid', array(':wid' => $wid, ':sid' => $sid));
+	$strength_notes_results = db_query('SELECT * FROM {workout_builder_strength_notes} where wid=:wid AND strength_id=:sid', array(':wid' => $wid, ':sid' => $sid));
 	$headers = array();
 	if(!empty($strength)){
 		$strength_data = array();	
