@@ -107,7 +107,14 @@ function workout_results($form, &$form_state){
 }
 
 function workout_results_next_submit($form, &$form_state){
-//	drupal_set_message('<pre>' . print_r($form_state, TRUE) . '</pre>');
+	//drupal_set_message('<pre>' . print_r(	, TRUE) . '</pre>');
+
+	// If you're on the home page, redirect to the actual page
+	if($_SERVER["REQUEST_URI"] == '/'){
+		// Redirect
+		header("Location: " . base_path() . "?q=workout_results&wid=" . $form_state['values']['workout_choice']);
+		die();
+	}
 
 	$form_state['page_num'] = 2;
 	$form_state['rebuild'] = TRUE;
@@ -239,7 +246,7 @@ function fillin_strength_results($headers, $wid, $sid, $num_performed){
 				$failed_reps = explode(":", $strength[$key][$i]->fail);
 				$failed_movements = explode(":", $strength[$key][$i]->fail_movement);
 				for($k = 0; $k < sizeof($failed_reps); $k++){
-					$results[$key] .= "<br>     " . "Failed on rep " . $failed_reps[$k];
+					$results[$key] .= "<br>     " . "Failed on rep " . $failed_reps[$k]; 
 					if(isset($failed_movements[$k])){
 						$results[$key] .= ": Movement: " . pretty_print_movement($failed_movements[$k]);
 					}
@@ -601,12 +608,13 @@ function fill_in_conditioning_results($wid, $num_performed){
 					$intervals = explode("-", $workout->interval_reps); 
 					for($k = 0; $k < sizeof($intervals); $k++){
 						$values = explode(",", $intervals[$k]);
-						$interval_moves = explode("\n", $moves[$k]);
+						$interval_moves = explode("<br>", $moves[$k]);
 						//drupal_set_message('<pre>' . print_r($values, TRUE) . '</pre>');
-						$results[$key] .= "Round #" . ($k + 1) . ":\n";
+						$results[$key] .= "Round #" . ($k + 1) . ":<br>";
 						for($j = 0; $j < sizeof($values); $j++){
-							$results[$key] .= $interval_moves[$j] . $values[$j] . "<br>";
+							$results[$key] .= $interval_moves[$j] . " " . $values[$j] . "<br>";
 						}
+						$results[$key] .= "<br>";
 					}
 
 				}
@@ -660,8 +668,8 @@ function assemble_conditioning_headers($wid){
 				}
 			}
 			elseif($workout[0]->style == 'intervals' && $workout[0]->rounds > 1){
-				if(!empty($workout[0]->duration)){
-					(strpos($workout[0]->duration, ':') !== FALSE) ? $clock = $workout[0]->duration : $clock = $workout[0]->duration . ":00";
+				if(!empty($workout[0]->interval_time)){
+					(strpos($workout[0]->interval_time, ':') !== FALSE) ? $clock = $workout[0]->interval_time : $clock = $workout[0]->interval_time . ":00";
 					$movement_str .= $workout[0]->rounds . " Rounds on a " . $clock . " Minute Clock:<br>";
 				}
 				else {
