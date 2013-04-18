@@ -90,8 +90,8 @@ td{
 
 
 <?php
-	include 'C:\wamp\www\drupal\sites\all\modules\workout_results\workout_results.inc';
-	//include '/var/www/sites/all/modules/workout_results/workout_results.inc';
+	//include 'C:\wamp\www\drupal\sites\all\modules\workout_results\workout_results.inc';
+	include '/var/www/sites/all/modules/workout_results/workout_results.inc';
 
 
 	global $user;
@@ -104,7 +104,7 @@ td{
 			foreach($result as $usr){
 				//name and gym affiliation section
 				print '<div id="uname">';
-					print '<p id="uname"><font color="179ce8" size="5"> Aaron Cahn </font>';
+					print '<p id="uname"><a href="?q=user/' . $user->uid . '/edit" style="text-decoration: none"><font color="179ce8" size="5"> ' . $usr->name . ' </font>';
 					//print '<p id="uname"><font color="179ce8" size="5">' . pretty_print($usr->name) . '</font>';
 					print '<br>';
 					print '<em>' . pretty_print($usr->gym) . '</em></p>';
@@ -112,15 +112,17 @@ td{
 				print '</div>'; //end uname div
 				
 				$twods = db_query('SELECT COUNT(DISTINCT wid) FROM {workout_tracker_strength} WHERE athlete_uid = :myuid', array(':myuid'=> $usr->uid))->fetchField();
-				$tweight = db_query('SELECT SUM(work) FROM {workout_tracker_strength} WHERE athlete_uid = :myuid', array(':myuid'=> $usr->uid))->fetchField();
+				$weight_lb = db_query('SELECT SUM(work) FROM {workout_tracker_strength} WHERE athlete_uid = :myuid AND weight_units=:units', array(':myuid'=> $usr->uid, ':units' => 0))->fetchField();
+				$weight_kg = db_query('SELECT SUM(work) FROM {workout_tracker_strength} WHERE athlete_uid = :myuid AND weight_units=:units', array(':myuid'=> $usr->uid, ':units' => 1))->fetchField();
 				
+				$tweight = $weight_lb + ($weight_kg * 2.2);
 				
 				print '<div class="centered-cell" id="stats">';
 					print '<table>';
 						print '<tr><th>' . pretty_print($usr->role) . ' Stats:</th></tr>';
 						print '<tr><td><font size="2"><b>' . $twods . '</b></font></td></tr>';
 						print '<tr><td><font color="179ce8" size="1"> WODs Complete </font></td></tr>';
-						print '<tr><td><font size="2"><b>' . $tweight . '</b></font></td></tr>';
+						print '<tr><td><font size="2"><b>' . $tweight . ' lbs</b></font></td></tr>'; 
 						print '<tr><td><font color="179ce8" size="1"> Weight Lifted </font></td></tr>';
 					print '</table>';
 				print '</div>'; //end stats div
@@ -130,7 +132,7 @@ td{
 			print '<div id="prpic">';
 				$picture_uri = db_query("SELECT uri FROM {file_managed} where uid=:uid", array(':uid' => $user->uid))->fetchField();
 				if($picture_uri != NULL){
-					print '<img src="' . file_create_url($picture_uri) . '">';			
+					print '<a href="?q=user/' . $user->uid . '/edit"><img src="' . file_create_url($picture_uri) . '">';			
 				}
 				else {		
 					print '<a href="?q=user/' . $user->uid . '/edit"><img src="' . base_path() . 'misc/druplicon.png"></a>';
