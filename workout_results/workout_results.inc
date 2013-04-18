@@ -113,7 +113,7 @@ function workout_results_next_submit($form, &$form_state){
 	if($_SERVER["REQUEST_URI"] == '/'){
 		// Redirect
 		header("Location: " . base_path() . "?q=workout_results&wid=" . $form_state['values']['workout_choice']);
-		exit();
+		die();
 	}
 
 	$form_state['page_num'] = 2;
@@ -608,12 +608,13 @@ function fill_in_conditioning_results($wid, $num_performed){
 					$intervals = explode("-", $workout->interval_reps); 
 					for($k = 0; $k < sizeof($intervals); $k++){
 						$values = explode(",", $intervals[$k]);
-						$interval_moves = explode("\n", $moves[$k]);
+						$interval_moves = explode("<br>", $moves[$k]);
 						//drupal_set_message('<pre>' . print_r($values, TRUE) . '</pre>');
-						$results[$key] .= "Round #" . ($k + 1) . ":\n";
+						$results[$key] .= "Round #" . ($k + 1) . ":<br>";
 						for($j = 0; $j < sizeof($values); $j++){
-							$results[$key] .= $interval_moves[$j] . $values[$j] . "<br>";
+							$results[$key] .= $interval_moves[$j] . " " . $values[$j] . "<br>";
 						}
+						$results[$key] .= "<br>";
 					}
 
 				}
