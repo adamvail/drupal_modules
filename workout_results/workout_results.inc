@@ -246,7 +246,7 @@ function fillin_strength_results($headers, $wid, $sid, $num_performed){
 				$failed_reps = explode(":", $strength[$key][$i]->fail);
 				$failed_movements = explode(":", $strength[$key][$i]->fail_movement);
 				for($k = 0; $k < sizeof($failed_reps); $k++){
-					$results[$key] .= "<br>     " . "Failed on rep " . $failed_reps[$k];
+					$results[$key] .= "<br>     " . "Failed on rep " . $failed_reps[$k]; 
 					if(isset($failed_movements[$k])){
 						$results[$key] .= ": Movement: " . pretty_print_movement($failed_movements[$k]);
 					}
@@ -668,8 +668,8 @@ function assemble_conditioning_headers($wid){
 				}
 			}
 			elseif($workout[0]->style == 'intervals' && $workout[0]->rounds > 1){
-				if(!empty($workout[0]->duration)){
-					(strpos($workout[0]->duration, ':') !== FALSE) ? $clock = $workout[0]->duration : $clock = $workout[0]->duration . ":00";
+				if(!empty($workout[0]->interval_time)){
+					(strpos($workout[0]->interval_time, ':') !== FALSE) ? $clock = $workout[0]->interval_time : $clock = $workout[0]->interval_time . ":00";
 					$movement_str .= $workout[0]->rounds . " Rounds on a " . $clock . " Minute Clock:<br>";
 				}
 				else {

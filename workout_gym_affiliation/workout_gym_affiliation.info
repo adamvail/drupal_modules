@@ -1,0 +1,4 @@
+name = Workout Gym Affiliation 
+description = Allows a user to be associated with a gym
+package = WOD Modules
+core = 7.x

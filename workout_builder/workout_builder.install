@@ -182,6 +182,12 @@ function workout_builder_schema(){
 				'length' => 6,
 				'description' => t('Time for each interval in seconds'),	
 			),			
+			'interval_style' => array(
+				'type' => 'int',
+				'unsigned' => TRUE,
+				'size' => 'small',
+				'description' => t('Style of intervals that start on a specific clock'),	
+			),			
 			'gym' => array(
 				'type' => 'varchar',
 				'length' => '255',
@@ -234,38 +240,7 @@ function workout_builder_schema(){
 		),
 	);
 
-	$schema['workout_gym_affiliation'] = array(
-		'description' => 'The gym affiliated with each user',
-		'fields' => array(
-			'uid' => array(
-				'type' => 'int',
-				'unsigned' => TRUE,
-				'not null' => TRUE,
-				'size' => 'normal',
-				'description' => t('The user\'s id'),	
-			),
-			'name' => array(
-				'type' => 'varchar',
-				'length' => 255,
-				'description' => t('Actual name of the user.'),			
-			),
-			'role' => array(
-				'type' => 'varchar',
-				'length' => 255,
-				'description' => t('The user\'s role. Either athlete or coach'),			
-			),
-			'gym' => array(
-				'type' => 'varchar',
-				'length' => 255,
-				'description' => t('The name of the user\'s gym'),			
-			),
-		),
-		'indexes' => array(
-			'uid' => array('uid'),
-			'role' => array('role'),
-			'gym' => array('gym'),
-		),
-	);
+
 
 	return $schema;
 }

@@ -514,6 +514,17 @@ function workout_builder_wbuild_page_two($form, &$form_state){
       ),
 		);
 
+		$form['cond_workout'][$k]['condition_exercises']['interval_style'] = array(
+			'#type' => 'select',
+			'#options' => array(t('For Time'), t('For Work')),
+			'#description' => t('Is the interval meant to be completed for amount of work done or <br>for how quickly the work is done?'),
+      '#states' => array(
+				'visible' => array(
+	    		':input[name="cond_workout[' . $k . '][condition_exercises][interval_on_clock]"]' => array('checked' => TRUE),
+				),
+      ),
+		);
+
 		$form['cond_workout'][$k]['condition_exercises']['interval_clock'] = array(
       '#type' => 'textfield',
       '#title' => t('Clock'),
@@ -910,7 +921,11 @@ function _populate_strength_table(&$form_state, $wid){
 				break;
 			}	
 			else{
-				$record->movement = strtolower($movement['lift']);
+				$lift = $movement['lift'];
+				if(strtoupper($lift) != $lift){
+					$lift = strtolower($lift);
+				}
+				$record->movement = $lift; 
 			}
 //			drupal_set_message('<pre>' . print_r($record, TRUE) . '</pre>');
 
@@ -977,7 +992,8 @@ function _populate_conditioning_table(&$form_state, $wid){
 			//	$record->interval_time = $movement['interval_time'];
 				$record->workout = strtolower(str_replace("\n", "<br>", $workout['workout']));
 				if(isset($workout['interval_clock']) && !empty($workout['interval_clock'])){
-					$record->duration = $workout['interval_clock'];
+					$record->interval_time = $workout['interval_clock'];
+					$record->interval_style = $workout['interval_style'];
 				}
 			}
 			elseif($workout['style'] == 'rest'){

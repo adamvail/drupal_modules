@@ -14,41 +14,6 @@ function workout_tracker_schema(){
 	// This doesn't scale so we'll have to figure out 
 	// how to have a table for each user most likely
 
-	$schema['workout_pr'] = array(
-		'description' => t('Current PR'),
-		'fields' => array(
-			'athlete_uid' => array(
-				'type' => 'int',
-				'unsigned' => TRUE,
-				'size' => 'normal',
-				'description' => t('The UID for user who performed this PR'),	
-			),
-			'movement' => array(
-					'type' => 'varchar',
-					'length' => '255',
-					'not null' => TRUE,
-					'description' => t('The movement'),
-			),
-			'pr' => array(
-				'type' => 'int',
-				'unsigned' => TRUE,
-				'size' => 'normal',
-				'description' => t('Current PR for specified movement'),	
-			),
-			'date' => array(
-				'type' => 'int',
-				'unsigned' => TRUE,
-				'not null' => TRUE,
-				'size' => 'normal',
-				'description' => t('The date that this pr was set'),	
-			),
-		),
-		'indexes' => array(
-			'athelete_uid' => array('athlete_uid'),
-			'movement' => array('movement'),
-		),
-	);
-
 	$schema['workout_tracker_strength'] = array(
 		'description' => t('Strength workout results'),
 		'fields' => array(
@@ -85,6 +50,12 @@ function workout_tracker_schema(){
 				'not null' => TRUE,
 				'size' => 'normal',
 				'description' => t('Date the workout was performed'),	
+			),
+			'weight_units' => array(
+				'type' => 'int',
+				'unsigned' => TRUE,
+				'size' => 'normal',
+				'description' => t('Weight units. lbs or kg'),	
 			),
 			'set_num' => array(
 				'type' => 'int',

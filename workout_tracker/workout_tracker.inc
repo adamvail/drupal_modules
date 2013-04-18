@@ -428,6 +428,14 @@ function workout_tracker_workout($form, &$form_state){
 			}
 			//drupal_set_message('<pre>' . print_r($combo, TRUE) . '</pre>');
 
+			if(!empty($workout[0]->wgt_style)){
+				$form['strength'][$workout[0]->strength_id]['units'] = array(
+					'#type' => 'select',
+					'#description' => t('Lbs or KG'),
+					'#options' => array(t('lbs'), t('kg')),
+					'#default_value' => 'lbs',
+				);
+			}
 
 			$percentage_scheme = explode("-", $workout[0]->wgt_percentage);
 			// Stqndard form items for all movements, regardless of complexity
@@ -605,18 +613,24 @@ function workout_tracker_workout($form, &$form_state){
 				$fieldset_title = substr($movement_str, 0, strlen($movement_str) - 5);
 			}
 			elseif($workout[0]->style == 'for_time'){
-				$movement_str = $workout[0]->rounds . " Rounds For Time";
-				$fieldset_title = $movement_str; 
+				$movement_str = '';
+				if(!empty($workout[0]->rounds)){
+					$movement_str = $workout[0]->rounds . " Rounds For Time";
+					$fieldset_title = $movement_str; 
+				}
+				else {
+					$fieldset_title = 'For Time';
+				}
 				if(!empty($workout[0]->cutoff)){
-					$movement_str = $movement_str . ", " . $workout[0]->cutoff . " minute cutoff:<br>";	
+					($movement_str != '') ? $movement_str .= ", " . $workout[0]->cutoff . " minute cutoff:<br>" : $movement_str .= $workout[0]->cutoff . " minute cutoff:<br>";	
 				}
 				else{
 					$movement_str = $movement_str . ":<br>";
 				}
 			}
 			elseif($workout[0]->style == 'intervals' && $workout[0]->rounds > 1){
-				if(!empty($workout[0]->duration)){
-					(strpos($workout[0]->duration, ':') !== FALSE) ? $clock = $workout[0]->duration : $clock = $workout[0]->duration . ":00";
+				if(!empty($workout[0]->interval_time)){
+					(strpos($workout[0]->interval_time, ':') !== FALSE) ? $clock = $workout[0]->interval_time : $clock = $workout[0]->interval_time . ":00";
 					$movement_str = $workout[0]->rounds . " Rounds on a " . $clock . " Minute Clock:<br>";
 				}
 				else {
@@ -672,7 +686,7 @@ function workout_tracker_workout($form, &$form_state){
 					}	
 				}
 			if(substr_count($movement_str, "Rest") != 1){	
-				$form_state['conditioning_print'][$workout[0]->conditioning_id] = $movement_str . "\n" . $notes;
+				$form_state['conditioning_print'][$workout[0]->conditioning_id] = $movement_str . "\n\n" . $notes;
 			}
 
 				if($workout[0]->style == 'amrap'){	
@@ -720,7 +734,7 @@ function workout_tracker_workout($form, &$form_state){
 					//drupal_set_message('<pre>' . print_r($num_intervals, TRUE) . '</pre>');
 				
 					for($interval = 1; $interval <= $rounds; $interval++){
-						if(!empty($workout[0]->duration)){
+						if(!empty($workout[0]->interval_time) && $workout[0]->interval_style == 0){
 							$form['conditioning'][$workout[0]->conditioning_id]['intervals'][$interval] = array(
 								'#type' => 'fieldset',
 								'#title' => t('Round #@int_num', array('@int_num' => $interval)),
@@ -844,6 +858,9 @@ function _save_strength_results(&$form_state){
 			$record->num_performed = $num_performed;
 			$record->date = time();
 			$record->set_num = $s;
+			if(isset($workout['units'])){
+				$record->weight_units = $workout['units'];
+			}
 			$set_summary = "Set #" . $s . ":";
 			if(isset($set['work']) && !empty($set['work'])){
 				$workout_completed = TRUE;
@@ -862,6 +879,7 @@ function _save_strength_results(&$form_state){
 						if(sizeof($lifts) == 1){ 
 							($failed_movements == '') ? $failed_movements .= $lifts[0] : $failed_movements .= ':' . $lifts[0];
 //							$set_summary .= $lifts[0] . "\n";
+								$set_summary .= "\n";
 						}
 						else {
 							($failed_movements == '') ? $failed_movements .= $set['fail_lift'][$f] : $failed_movements .= ':' . $set['fail_lift'][$f];

@@ -1,0 +1,57 @@
+<?php
+
+/**
+* @file
+* Allows a user to see their workout history and search
+* for all the instances of a movement that they have
+* performed.
+*/
+
+
+/**
+* Implements hook_menu().
+*
+* Set up URL so building a workout
+* can be chosen right from the menu.
+*/
+
+function workout_gym_affiliation_menu() {
+/*
+  $items = array();
+  $items['workout_gym_affiliation'] = array(
+    'title' => 'Workout Gym Affiliation',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('workout_gym_affiliation'),
+    'access callback' => 'user_is_logged_in',
+    'description' => 'User Gym Affilitaion',
+    'file' => 'workout_gym_affiliation.inc',
+    'type' => MENU_NORMAL_ITEM, 
+  );
+
+  return $items;
+*/
+}
+/**
+* Page callback for out general info page
+*/
+function workout_gym_affiliation_intro(){
+  $markup = t('This module allows a user to search their workout history');
+  return array('#markup' => $markup);
+}
+
+/**
+* Implements hook_help()
+*/
+
+function workout_gym_affiliation_help($path, $arg){
+  switch($path) {
+ /*   case 'workout_search/wbuild':
+      $help = t('This form is where the workout\'s movements are constructed');
+      break;
+*/
+  }
+
+  if (!empty($help)){
+    return '<p>' . $help . '</p>';
+  }
+}

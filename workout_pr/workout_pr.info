@@ -1,0 +1,4 @@
+name = Workout PR Table  
+description = Allows users' PRs to be tracked
+package = WOD Modules
+core = 7.x
