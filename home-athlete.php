@@ -1,5 +1,22 @@
 <!DOCTYPE html>
 <html>
+<head>
+
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-40201944-1']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+
+</head>
 <body>
 
 <style>
@@ -54,6 +71,13 @@
 	margin:auto;
 	display:block;
 }
+#uname {
+	margin:0px 0px 0px 20px;
+}
+#stats {
+	float:left;
+	width:40%;
+}
 td{
 	text-align:center;
 }
@@ -75,20 +99,34 @@ td{
 	if ( $user->uid ) {
 		print '<div id="prof">';
 			
-			//print out the user profile information
-			$result = db_query('SELECT * FROM {workout_gym_affiliation} WHERE uid = :uid', array(':uid' => $user->uid));
 			$mygym = '';
+			$result = db_query('SELECT * FROM {workout_gym_affiliation} WHERE uid = :uid', array(':uid' => $user->uid));
 			foreach($result as $usr){
-				print '<h1 class="centered-cell"> User Profile </h1>';
-				print 'User: ' . $usr->name;
-				print '<br>';
-				print 'Role: ' . $usr->role;
-				print '<br>';
-				print 'Gym: ' . $usr->gym;
+				//name and gym affiliation section
+				print '<div id="uname">';
+					print '<p id="uname"><font color="179ce8" size="5"> Aaron Cahn </font>';
+					//print '<p id="uname"><font color="179ce8" size="5">' . pretty_print($usr->name) . '</font>';
+					print '<br>';
+					print '<em>' . pretty_print($usr->gym) . '</em></p>';
+					print '<hr>';
+				print '</div>'; //end uname div
+				
+				$twods = db_query('SELECT COUNT(DISTINCT wid) FROM {workout_tracker_strength} WHERE athlete_uid = :myuid', array(':myuid'=> $usr->uid))->fetchField();
+				$tweight = db_query('SELECT SUM(work) FROM {workout_tracker_strength} WHERE athlete_uid = :myuid', array(':myuid'=> $usr->uid))->fetchField();
+				
+				
+				print '<div class="centered-cell" id="stats">';
+					print '<table>';
+						print '<tr><th>' . pretty_print($usr->role) . ' Stats:</th></tr>';
+						print '<tr><td><font size="2"><b>' . $twods . '</b></font></td></tr>';
+						print '<tr><td><font color="179ce8" size="1"> WODs Complete </font></td></tr>';
+						print '<tr><td><font size="2"><b>' . $tweight . '</b></font></td></tr>';
+						print '<tr><td><font color="179ce8" size="1"> Weight Lifted </font></td></tr>';
+					print '</table>';
+				print '</div>'; //end stats div
 				$mygym = $usr->gym;
 			}
 			
-			//disply the users profile picture
 			print '<div id="prpic">';
 				$picture_uri = db_query("SELECT uri FROM {file_managed} where uid=:uid", array(':uid' => $user->uid))->fetchField();
 				if($picture_uri != NULL){
@@ -192,52 +230,60 @@ td{
 			print '</table>';
 		print '</div>'; //end hist div
 		
-		print '<div id="graph">';
-			//*-------------------------------------------------
-			
-			$chart = array(
-				'#chart_id' => 'weight_chart',
-				'#title' => chart_title(t('Weight Lifted per Movement'), 15),
-				'#type' => CHART_TYPE_BAR_V_GROUPED,
-				'#size' => chart_size(300, 200),
-				'#adjust_resolution' => TRUE,
-				'#grid_lines' => chart_grid_lines(10, 20), 
-				'#bar_size' => chart_bar_size(35, 15), 
-			);
-			
-			//gather data for the chart
-			$chart['#data']['clean'] = array(1);
-			$chart['#data']['jerk']  = array(2);
-			$chart['#data']['squat']  = array(5);
-			$chart['#data']['Deadlift']  = array(2);
+		if($wid != 0){
+			print '<div id="graph">';
+				//*-------------------------------------------------
+				
+				//build their graph
+				$chart = array(
+					'#chart_id' => 'wod_chart',
+					'#title' => chart_title(t('WOD Movement Breakdown'), 15),
+					'#type' => CHART_TYPE_BAR_V_GROUPED,
+					'#size' => chart_size(400, 200),
+					'#adjust_resolution' => TRUE, 
+					'#bar_size' => chart_bar_size(15, 5), 
+				);
+				
+				$workout = db_query('SELECT * FROM {workout_tracker_strength} WHERE wid = :wid AND athlete_uid = :auid', array(':wid' => $wid, ':auid' => $user->uid));
+				$exercise = db_query('SELECT movement FROM {workout_builder_strength} WHERE creator_id = :uid AND wid = :wid', array(':uid' => $user->uid,':wid'=>$wid));
+				$size = db_query('SELECT sid FROM {workout_tracker_strength} WHERE wid = :wid AND athlete_uid = :auid ORDER BY sid DESC LIMIT 1', array(':wid' => $wid, ':auid' => $user->uid))->fetchField();
+				//initialize data array
+				$weights = array_fill(1, $size, 0);
+				
+				//sum the weight lifted for each movement
+				foreach($workout as $move) {
+					$weights[$move->sid] += $move->work;					
+				}
 
-			//create the legend
-			$chart['#legends'][] = t('Clean');
-			$chart['#legends'][] = t('Jerk');
-			$chart['#legends'][] = t('Squat');
-			$chart['#legends'][] = t('Deadlift');
+				//create the data arrays
+				for($i=1; $i<=sizeof($weights); $i++) {
+					$chart['#data'][$i] = array($weights[$i]);
+					$chart['#data_colors'][] = chart_unique_color('$chart[\'#data\'][' . $i . ']');
+				}
+				//create the workout legend
+				foreach($exercise as $wmove) {
+					$chart['#legends'][] = t(pretty_print($wmove->movement));					
+				}
 
-			//set chart bar line colors
-			$chart['#data_colors'][] = '00ff00';
-			$chart['#data_colors'][] = 'ff0000';
-			$chart['#data_colors'][] = '0000ff';
-			$chart['#data_colors'][] = 'FBEC5D';
-			
-			$chart['#mixed_axis_labels'][CHART_AXIS_Y_LEFT][0][] = chart_mixed_axis_range_label(0, 5);
-			$chart['#mixed_axis_labels'][CHART_AXIS_Y_LEFT][1][] = chart_mixed_axis_label(t('Weight'), 95);
-
-			
-			$chart['#mixed_axis_labels'][CHART_AXIS_X_BOTTOM][1][] = chart_mixed_axis_label(t(''));
-			//$chart['#mixed_axis_labels'][CHART_AXIS_X_BOTTOM][1][] = chart_mixed_axis_label(t('Jerk'));
-			//$chart['#mixed_axis_labels'][CHART_AXIS_X_BOTTOM][1][] = chart_mixed_axis_label(t('Squat'));
-			//$chart['#mixed_axis_labels'][CHART_AXIS_X_BOTTOM][1][] = chart_mixed_axis_label(t('Deadlift'));  
-			$chart['#mixed_axis_labels'][CHART_AXIS_X_BOTTOM][2][] = chart_mixed_axis_label(t('Movement'), 50);
+				//create chart axis labels and tick ranges
+				$chart['#mixed_axis_labels'][CHART_AXIS_Y_LEFT][0][] = chart_mixed_axis_range_label(0,max($weights));
+				$chart['#mixed_axis_labels'][CHART_AXIS_Y_LEFT][1][] = chart_mixed_axis_label(t('Weight'), 50);
+				
+				$chart['#mixed_axis_labels'][CHART_AXIS_X_BOTTOM][1][] = chart_mixed_axis_label(t(''));
+				$chart['#mixed_axis_labels'][CHART_AXIS_X_BOTTOM][2][] = chart_mixed_axis_label(t('Movements'), 50);
 
 
-			print theme('chart', array('chart' => $chart));
+				print theme('chart', array('chart' => $chart));
 
-			//--------------------------------------------------*/
-		print '</div>'; //end graph div
+				//--------------------------------------------------*/
+			print '</div>'; //end graph div
+		}
+	}
+	
+	//helper print function
+	function pretty_print($str){
+		$pretty_str = implode(' ', array_map('ucfirst', explode(' ', $str)));
+		return $pretty_str;
 	}
 ?>
 
