@@ -15,6 +15,14 @@ function workout_search($form, &$form_state){
 		'#size' => 15,
 		'#maxlength' => 30, 
 	);	
+	
+	$options = array('strength' => t('Strength'), 'conditioning' => t('Conditioning'), 'both' => t('Both'));
+	$form['search_type'] = array(
+		'#type' => 'radios',
+		'#title' => t('Search strength, conditioning, or both'),
+		'#options' => $options,
+		'#default_value' => 'both',
+	);
 
 	$form['next'] = array(
 		'#type' => 'submit',
@@ -30,13 +38,17 @@ function workout_search_next_submit($form, &$form_state){
 //	drupal_set_message('<pre>' . print_r($form_state, TRUE) . '</pre>');
 
 	$form_state['search_term'] = $form_state['input']['search'];
+	$form_state['search_type'] = $form_state['input']['search_type'];
 	$form_state['page_num'] = 2;
 	$form_state['rebuild'] = TRUE;
 }
 
 function workout_search_find_workouts($form, &$form_state){
 	global $user;
-	$search_term = $form_state['input']['search'];
+	$search_term = $form_state['search_term'];
+	$search_type = $form_state['search_type'];
+	$workouts_strength = array();
+	$workouts_conditioning = array();
 
 	$gym = db_query('SELECT gym FROM {workout_gym_affiliation} where uid=:uid', array(':uid' => $user->uid))->fetchField();
 
@@ -48,12 +60,28 @@ function workout_search_find_workouts($form, &$form_state){
 			$creator_ids[] = $c->uid;
 		}
 		$creator_ids[] = $user->uid;
-		$workouts_strength = db_query("SELECT wid, strength_id FROM {workout_builder_strength} WHERE creator_id IN (:cid) AND movement LIKE :mvmt", array(':cid' => $creator_ids, ':mvmt' => '%' . db_like($search_term) . '%'))->fetchAll();
-		$workouts_conditioning = db_query("SELECT wid, conditioning_id FROM {workout_builder_conditioning} WHERE creator_id IN (:cid) AND workout LIKE :mvmt", array(':cid' => $creator_ids, ':mvmt' => '%' . db_like($search_term) . '%'))->fetchAll();
+		if($search_type == 'both'){
+			$workouts_strength = db_query("SELECT wid, strength_id FROM {workout_builder_strength} WHERE creator_id IN (:cid) AND movement LIKE :mvmt", array(':cid' => $creator_ids, ':mvmt' => '%' . db_like($search_term) . '%'))->fetchAll();
+			$workouts_conditioning = db_query("SELECT wid, conditioning_id FROM {workout_builder_conditioning} WHERE creator_id IN (:cid) AND workout LIKE :mvmt", array(':cid' => $creator_ids, ':mvmt' => '%' . db_like($search_term) . '%'))->fetchAll();
+		}
+		elseif($search_type == 'strength'){
+			$workouts_strength = db_query("SELECT wid, strength_id FROM {workout_builder_strength} WHERE creator_id IN (:cid) AND movement LIKE :mvmt", array(':cid' => $creator_ids, ':mvmt' => '%' . db_like($search_term) . '%'))->fetchAll();
+		}
+		elseif($search_type == 'conditioning'){
+			$workouts_conditioning = db_query("SELECT wid, conditioning_id FROM {workout_builder_conditioning} WHERE creator_id IN (:cid) AND workout LIKE :mvmt", array(':cid' => $creator_ids, ':mvmt' => '%' . db_like($search_term) . '%'))->fetchAll();
+		}
 	}
 	else {
-		$workouts_strength = db_query("SELECT wid, strength_id FROM {workout_builder_strength} WHERE creator_id=:cid AND movement LIKE :mvmt", array(':cid' => $user->uid, ':mvmt' => '%' . db_like($search_term) . '%'))->fetchAll();
-		$workouts_conditioning = db_query("SELECT wid, conditioning_id FROM {workout_builder_conditioning} WHERE creator_id=:cid AND workout LIKE :mvmt", array(':cid' => $user->uid, ':mvmt' => '%' . db_like($search_term) . '%'))->fetchAll();
+		if($search_type == 'both'){
+			$workouts_strength = db_query("SELECT wid, strength_id FROM {workout_builder_strength} WHERE creator_id=:cid AND movement LIKE :mvmt", array(':cid' => $user->uid, ':mvmt' => '%' . db_like($search_term) . '%'))->fetchAll();
+			$workouts_conditioning = db_query("SELECT wid, conditioning_id FROM {workout_builder_conditioning} WHERE creator_id=:cid AND workout LIKE :mvmt", array(':cid' => $user->uid, ':mvmt' => '%' . db_like($search_term) . '%'))->fetchAll();
+		}
+		elseif($search_type == 'strength'){
+			$workouts_strength = db_query("SELECT wid, strength_id FROM {workout_builder_strength} WHERE creator_id=:cid AND movement LIKE :mvmt", array(':cid' => $user->uid, ':mvmt' => '%' . db_like($search_term) . '%'))->fetchAll();
+		}
+		elseif($search_type == 'conditioning'){
+			$workouts_conditioning = db_query("SELECT wid, conditioning_id FROM {workout_builder_conditioning} WHERE creator_id=:cid AND workout LIKE :mvmt", array(':cid' => $user->uid, ':mvmt' => '%' . db_like($search_term) . '%'))->fetchAll();
+		}
 	}
 
 	krsort($workouts_strength);
