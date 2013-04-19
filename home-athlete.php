@@ -90,8 +90,8 @@ td{
 
 
 <?php
-	include 'C:\wamp\www\drupal\sites\all\modules\workout_results\workout_results.inc';
-	//include '/var/www/sites/all/modules/workout_results/workout_results.inc';
+	//include 'C:\wamp\www\drupal\sites\all\modules\workout_results\workout_results.inc';
+	include '/var/www/sites/all/modules/workout_results/workout_results.inc';
 
 
 	global $user;
