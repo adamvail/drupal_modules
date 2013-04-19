@@ -135,7 +135,6 @@ td{
 			foreach($result as $usr){
 				//name and gym affiliation section
 				print '<div id="uname">';
-					//print '<p id="uname"><font color="179ce8" size="5"> Aaron Cahn </font>';
 					print '<p id="uname"><font color="179ce8" size="5">' . pretty_print($usr->name) . '</font>';
 					print '<br>';
 					print '<em>' . pretty_print($usr->gym) . '</em></p>';
@@ -283,6 +282,9 @@ td{
 							$exercise = db_query('SELECT movement FROM {workout_builder_strength} WHERE creator_id = :uid AND wid = :wid', array(':uid' => $user->uid,':wid'=>$wid));
 							$size = db_query('SELECT sid FROM {workout_tracker_strength} WHERE wid = :wid AND athlete_uid = :auid ORDER BY sid DESC LIMIT 1', array(':wid' => $wid, ':auid' => $auid))->fetchField();
 							//initialize data array
+							if(empty($size)){
+								return;
+							}
 							$weights = array_fill(1, $size, 0);
 							
 							//sum the weight lifted for each movement
