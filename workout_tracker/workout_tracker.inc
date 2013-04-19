@@ -996,7 +996,7 @@ function _save_conditioning_results(&$form_state){
 		if(!empty($workout['for_time'])){
 			$workout_completed = TRUE;
 			$record->time = $workout['for_time'];
-			(strpos($record->time, ":") !== FALSE) ? $workout_summary .= "Finished in " . $record->time . " minutes" : $workout_summary .= "Finished in " . $record->time . ":00 minutes";
+			(strpos($record->time, ":") !== FALSE || strpos($record->time, "+") !== FALSE) ? $workout_summary .= "Finished in " . $record->time . " minutes" : $workout_summary .= "Finished in " . $record->time . ":00 minutes";
 		}
 		
 		if(isset($workout['intervals'])){
