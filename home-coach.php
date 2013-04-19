@@ -58,7 +58,7 @@
 	border-style:solid;
 	border-width:2px;
 	border-color:#D4D4D4;
-	border-radius: 10px;
+	border-radius:10px;
 	float:left;
 	width:30%;
 	padding:15px;
@@ -66,9 +66,6 @@
 }
 #wod {
 	float:right;
-	/*border-style:solid;
-	border-width:2px;
-	border-color:grey;*/
 	margin:5px;
 	width:60%
 }
@@ -83,7 +80,7 @@
 	border-style:solid;
 	border-width:2px;
 	border-color:#D4D4D4;
-	width:128px;
+	width:40%;
 }
 .invisgraph {
 	float:right;
@@ -271,7 +268,7 @@ td{
 							//build their graph
 							$chart = array(
 								'#chart_id' => 'wod_chart' . $cindex,
-								'#title' => chart_title(t('WOD Movement Breakdown'), 15),
+								'#title' => chart_title(t('WOD Breakdown'), 15),
 								'#type' => CHART_TYPE_BAR_V_GROUPED,
 								'#size' => chart_size(400, 200),
 								'#adjust_resolution' => TRUE, 
