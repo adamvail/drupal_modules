@@ -90,8 +90,8 @@ td{
 
 
 <?php
-	//include 'C:\wamp\www\drupal\sites\all\modules\workout_results\workout_results.inc';
-	include '/var/www/sites/all/modules/workout_results/workout_results.inc';
+	include 'C:\wamp\www\drupal\sites\all\modules\workout_results\workout_results.inc';
+	//include '/var/www/sites/all/modules/workout_results/workout_results.inc';
 
 
 	global $user;
@@ -104,8 +104,7 @@ td{
 			foreach($result as $usr){
 				//name and gym affiliation section
 				print '<div id="uname">';
-					print '<p id="uname"><a href="?q=user/' . $user->uid . '/edit" style="text-decoration: none"><font color="179ce8" size="5"> ' . $usr->name . ' </font>';
-					//print '<p id="uname"><font color="179ce8" size="5">' . pretty_print($usr->name) . '</font>';
+					print '<p id="uname"><a href="?q=user/' . $user->uid . '/edit" style="text-decoration: none"><font color="179ce8" size="5"> ' . pretty_print($usr->name) . ' </font>';
 					print '<br>';
 					print '<em>' . pretty_print($usr->gym) . '</em></p>';
 					print '<hr>';
@@ -120,7 +119,7 @@ td{
 				print '<div class="centered-cell" id="stats">';
 					print '<table>';
 						print '<tr><th>' . pretty_print($usr->role) . ' Stats:</th></tr>';
-						print '<tr><td><font size="2"><b>' . $twods . '</b></font></td></tr>';
+						print '<tr><td><font size="2"><b>' . (int)$twods . '</b></font></td></tr>';
 						print '<tr><td><font color="179ce8" size="1"> WODs Complete </font></td></tr>';
 						print '<tr><td><font size="2"><b>' . $tweight . ' lbs</b></font></td></tr>'; 
 						print '<tr><td><font color="179ce8" size="1"> Weight Lifted </font></td></tr>';
@@ -232,7 +231,8 @@ td{
 			print '</table>';
 		print '</div>'; //end hist div
 		
-		if($wid != 0){
+		$gwid = db_query('SELECT MAX(wid) FROM {workout_tracker_strength} WHERE athlete_uid = :myuid', array(':myuid' => $user->uid))->fetchField();
+		if($gwid != 0){
 			print '<div id="graph">';
 				//*-------------------------------------------------
 				
@@ -246,9 +246,9 @@ td{
 					'#bar_size' => chart_bar_size(15, 5), 
 				);
 				
-				$workout = db_query('SELECT * FROM {workout_tracker_strength} WHERE wid = :wid AND athlete_uid = :auid', array(':wid' => $wid, ':auid' => $user->uid));
-				$exercise = db_query('SELECT movement FROM {workout_builder_strength} WHERE creator_id = :uid AND wid = :wid', array(':uid' => $user->uid,':wid'=>$wid));
-				$size = db_query('SELECT sid FROM {workout_tracker_strength} WHERE wid = :wid AND athlete_uid = :auid ORDER BY sid DESC LIMIT 1', array(':wid' => $wid, ':auid' => $user->uid))->fetchField();
+				$workout = db_query('SELECT * FROM {workout_tracker_strength} WHERE wid = :wid AND athlete_uid = :auid', array(':wid' => $gwid, ':auid' => $user->uid));
+				$exercise = db_query('SELECT movement FROM {workout_builder_strength} WHERE wid = :wid', array(':wid'=>$gwid));
+				$size = db_query('SELECT sid FROM {workout_tracker_strength} WHERE wid = :wid AND athlete_uid = :auid ORDER BY sid DESC LIMIT 1', array(':wid' => $gwid, ':auid' => $user->uid))->fetchField();
 				//initialize data array
 				$weights = array_fill(1, $size, 0);
 				

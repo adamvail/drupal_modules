@@ -121,8 +121,8 @@ td{
 
 <?php
 
-	//include 'C:\wamp\www\drupal\sites\all\modules\workout_results\workout_results.inc';
-	include '/var/www/includes/utils.inc';
+	include 'C:\wamp\www\drupal\sites\all\modules\workout_results\workout_results.inc';
+	//include '/var/www/includes/utils.inc';
 
 	global $user;
 	$graphs = array();
@@ -135,15 +135,14 @@ td{
 			foreach($result as $usr){
 				//name and gym affiliation section
 				print '<div id="uname">';
-					print '<p id="uname"><font color="179ce8" size="5"> ' . $usr->name . ' </font>';
-					//print '<p id="uname"><font color="179ce8" size="5">' . pretty_print($usr->name) . '</font>';
+					print '<p id="uname"><font color="179ce8" size="5">' . pretty_print($usr->name) . '</font>';
 					print '<br>';
 					print '<em>' . pretty_print($usr->gym) . '</em></p>';
 					print '<hr>';
 				print '</div>'; //end uname div
 				
 				$twods = db_query('SELECT COUNT(DISTINCT wid) FROM {workout_tracker_strength} WHERE athlete_uid = :myuid', array(':myuid'=> $usr->uid))->fetchField();
-				$tweight = db_query('SELECT SUM(work) FROM {workout_tracker_strength} WHERE athlete_uid = :myuid', array(':myuid'=> $usr->uid))->fetchField();
+				$nmembers = db_query('SELECT COUNT(DISTINCT uid) FROM {workout_gym_affiliation} WHERE gym LIKE :mygym', array(':mygym'=> $usr->gym))->fetchField();
 				
 				
 				print '<div class="centered-cell" id="stats">';
@@ -151,8 +150,8 @@ td{
 						print '<tr><th>' . pretty_print($usr->role) . ' Stats:</th></tr>';
 						print '<tr><td><font size="2"><b>' . $twods . '</b></font></td></tr>';
 						print '<tr><td><font color="179ce8" size="1"> WODs Complete </font></td></tr>';
-						print '<tr><td><font size="2"><b>' . $tweight . '</b></font></td></tr>';
-						print '<tr><td><font color="179ce8" size="1"> Weight Lifted </font></td></tr>';
+						print '<tr><td><font size="2"><b>' . $nmembers . '</b></font></td></tr>';
+						print '<tr><td><font color="179ce8" size="1"> Gym Members </font></td></tr>';
 					print '</table>';
 				print '</div>'; //end stats div
 			}
