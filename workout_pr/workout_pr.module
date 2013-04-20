@@ -16,20 +16,20 @@
 */
 
 function workout_pr_menu() {
-/*
+
   $items = array();
   $items['workout_pr'] = array(
-    'title' => 'Workout Gym Affiliation',
+    'title' => 'Personal Records (PR)',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('workout_pr'),
     'access callback' => 'user_is_logged_in',
-    'description' => 'User Gym Affilitaion',
+    'description' => 'List of all PRs',
     'file' => 'workout_pr.inc',
     'type' => MENU_NORMAL_ITEM, 
   );
 
   return $items;
-*/
+
 }
 /**
 * Page callback for out general info page

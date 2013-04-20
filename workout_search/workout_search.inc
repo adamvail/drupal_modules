@@ -61,14 +61,14 @@ function workout_search_find_workouts($form, &$form_state){
 		}
 		$creator_ids[] = $user->uid;
 		if($search_type == 'both'){
-			$workouts_strength = db_query("SELECT wid, strength_id FROM {workout_builder_strength} WHERE creator_id IN (:cid) AND movement LIKE :mvmt", array(':cid' => $creator_ids, ':mvmt' => '%' . db_like($search_term) . '%'))->fetchAll();
-			$workouts_conditioning = db_query("SELECT wid, conditioning_id FROM {workout_builder_conditioning} WHERE creator_id IN (:cid) AND workout LIKE :mvmt", array(':cid' => $creator_ids, ':mvmt' => '%' . db_like($search_term) . '%'))->fetchAll();
+			$workouts_strength = db_query("SELECT wid, strength_id FROM {workout_builder_strength} WHERE creator_id IN (:cid) AND movement LIKE :mvmt", array(':cid' => $creator_ids, ':mvmt' => "%" . db_like($search_term) . "%"))->fetchAll();
+			$workouts_conditioning = db_query("SELECT wid, conditioning_id FROM {workout_builder_conditioning} WHERE creator_id IN (:cid) AND workout LIKE :mvmt", array(':cid' => $creator_ids, ':mvmt' => "%" . db_like($search_term) . "%"))->fetchAll();
 		}
 		elseif($search_type == 'strength'){
-			$workouts_strength = db_query("SELECT wid, strength_id FROM {workout_builder_strength} WHERE creator_id IN (:cid) AND movement LIKE :mvmt", array(':cid' => $creator_ids, ':mvmt' => '%' . db_like($search_term) . '%'))->fetchAll();
+			$workouts_strength = db_query("SELECT wid, strength_id FROM {workout_builder_strength} WHERE creator_id IN (:cid) AND movement LIKE :mvmt", array(':cid' => $creator_ids, ':mvmt' => "%" . db_like($search_term) . "%"))->fetchAll();
 		}
 		elseif($search_type == 'conditioning'){
-			$workouts_conditioning = db_query("SELECT wid, conditioning_id FROM {workout_builder_conditioning} WHERE creator_id IN (:cid) AND workout LIKE :mvmt", array(':cid' => $creator_ids, ':mvmt' => '%' . db_like($search_term) . '%'))->fetchAll();
+			$workouts_conditioning = db_query("SELECT wid, conditioning_id FROM {workout_builder_conditioning} WHERE creator_id IN (:cid) AND workout LIKE :mvmt", array(':cid' => $creator_ids, ':mvmt' => "%" . db_like($search_term) . "%"))->fetchAll();
 		}
 	}
 	else {

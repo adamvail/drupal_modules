@@ -33,6 +33,12 @@ function workout_pr_schema(){
 				'size' => 'normal',
 				'description' => t('Current PR for specified movement'),	
 			),
+			'units' => array(
+				'type' => 'int',
+				'unsigned' => TRUE,
+				'size' => 'small',
+				'description' => t('Weight units of the PR'),	
+			),
 			'date' => array(
 				'type' => 'int',
 				'unsigned' => TRUE,
@@ -48,6 +54,16 @@ function workout_pr_schema(){
 	);
 
 	return $schema;
+}
+
+function workout_pr_update_7000(){
+	$spec = array(
+		'type' => 'int',
+		'description' => t('Weight units of the PR'),
+		'size' => 'small',
+		'unsigned' => TRUE,
+	);
+	db_add_field('workout_pr', 'units', $spec);
 }
 
 function workout_pr_uninstall() {
