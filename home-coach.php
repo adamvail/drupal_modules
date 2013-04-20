@@ -119,7 +119,7 @@ td{
 <?php
 
 	//check include statements
-	if(!@include '/var/www/includes/utils.inc') {
+	if(!@include '/var/www/sites/all/modules/workout_results/workout_results.inc') {
 		include 'C:/wamp/www/drupal/sites/all/modules/workout_results/workout_results.inc';
 		render_page();
 	}
