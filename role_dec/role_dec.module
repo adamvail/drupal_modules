@@ -33,38 +33,38 @@ function role_dec_form_alter(&$form, &$form_state, $form_id) {
 			'#description' => t('Choose whether you are a Coach or Athlete'),
 	);
 	
-	$form['account']['affiliation_dec'] = array(
+	$form['account']['affiliation_dec_coach'] = array(
 			'#type' => 'fieldset',
 			'#title' => t('Gym Affiliation'),
 			'#states' => array(
-				'visible' => array(
-					':input[name="role"]' => array(array('value' => 'coach'), array('value' => 'athlete')),
-				),
-			),
-	);
-	
-	$form['account']['affiliation_dec']['coach_gym'] = array(
-		'#type' => 'textfield',
-		'#description' => t('Please enter the name of your gym.'),
-		'#size' => 15,
-		'#maxlength' => 50,
-		'#states' => array(
 			'visible' => array(
 				':input[name="role"]' => array('value' => 'coach'),
 			),
 		),
 	);
 	
-	$form['account']['affiliation_dec']['athlete_gym'] = array(
+	$form['account']['affiliation_dec_coach']['coach_gym'] = array(
+		'#type' => 'textfield',
+		'#description' => t('Please enter the name of your gym.'),
+		'#size' => 15,
+		'#maxlength' => 50,
+	);
+	
+	$form['account']['affiliation_dec_athlete'] = array(
+			'#type' => 'fieldset',
+			'#title' => t('Gym Affiliation'),
+			'#states' => array(
+			'visible' => array(
+				':input[name="role"]' => array('value' => 'athlete'),
+			),
+		),
+	);
+	
+	$form['account']['affiliation_dec_athlete']['athlete_gym'] = array(
 		'#type' => 'radios',
 		'#options' => array(
 				'select_gym' => t('Select Gym'), 			
 				'new_gym' => t('Enter Gym'),						
-		),
-		'#states' => array(
-			'visible' => array(
-				':input[name="role"]' => array('value' => 'athlete'),
-			),
 		),
 		'#description' => t('Select gym or enter new gym if yours does not exist.'),
 	);
@@ -78,7 +78,7 @@ function role_dec_form_alter(&$form, &$form_state, $form_id) {
 		$i++;
 	}
 	
-	$form['account']['affiliation_dec']['choose_gym'] = array(
+	$form['account']['affiliation_dec_athlete']['choose_gym'] = array(
 		'#type' => 'select',
 		'#description' => t('Select gym.'),
 		'#options' => $options,
@@ -89,7 +89,7 @@ function role_dec_form_alter(&$form, &$form_state, $form_id) {
 		),
 	);
 	
-	$form['account']['affiliation_dec']['enter_gym'] = array(
+	$form['account']['affiliation_dec_athlete']['enter_gym'] = array(
 		'#type' => 'textfield',
 		'#description' => t('Please enter the name of your gym.'),
 		'#size' => 15,
@@ -109,7 +109,7 @@ function role_dec_user_insert(&$edit, $account, $category){
 	$record = new stdClass();
 	
 	//drupal_set_message('<pre>' . print_r($edit, TRUE) . '</pre>');
-	//drupal_set_message('<pre>' . print_r($account, TRUE) . '</pre>');
+	drupal_set_message('<pre>' . print_r($account, TRUE) . '</pre>');
 	//drupal_set_message('<pre>' . print_r($category, TRUE) . '</pre>');
 	
 	//write to the gym affilitation table
@@ -128,11 +128,17 @@ function role_dec_user_insert(&$edit, $account, $category){
 		$i++;
 	}
 	
-	if($account->athlete_gym == 'select_gym'){
-		$record->gym = $gym;
+	if($account->role == 'coach') {
+		$record->gym = $account->coach_gym;
 	}
-	elseif($account->athlete_gym == 'new_gym'){
-		$record->gym = $account->enter_gym;
+	elseif($account->role == 'athlete') {
+		if($account->athlete_gym == 'select_gym') {
+			$record->gym = $gym;
+		}
+		elseif($account->athlete_gym == 'new_gym') {
+			$record->gym = $account->enter_gym;
+		}
+	
 	}
 
 	drupal_write_record($table, $record);
