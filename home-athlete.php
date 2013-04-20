@@ -81,6 +81,9 @@
 td{
 	text-align:center;
 }
+.left-cell {
+	text-align: left;
+}
 .centered-cell {
   text-align: center;
 } 
