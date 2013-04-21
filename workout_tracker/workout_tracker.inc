@@ -894,7 +894,7 @@ function _save_strength_results(&$form_state){
 						// this means at least one rep was completed, find it and set it if its bigger than what's already there
 						foreach($lifts as $lift){
 							if($set['work'] > $lift_results[$lift]){
-								$lift_results[$lift] = $set['work'];
+								($record->weight_units == 1) ? $lift_results[$lift] = ($set['work'] * 2.2) : $lift_results[$lift] = $set['work'];
 							}
 						}
 					}
@@ -904,7 +904,8 @@ function _save_strength_results(&$form_state){
 							$failed_moves = explode(":", $failed_movements);
 							foreach($lifts as $lift){
 								if($lift != $failed_moves[0] && $set['work'] > $lift_results[$lift]){
-									$lift_results[$lift] = $set['work'];
+									($record->weight_units == 1) ? $lift_results[$lift] = ($set['work'] * 2.2) : $lift_results[$lift] = $set['work'];
+								//	$lift_results[$lift] = $set['work'];
 								}
 								else{
 									break;
@@ -921,7 +922,8 @@ function _save_strength_results(&$form_state){
 			else{
 				// didn't fail, so map weights to lifts
 				foreach($lifts as $lift){
-					$lift_results[$lift] = $set['work'];
+					//$lift_results[$lift] = $set['work'];
+					($record->weight_units == 1) ? $lift_results[$lift] = ($set['work'] * 2.2) : $lift_results[$lift] = $set['work'];
 				}
 			}
 			if($workout_completed == TRUE){
@@ -1057,6 +1059,7 @@ function check_pr($lift, $weight){
 			$num_updated = db_update($pr_table)
 				->fields(array(
 					'pr' => $weight,
+					'date' => time(),
 				))
 				->condition('athlete_uid', $user->uid, '=')
 				->condition('movement', $movement, '=')
@@ -1071,6 +1074,7 @@ function check_pr($lift, $weight){
 		// this lift isn't already in the database
 		$record->movement = $movement;
 		$record->pr = $weight;
+		$record->units = 0;
 		drupal_write_record($pr_table, $record);
 	}
 }
