@@ -24,32 +24,33 @@ function workout_results($form, &$form_state){
 
 	$recent_strength = db_query("SELECT DISTINCT(wid) FROM {workout_tracker_strength} where athlete_uid=:aid ORDER BY wid DESC LIMIT 7", array(':aid' => $user->uid))->fetchAll();
 	foreach($recent_strength as $rs){
-		$wids[$rs->wid] = $rs->wid;
 		$d = db_query("SELECT MAX(date) FROM {workout_tracker_strength} where wid=:wid AND athlete_uid=:aid", array(':wid' => $rs->wid, ':aid' => $user->uid))->fetchField();
 		$dates[$rs->wid] = $d;
 	}
 
-	if(!empty($wids)){
-		$recent_conditioning = db_query("SELECT DISTINCT(wid) FROM {workout_tracker_conditioning} where athlete_uid=:aid AND wid NOT IN (:swids) ORDER BY wid DESC LIMIT 7", array(':aid' => $user->uid, ':swids' => $wids))->fetchAll();
+	if(!empty($dates)){
+		$recent_conditioning = db_query("SELECT DISTINCT(wid) FROM {workout_tracker_conditioning} where athlete_uid=:aid AND wid NOT IN (:swids) ORDER BY wid DESC LIMIT 7", array(':aid' => $user->uid, ':swids' => array_keys($dates)))->fetchAll();
 	}
 	else {
 		$recent_conditioning = db_query("SELECT DISTINCT(wid) FROM {workout_tracker_conditioning} where athlete_uid=:aid ORDER BY wid DESC LIMIT 7", array(':aid' => $user->uid))->fetchAll();
 	}
 
 	foreach($recent_conditioning as $rc){
-		$wids[$rc->wid] = $rc->wid;
 		$d = db_query("SELECT MAX(date) FROM {workout_tracker_conditioning} where wid=:wid AND athlete_uid=:aid", array(':wid' => $rc->wid, ':aid' => $user->uid))->fetchField();
 		$dates[$rc->wid] = $d;
 	}
 
-	if(empty($wids)){
+	if(empty($dates)){
 		$form['header'] = array(
 			'#markup' => '<p>There are no completed, please use the Workout Builder to create a workout</p>',
 		);	
 		return $form;
 	}
 
-	foreach($wids as $w){
+	arsort($dates);
+	//drupal_set_message('<pre>' . print_r($dates, TRUE) . '</pre>');
+
+	foreach($dates as $w => $date){
 		$movement_str = '';
 
 		$movements = db_query("SELECT movement FROM {workout_builder_strength} WHERE wid=:wid", array(':wid' => $w))->fetchAll();
@@ -77,11 +78,10 @@ function workout_results($form, &$form_state){
 			}
 		}
 
-		$workout_strength = convert_timestamp($dates[$w]) . ": " . $movement_str;
+		$workout_strength = convert_timestamp($date) . ": " . $movement_str;
 		$wids[$w] = $workout_strength;
 	}
 
-	krsort($wids);
 //	drupal_set_message('<pre>' . print_r($wids, TRUE) . '</pre>');
 
 	$form['description'] = array(
