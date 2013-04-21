@@ -17,6 +17,8 @@ function workout_results($form, &$form_state){
 
 	$form_state['page_num'] = 1;
 
+//	return workouts_in_table();
+
 	$strength_exists = FALSE;
 	$conditioning_exists = FALSE;
 	$wids = array();
@@ -707,4 +709,86 @@ function detect_mobile(){
 			return TRUE;
 		}
 	return FALSE;
+}
+
+function workouts_in_table(){
+	global $user;
+
+	$attributes['datatable_options'] = array(
+		'bFilter' => TRUE,
+		'bInfo' => TRUE,
+	);
+
+	$header = array(
+		array(
+			'data' => t('Date'),
+			'datatable_options' => array(
+				'bSortable' => TRUE,
+				'bSearchable' => TRUE,
+			),
+		),
+		array(
+			'data' => t('Workout'),
+			'datatable_options' => array(
+				'bSortable' => TRUE,
+				'bSearchable' => TRUE,
+			),
+		),
+	);
+
+	$completed_strength = db_select('workout_tracker_strength', 's')
+		->fields('s', array('date', 'wid'))
+		->condition('athlete_uid', $user->uid, '=')
+		->orderBy('date', 'DESC')
+		->execute()
+		->fetchAll();
+
+	// TODO, think of way to get all the workouts in without conflicting with multiple
+	// completions of the same workout
+	$dates = array();
+	foreach($completed_strength as $s){
+		if(!isset($dates[$s->wid])){
+			$dates[$s->wid] = $s->date;
+		}
+	}
+
+	$completed_conditioning = db_select('workout_tracker_conditioning', 'c')
+		->fields('c', array('date', 'wid'))
+		->condition('athlete_uid', $user->uid, '=')
+		->condition('wid', array_keys($dates), 'NOT IN')
+		->orderBy('date', 'DESC')
+		->execute()
+		->fetchAll();
+
+	foreach($completed_conditioning as $cc){
+		if(!isset($dates[$cc->wid])){
+			$dates[$cc->wid] = $cc->date;
+		}
+	}
+
+	arsort($dates);
+
+	foreach($dates as $w => $date){
+		$strength_movements = db_select('workout_builder_strength', 's')
+			->fields('s', array('movement'))
+			->condition('wid', $w, '=')
+			->execute()
+			->fetchAll();
+		
+		$strength_str = '';
+		foreach($strength_movements as $lift){
+			($strength_str == '') ? $strength_str .= pretty_print_movement($lift->movement) : $strength_str .= ', ' . pretty_print_movement($lift->movement);
+		}
+
+		$rows[] = array(convert_timestamp($date), $strength_str);
+	}
+
+	$build['datatable'] = array(
+		'#theme' => 'datatable',
+		'#header' => $header,
+		'#rows' => $rows,
+		'#attributes' => $attributes,
+	);
+
+	return $build;
 }
