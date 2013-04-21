@@ -46,6 +46,28 @@ function workout_tracker($form, &$form_state){
 		return $form;
 	}
 
+	$dates = array();
+	$creators = array();
+	foreach($top_strength as $ts){
+		$dates[$ts->wid] = $ts->date;
+		$creators[$ts->wid] = $ts->creator_id;
+	}
+	foreach($top_conditioning as $tc){
+		$dates[$tc->wid] = $tc->date;
+		$creators[$tc->wid] = $tc->creator_id;
+	}
+	arsort($dates);
+
+	foreach($dates as $wid => $date){
+		if($creators[$wid] == $user->uid){
+			$creator = "You";
+		}	
+		else {
+			$creator = db_query("SELECT name FROM {workout_gym_affiliation} where uid=:uid", array(':uid' => $creators[$wid]))->fetchField();
+		}		
+		$top_ten[$wid] = convert_timestamp($date) . ', Created by ' . $creator;
+	}
+/*
 	$creators = array();
 	// Take the last 10 workouts from both strength and conditioning
 	// and make them one unified array to populate radio buttons
@@ -71,7 +93,7 @@ function workout_tracker($form, &$form_state){
 			$top_ten[$ts->wid] = convert_timestamp($ts->date) . ', Created by ' . $creator;
 		}
 	}
-
+*/
 	if(empty($top_ten)){
 		$form['header'] = array(
 			'#markup' => '<p>There are no workouts built, please use the Workout Builder to create a workout</p>',
@@ -79,7 +101,6 @@ function workout_tracker($form, &$form_state){
 	  return $form;
 	}
 
-	krsort($top_ten);
 /*
 	$week = array_slice($top_ten, 0, 7);
 	drupal_set_message('<pre>' . print_r($week, TRUE) . '</pre>');
