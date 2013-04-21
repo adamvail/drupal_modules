@@ -238,10 +238,11 @@ function workout_tracker_workout($form, &$form_state){
 							$set_header .= ' at ' . $workout[0]->wgt_percentage . '%';
 							break;
 						case 'weight':
+							$units = '';
 							if($workout[0]->wgt_units == 0){
 								$units = 'lbs';
 							}
-							else{
+							elseif($workout[0]->wgt_units == 1){
 								$units = 'kg';
 							}
 
@@ -429,11 +430,15 @@ function workout_tracker_workout($form, &$form_state){
 			//drupal_set_message('<pre>' . print_r($combo, TRUE) . '</pre>');
 
 			if(!empty($workout[0]->wgt_style)){
+				$units = 'lbs';
+				if($workout[0]->wgt_units == 1) {
+					$units = 'kg';
+				}
 				$form['strength'][$workout[0]->strength_id]['units'] = array(
 					'#type' => 'select',
 					'#description' => t('Lbs or KG'),
 					'#options' => array(t('lbs'), t('kg')),
-					'#default_value' => 'lbs',
+					'#default_value' => $units,
 				);
 			}
 
@@ -845,11 +850,11 @@ function _save_strength_results(&$form_state){
 
 	for($i = 1; isset($form_state['input']['strength'][$i]); $i++){
 		$workout = $form_state['input']['strength'][$i];
-		$workout_completed = FALSE;
 		$lifts = array_keys($all_lifts[$i]);
-		$set_summary = '';
 		for($s = 1; isset($workout[$s]); $s++){
 			$set = $workout[$s];
+			$set_summary = '';
+			$workout_completed = FALSE;
 
 			$record = new stdClass();
 			$record->wid = $form_state['wid'];	
@@ -861,12 +866,16 @@ function _save_strength_results(&$form_state){
 			if(isset($workout['units'])){
 				$record->weight_units = $workout['units'];
 			}
-			$set_summary = "Set #" . $s . ":";
 			if(isset($set['work']) && !empty($set['work'])){
+				$set_summary .= "Set #" . $s . ":";
 				$workout_completed = TRUE;
 				$record->work = $set['work'];
 				$set_summary .= " " . $set['work'] . "\n";
 			}
+			else {
+				continue;
+			}
+
 //			drupal_set_message('<pre>' . print_r($set, TRUE) . '</pre>');
 			if(isset($set['fail'])){
 				$num_failed = 0;
