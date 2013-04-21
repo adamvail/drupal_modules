@@ -19,6 +19,21 @@ function role_dec_form_alter(&$form, &$form_state, $form_id) {
 		return;
 	}
 	
+	$require_field = FALSE;
+	
+	if($form_id == 'user_register_form') {
+		$require_field = TRUE;
+	}
+		$form['account']['disp_name'] = array(
+				'#type' => 'textfield',
+				'#title' => t('Display Name'),
+				'#description' => t('Enter your name as you want it to appear in your profile on the homepage. (e.g. John Smith)'),
+				'#size' => 31,
+				'#maxlength' => 50,
+				'#required' => $require_field,
+				'#weight' => 0,
+		);
+
 	$form['account']['role_dec'] = array(
 			'#type' => 'fieldset',
 			'#title' => t('User Role Decision'),
@@ -31,6 +46,7 @@ function role_dec_form_alter(&$form, &$form_state, $form_id) {
 				'athlete' => t('Athlete'),						
 			),
 			'#description' => t('Choose whether you are a Coach or Athlete'),
+			'#required' => $require_field,
 	);
 	
 	$form['account']['affiliation_dec_coach'] = array(
@@ -103,6 +119,7 @@ function role_dec_form_alter(&$form, &$form_state, $form_id) {
 	//drupal_set_message('<pre>' . print_r($form, TRUE) . '</pre>');
 }
 
+//input the gym affiliation data upon account creation
 function role_dec_user_insert(&$edit, $account, $category){
 
 	$table = 'workout_gym_affiliation';
@@ -114,7 +131,7 @@ function role_dec_user_insert(&$edit, $account, $category){
 	
 	//write to the gym affilitation table
 	$record->uid = $account->uid;
-	$record->name = $account->name;
+	$record->name = $account->disp_name;
 	$record->role = $account->role;
 	
 	//grab all the unique gym names
@@ -156,4 +173,106 @@ function role_dec_user_insert(&$edit, $account, $category){
 	}
 	
 	drupal_write_record($table, $record);
+}
+
+//update the gym affiliation information
+function role_dec_user_update(&$edit, $account, $category) {
+	
+	//drupal_set_message('<pre>' . print_r($edit, TRUE) . '</pre>');
+	//drupal_set_message('<pre>' . print_r($account, TRUE) . '</pre>');
+	//drupal_set_message('<pre>' . print_r($category, TRUE) . '</pre>');
+	
+	//update user display name
+	if($account->disp_name != NULL) {
+		db_update('workout_gym_affiliation')
+			->fields(array(
+				'name' => $account->disp_name,
+			))
+			->condition('uid',$account->uid)
+			->execute();
+	}
+	
+	//update user display name
+	if($account->role != NULL) {
+		db_update('workout_gym_affiliation')
+			->fields(array(
+				'role' => $account->role,
+			))
+			->condition('uid',$account->uid)
+			->execute();
+	}
+
+	//grab all the unique gym names
+	$result = db_query('SELECT DISTINCT gym FROM {workout_gym_affiliation}');
+	$i = 0;
+	$gym = NULL;
+	foreach($result as $row){
+		if($i == $account->choose_gym){
+			$gym = $row->gym;
+		}
+		$i++;
+	}
+	
+	//update gym for a coach
+	if($account->role == 'coach' && $account->coach_gym != NULL) {
+		db_update('workout_gym_affiliation')
+			->fields(array(
+				'gym' => $account->coach_gym,
+			))
+			->condition('uid',$account->uid)
+			->execute();
+	}
+	elseif($account->role == 'athlete') {
+		if($account->athlete_gym == 'select_gym') {
+			db_update('workout_gym_affiliation')
+				->fields(array(
+					'gym' => $gym,
+				))
+				->condition('uid',$account->uid)
+				->execute();
+		}
+		elseif($account->athlete_gym == 'new_gym') {
+			db_update('workout_gym_affiliation')
+				->fields(array(
+					'gym' => $account->enter_gym,
+				))
+				->condition('uid',$account->uid)
+				->execute();
+		}
+	}
+	
+	//update users_roles table
+	if($account->role != NULL) {
+		
+		$result = db_query('SELECT * FROM {role}');
+		foreach($result as $row){
+			if($row->name == $account->role){
+				db_update('users_roles')
+					->fields(array(
+						'rid' => $row->rid,
+					))
+					->condition('uid',$account->uid)
+					->execute();
+			}
+		}
+	}
+}
+
+//delete gym affiliation information upon user cancellation
+function role_dec_user_cancel($edit, $account, $method) {
+	//Do nothing at the moment				
+}
+
+//delete gym affiliation information upon user cancellation
+function role_dec_user_delete($account) {
+	
+	//delete the user row from affiliation table
+	db_delete('workout_gym_affiliation')
+		->condition('uid',$account->uid)
+		->execute();
+
+	//delete user row from role table
+	db_delete('users_roles')
+		->condition('uid',$account->uid)
+		->execute();				
 }
