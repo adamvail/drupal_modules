@@ -769,6 +769,7 @@ function workouts_in_table(){
 	arsort($dates);
 
 	foreach($dates as $w => $date){
+//	drupal_set_message('<pre>' . print_r($w . " -> " . $date, TRUE) . '</pre>');
 		$strength_movements = db_select('workout_builder_strength', 's')
 			->fields('s', array('movement'))
 			->condition('wid', $w, '=')

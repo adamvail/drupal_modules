@@ -149,8 +149,8 @@ td{
 			//logic to get the most recent WOD which can be either from the coach or the athlete
 			$wid = 0;	
 			// grab the most up to date wid the athlete has built
-			$swida = db_query('SELECT MAX(wid) FROM {workout_builder_strength} WHERE creator_id = :auid', array(':auid' => $user->uid))->fetchField();
-			$cwida = db_query('SELECT MAX(wid) FROM {workout_builder_conditioning} WHERE creator_id = :auid', array(':auid' => $user->uid))->fetchField();
+			$swida = db_query('SELECT MAX(wid) FROM {workout_builder_strength} WHERE creator_id = :auid and date < :date', array(':auid' => $user->uid, ':date' => time()))->fetchField();
+			$cwida = db_query('SELECT MAX(wid) FROM {workout_builder_conditioning} WHERE creator_id = :auid and date < :date', array(':auid' => $user->uid, ':date' => time()))->fetchField();
 			if($swida > $cwida) {
 				$wid = $swida;
 			}
@@ -160,8 +160,8 @@ td{
 			//grab the coaches uid
 			$cuid = db_query('SELECT uid FROM {workout_gym_affiliation} WHERE gym LIKE :mygym AND role LIKE :role', array(':mygym' => $mygym, ':role' => 'coach'))->fetchField();
 			// grab the most up to date wid the coach has built
-			$swidc = db_query('SELECT MAX(wid) FROM {workout_builder_strength} WHERE creator_id = :cuid', array(':cuid' => $cuid))->fetchField();
-			$cwidc = db_query('SELECT MAX(wid) FROM {workout_builder_conditioning} WHERE creator_id = :cuid', array(':cuid' => $cuid))->fetchField();
+			$swidc = db_query('SELECT MAX(wid) FROM {workout_builder_strength} WHERE creator_id = :cuid and date < :date', array(':cuid' => $cuid, ':date' => time()))->fetchField();
+			$cwidc = db_query('SELECT MAX(wid) FROM {workout_builder_conditioning} WHERE creator_id = :cuid and date < :date', array(':cuid' => $cuid, ':date' => time()))->fetchField();
 			if($swidc > $wid) {
 				$wid = $swidc;
 			}

@@ -1076,7 +1076,7 @@ function check_pr($lift, $weight){
 	global $user;
 //	drupal_set_message('<pre>' . print_r($lift . ':' . $weight, TRUE) . '</pre>');
 	$pr_table = 'workout_pr';
-	$movement = strtolower($lift);
+	$movement = $lift;
 
 	$cur_pr = db_query('SELECT pr FROM {workout_pr} where athlete_uid=:auid AND movement=:movement', array(':auid' => $user->uid, ':movement' => $movement))->fetchField();
 
