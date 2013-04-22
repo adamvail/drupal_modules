@@ -737,7 +737,25 @@ function workout_tracker_workout($form, &$form_state){
 						'#title' => t('Time'),
 						'#size' => 5,
 						'#maxlength' => 5,
-					); 
+					);
+
+					$form['conditioning'][$workout[0]->conditioning_id]['for_time_dnf'] = array(
+						'#markup' => '<p>If you did not finish within the time cap, enter the rounds and reps of what you did finish</p>',
+					);
+
+ 					$form['conditioning'][$workout[0]->conditioning_id]['for_time_rounds'] = array(
+						'#type' => 'textfield',
+						'#title' => t('Rounds Completed'),
+						'#size' => 3,
+						'#maxlength' => 3,
+					);
+
+					$form['conditioning'][$workout[0]->conditioning_id]['for_time_reps'] = array(
+						'#type' => 'textfield',
+						'#title' => t('Extra Reps'),
+						'#size' => 3,
+						'#maxlength' => 3,
+					);
 				}
 
 				if($workout[0]->style == 'intervals'){
@@ -1025,10 +1043,29 @@ function _save_conditioning_results(&$form_state){
 			}
 		}
 		
-		if(!empty($workout['for_time'])){
+		if(!empty($workout['for_time']) || !empty($workout['for_time_rounds']) || !empty($workout['for_time_reps'])){
 			$workout_completed = TRUE;
-			$record->time = $workout['for_time'];
-			(strpos($record->time, ":") !== FALSE || strpos($record->time, "+") !== FALSE) ? $workout_summary .= "Finished in " . $record->time . " minutes" : $workout_summary .= "Finished in " . $record->time . ":00 minutes";
+			$workout_summary .= "Finished ";
+			if(!empty($workout['for_time_rounds']) || !empty($workout['for_time_reps'])){
+				if(!empty($workout['for_time_rounds'])){
+ 					$record->amrap_rounds = $workout['for_time_rounds'];
+					$workout_summary .= $workout['for_time_rounds'] . " rounds ";
+				}
+				else {
+					$record->amrap_rounds = 0;
+				}
+				if(!empty($workout['for_time_reps'])){
+					$record->amrap_reps = $workout['for_time_reps'];
+					$workout_summary .= $workout['for_time_reps'] . " reps ";
+				}
+				else{
+					$record->amrap_reps = 0;
+				}
+			}
+			else{
+				$record->time = $workout['for_time'];
+				(strpos($record->time, ":") !== FALSE || strpos($record->time, "+") !== FALSE) ? $workout_summary .= "Finished in " . $record->time . " minutes" : $workout_summary .= "Finished in " . $record->time . ":00 minutes";
+			}
 		}
 		
 		if(isset($workout['intervals'])){

@@ -556,12 +556,18 @@ function fill_in_conditioning_results($wid, $num_performed){
 			if(isset($workout->time) && !empty($workout->time)){
 				//drupal_set_message('<pre>' . print_r("Rounds for time:\n" . $workout, TRUE) . '</pre>');
 				// rounds for time
-				if(strpos($workout->time, ":") !== FALSE){
+				if(strpos($workout->time, ":") !== FALSE || strpos($workout->time, "+") !== FALSE){
 					$results[$key] .= "     Time: " . $workout->time . " minutes<br>";
 				}
 				else {
 					$results[$key] .= "     Time: " . $workout->time . ":00 minutes\n";
 				}
+/*				if(strpos($workout->time, ":") !== FALSE){
+					$results[$key] .= "     Time: " . $workout->time . " minutes<br>";
+				}
+				else {
+					$results[$key] .= "     Time: " . $workout->time . ":00 minutes\n";
+				}*/
 			}
 			elseif(!empty($workout->amrap_rounds) || !empty($workout->amrap_reps)){
 				// amrap
