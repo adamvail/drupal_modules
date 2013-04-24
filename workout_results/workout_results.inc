@@ -565,6 +565,7 @@ function fill_in_conditioning_results($wid, $num_performed){
 	$results = array();
 	$keys = array_keys($conditioning);
 	//drupal_set_message('<pre>' . print_r($keys, TRUE) . '</pre>');
+	// TODO, grab the conditioning style from the database to know how to parse the data correctly
 	foreach($keys as $key){
 		$results[$key] = ''; //"Performed on " . convert_timestamp($conditioning[$key][0]->date) . "<br>";
 		for($i = 0; $i < sizeof($conditioning[$key]); $i++){

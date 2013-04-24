@@ -1172,13 +1172,15 @@ function workout_tracker_mail($key, &$message, $params){
 				}
 			}
 
-			$cids = array_keys($params['conditioning_print']);
-			for($iter = 0; $iter < sizeof($cids); $iter++){
-				$i = $cids[$iter];
-				if(!empty($params['conditioning_summary'][$i])){
-					$message['body'][] = $params['conditioning_print'][$i];			
-					$message['body'][] = t("\n\nResults:");
-					$message['body'][] = $params['conditioning_summary'][$i];
+			if(isset($param['conditioning_print'])){
+				$cids = array_keys($params['conditioning_print']);
+				for($iter = 0; $iter < sizeof($cids); $iter++){
+					$i = $cids[$iter];
+					if(!empty($params['conditioning_summary'][$i])){
+						$message['body'][] = $params['conditioning_print'][$i];			
+						$message['body'][] = t("\n\nResults:");
+						$message['body'][] = $params['conditioning_summary'][$i];
+					}
 				}
 			}
 
