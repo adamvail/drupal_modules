@@ -527,6 +527,20 @@ function create_conditioning_string($wid, $num_performed){
 	return $results;
 }
 
+function assemble_conditioning_headers($wid){
+	$workouts = db_select('workout_builder_conditioning', 'b')
+		->fields('b')
+		->condition('wid', $wid, '=')
+		->execute()
+		->fetchAll();
+
+	$headers = array();
+	foreach($workouts as $w){
+		$headers[$w->conditioning_id] = $w->workout;
+	}
+	return $headers;
+}
+
 function create_conditioning_string_old($wid, $num_performed){
 
 	$headers = assemble_conditioning_headers($wid);
@@ -672,7 +686,7 @@ function fill_in_conditioning_results($wid, $num_performed){
 
 }
 
-function assemble_conditioning_headers($wid){
+function assemble_conditioning_headers_old($wid){
 	$conditioning = db_query('SELECT * FROM {workout_builder_conditioning} where wid=:wid', array(':wid' => $wid));
 	$conditioning_notes_results = db_query('SELECT * FROM {workout_builder_conditioning_notes} where wid=:wid', array(':wid' => $wid));
 	$results = array();
