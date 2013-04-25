@@ -25,7 +25,7 @@ function workout_builder_menu() {
     'page arguments' => array('workout_builder_wbuilder'),
     'access callback' => 'user_is_logged_in',
     'description' => 'Build your workout',
-    'file' => 'workout_builder_wbuild.inc',
+    'file' => 'workout_builder_wbuild_conditioning.inc',
     'type' => MENU_NORMAL_ITEM, 
   );
 

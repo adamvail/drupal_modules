@@ -156,6 +156,11 @@ function workout_tracker_schema(){
 				'length' => 255,
 				'description' => t('Comma delimited list of reps from each interval for this movement'),
 			),
+			'results' => array(
+				'type' => 'text',
+				'size' => 'big',
+				'description' => t('Conditioning results'),
+			),		
 		),
 		'indexes' => array(
 			'athlete_uid' => array('athlete_uid'),
@@ -238,6 +243,15 @@ function workout_tracker_schema(){
 		),
 	);
 	return $schema;
+}
+
+function workout_tracker_update_7000(){
+	$spec = array(
+		'type' => 'text',
+		'description' => t('Conditioning results'),
+		'size' => 'big',
+	);
+	db_add_field('workout_tracker_conditioning', 'results', $spec);
 }
 
 function workout_tracker_uninstall() {

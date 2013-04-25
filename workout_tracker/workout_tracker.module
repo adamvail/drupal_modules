@@ -25,7 +25,7 @@ function workout_tracker_menu() {
     'page arguments' => array('workout_tracker'),
     'access callback' => 'user_is_logged_in',
     'description' => 'Track your workout',
-    'file' => 'workout_tracker.inc',
+    'file' => 'workout_tracker_conditioning.inc',
     'type' => MENU_NORMAL_ITEM, 
   );
 

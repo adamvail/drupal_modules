@@ -488,6 +488,47 @@ function assemble_strength_headers($wid){
 
 function create_conditioning_string($wid, $num_performed){
 
+	$workouts = db_select('workout_builder_conditioning', 'b')
+		->fields('b')
+		->condition('wid', $wid, '=')
+		->execute()
+		->fetchAll();
+	
+	$notes = db_select('workout_builder_conditioning_notes', 'n')
+		->fields('n')
+		->condition('wid', $wid, '=')
+		->execute()
+		->fetchAll();
+
+	$logs = db_select('workout_tracker_conditioning', 'c')
+		->fields('c')
+		->condition('wid', $wid, '=')
+		->condition('num_performed', $num_performed, '=')
+		->execute()
+		->fetchAll();
+
+	$headers = array();
+	foreach($workouts as $w){
+		$headers[$w->conditioning_id] = $w->workout;
+	}
+	foreach($notes as $n){
+		$headers[$n->conditioning_id] .= "<br><br>" . $n->notes;
+	}
+
+	$results = '';
+	foreach($logs as $l){
+		$results .= $headers[$l->cid] . "<br><br>"; 
+		$lines = explode("\n", $l->results);
+		foreach($lines as $line){
+			$results .= $line . "<br>"; 
+		}
+		$results .= "<br>";  
+	}
+	return $results;
+}
+
+function create_conditioning_string_old($wid, $num_performed){
+
 	$headers = assemble_conditioning_headers($wid);
 	$results = fill_in_conditioning_results($wid, $num_performed);
 
