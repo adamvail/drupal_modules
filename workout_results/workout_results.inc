@@ -401,7 +401,7 @@ function assemble_strength_headers($wid){
 							}
 							// This means we found some that are the same
 							//drupal_set_message('<pre>' . print_r("p: " . $p . "\nk: " . $k, TRUE) . '</pre>');
-							if($k == sizeof($percentage_scheme)){	
+							if($k == sizeof($percentage_scheme) && $percentage_scheme[$p] == $percentage_scheme[$k] && $rep_scheme[$p] == $rep_scheme[$k]){	
 								$num_sets = $k + 1 - $p; 
 							}
 							else{
@@ -410,7 +410,7 @@ function assemble_strength_headers($wid){
 
 							$movement_str .= $num_sets . "x" . $rep_scheme[$p] . " @ " . $percentage_scheme[$p] . "%, ";
 
-							if($k == sizeof($percentage_scheme)){
+							if($k == sizeof($percentage_scheme) && $percentage_scheme[$p] == $percentage_scheme[$k] && $rep_scheme[$p] == $rep_scheme[$k]){
 								$p = $k;
 							}			
 							else{
