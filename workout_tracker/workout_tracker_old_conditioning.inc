@@ -586,6 +586,27 @@ function workout_tracker_workout($form, &$form_state){
 							),
 						);
 					}
+						// This is supposed to build form elements to specify on which movement rep you failed
+						// for a complex movement....but it doesn't work...i'll come back to it
+				/*	
+						foreach($lift_keys as $l){
+						//drupal_set_message('<pre>' . print_r($combo[$l], TRUE) . '</pre>');
+
+						$form['strength'][$workout[0]->strength_id][$k]['fail_lift'][$l] = array(
+								'#type' => 'radios',
+								'#title' => t('Failed on movement rep:'),
+								'#options' => $combo[$l],
+								//'#default_value' => key($combo[$l]),
+								'#states' => array(
+									'visible' => array(
+										':input[name="strength[' . $workout[0]->strength_id . '][' . $k . '][fail]"]' => array('checked' => TRUE),
+										':input[name="strength[' . $workout[0]->strength_id . '][' . $k . '][fail_lift]"]' => array('value' => $l),
+									),
+								),
+							);
+
+						}
+*/
 				}
 			}
 		}	
@@ -609,47 +630,191 @@ function workout_tracker_workout($form, &$form_state){
 
 		// Loop through the different strength_id to populate the form	
 		foreach($conditioning_data as $workout){
-			drupal_set_message('<pre>' . print_r($workout, TRUE) . '</pre>');
 			$form_state['conditioning_exists'] = TRUE;
 			// $workout is an array of movements all with the same conditioning_id
 
-			$lines = explode("<br>", $workout[0]->workout);
-			$fieldset_title = $lines[0];	
-			$movement_str = $workout[0]->workout . "<br>"; 
+			$fieldset_title = '';
+			if($workout[0]->style == 'amrap'){
+				$movement_str = $workout[0]->duration . " minute AMRAP:<br>";
+				$fieldset_title = substr($movement_str, 0, strlen($movement_str) - 5);
+			}
+			elseif($workout[0]->style == 'for_time'){
+				$movement_str = '';
+				if(!empty($workout[0]->rounds)){
+					$movement_str = $workout[0]->rounds . " Rounds For Time";
+					$fieldset_title = $movement_str; 
+				}
+				else {
+					$fieldset_title = 'For Time';
+				}
+				if(!empty($workout[0]->cutoff)){
+					($movement_str != '') ? $movement_str .= ", " . $workout[0]->cutoff . " minute cutoff:<br>" : $movement_str .= $workout[0]->cutoff . " minute cutoff:<br>";	
+				}
+				else{
+					$movement_str = $movement_str . ":<br>";
+				}
+			}
+			elseif($workout[0]->style == 'intervals' && $workout[0]->rounds > 1){
+				if(!empty($workout[0]->interval_time)){
+					(strpos($workout[0]->interval_time, ':') !== FALSE) ? $clock = $workout[0]->interval_time : $clock = $workout[0]->interval_time . ":00";
+					$movement_str = $workout[0]->rounds . " Rounds on a " . $clock . " Minute Clock:<br>";
+				}
+				else {
+					$movement_str = $workout[0]->rounds . " Rounds of:<br>";
+				}
+				if($workout[0]->rounds == 1){
+					$fieldset_str = '1 Round: Intervals';
+				}
+				else{
+					$fieldset_title = $workout[0]->rounds . ' Rounds: Intervals';
+				}
+			}
+			elseif($workout[0]->style == 'rest'){
+				$fieldset_title = "Rest";
+				$movement_str = $workout[0]->duration . " Minutes Rest";
+			}
+			
+			// replace pipes with html new lines
+			$movement_str .= $workout[0]->workout . "<br>"; //str_replace("\n", "<br>", $workout[0]->workout);
+
 
 			//drupal_set_message('<pre>' . print_r($movement_str, TRUE) . '</pre>');
 			// Now that the string is done, build the fieldset to display it.
-			$form['conditioning'][$workout[0]->conditioning_id] = array(
-					'#type' => 'fieldset',
-					'#title' => t('@header', array('@header' => $fieldset_title)),
-					'#collapsible' => TRUE,
-					'#collapsed' => TRUE,
-			);
-
-			// print the workout line
-			$form['conditioning'][$workout[0]->conditioning_id]['header'] = array(
-				'#markup' => '<p>' . $movement_str . '</p>',
-			);	
-
-			$notes = '';
-			if(isset($conditioning_notes[$workout[0]->conditioning_id]->notes)){
-				$paragraphs = explode("\n", $conditioning_notes[$workout[0]->conditioning_id]->notes);
-				for($cn = 0; $cn < sizeof($paragraphs); $cn++){
-					$form['conditioning'][$workout[0]->conditioning_id]['conditioning_notes'][$cn] = array(
-						'#markup' => '<p>' . $paragraphs[$cn] . '</p>',
-					);
-					$notes .= $paragraphs[$cn];
-				}	
+			if($workout[0]->style == 'rest'){
+				$form['conditioning'][$workout[0]->conditioning_id] = array(
+						'#type' => 'fieldset',
+						'#title' => t('@header', array('@header' => $fieldset_title)),
+						'#collapsible' => FALSE,
+				);
+			}
+			else{
+				$form['conditioning'][$workout[0]->conditioning_id] = array(
+						'#type' => 'fieldset',
+						'#title' => t('@header', array('@header' => $fieldset_title)),
+						'#collapsible' => TRUE,
+						'#collapsed' => TRUE,
+				);
 			}
 
-			// Add field to put results
+				// print the workout line
+				$form['conditioning'][$workout[0]->conditioning_id]['header'] = array(
+					'#markup' => '<p>' . $movement_str . '</p>',
+				);	
 
-			$form['conditioning'][$workout[0]->conditioning_id]['results'] = array(
-				'#type' => 'textarea',
-				'#title' => t('Conditioning Results'),
-			);
+				$notes = '';
+				if(isset($conditioning_notes[$workout[0]->conditioning_id]->notes)){
+					$paragraphs = explode("\n", $conditioning_notes[$workout[0]->conditioning_id]->notes);
+					for($cn = 0; $cn < sizeof($paragraphs); $cn++){
+						$form['conditioning'][$workout[0]->conditioning_id]['conditioning_notes'][$cn] = array(
+							'#markup' => '<p>' . $paragraphs[$cn] . '</p>',
+						);
+						$notes .= $paragraphs[$cn];
+					}	
+				}
+			if(substr_count($movement_str, "Rest") != 1){	
+				$form_state['conditioning_print'][$workout[0]->conditioning_id] = $movement_str . "\n\n" . $notes;
+			}
+
+				if($workout[0]->style == 'amrap'){	
+					$form['conditioning'][$workout[0]->conditioning_id]['amrap_rounds'] = array(
+						'#type' => 'textfield',
+						'#title' => t('Rounds Completed'),
+						'#size' => 3,
+						'#maxlength' => 3,
+					);
+
+					$form['conditioning'][$workout[0]->conditioning_id]['amrap_reps'] = array(
+						'#type' => 'textfield',
+						'#title' => t('Extra Reps'),
+						'#size' => 3,
+						'#maxlength' => 3,
+					);
+				}
+			
+				if($workout[0]->style == 'for_time'){
+					$form['conditioning'][$workout[0]->conditioning_id]['for_time'] = array(
+						'#type' => 'textfield',
+						'#title' => t('Time'),
+						'#size' => 5,
+						'#maxlength' => 5,
+					);
+
+					$form['conditioning'][$workout[0]->conditioning_id]['for_time_dnf'] = array(
+						'#markup' => '<p>If you did not finish within the time cap, enter the rounds and reps of what you did finish</p>',
+					);
+
+ 					$form['conditioning'][$workout[0]->conditioning_id]['for_time_rounds'] = array(
+						'#type' => 'textfield',
+						'#title' => t('Rounds Completed'),
+						'#size' => 3,
+						'#maxlength' => 3,
+					);
+
+					$form['conditioning'][$workout[0]->conditioning_id]['for_time_reps'] = array(
+						'#type' => 'textfield',
+						'#title' => t('Extra Reps'),
+						'#size' => 3,
+						'#maxlength' => 3,
+					);
+				}
+
+				if($workout[0]->style == 'intervals'){
+					$rounds = $workout[0]->rounds;
+					if(empty($rounds) || !isset($rounds)){
+						$rounds = 1;
+					}
+					$work = $workout[0]->workout;
+
+					$intervals_full = explode("<br>", $work);
+					$intervals = array();
+					foreach($intervals_full as $invt){
+						if(substr_count($invt, "rest") == 0){
+							$intervals[] = $invt;
+						}
+					}
+					$num_moves = sizeof($intervals);
+					$form_state['interval_rounds'] = $rounds;
+					$form_state['interval_num_moves'] = $num_moves;
+					//drupal_set_message('<pre>' . print_r($num_intervals, TRUE) . '</pre>');
+				
+					for($interval = 1; $interval <= $rounds; $interval++){
+						if(!empty($workout[0]->interval_time) && $workout[0]->interval_style == 0){
+							$form['conditioning'][$workout[0]->conditioning_id]['intervals'][$interval] = array(
+								'#type' => 'fieldset',
+								'#title' => t('Round #@int_num', array('@int_num' => $interval)),
+								'#collapsible' => TRUE,
+								'#collapsed' => TRUE,
+							);
+				
+							$form['conditioning'][$workout[0]->conditioning_id]['intervals'][$interval]['split'] = array(
+									'#type' => 'textfield',
+									'#title' => t('Time'),
+									'#size' => 5,
+									'#maxlength' => 15,
+								);
+						}
+						else {
+							$form['conditioning'][$workout[0]->conditioning_id]['intervals'][$interval] = array(
+								'#type' => 'fieldset',
+								'#title' => t('Round #@int_num', array('@int_num' => $interval)),
+								'#collapsible' => TRUE,
+								'#collapsed' => TRUE,
+							);
+							for($move = 1; $move <= $num_moves; $move++){
+								if(substr_count($intervals[$move - 1], "rest") == 0){
+									$form['conditioning'][$workout[0]->conditioning_id]['intervals'][$interval][$move] = array(
+										'#type' => 'textfield',
+										'#title' => t($intervals[$move - 1]),
+										'#size' => 5,
+										'#maxlength' => 15,
+									);	
+								}				
+							}
+						}
+					}
+				}
+			}
 		}
-	}
 
 	$form['save'] = array(
 	'#type' => 'submit',
@@ -858,10 +1023,87 @@ function _save_conditioning_results(&$form_state){
 		$record->num_performed = $num_performed;	
 		$record->date = time();
 
-		if(!empty($workout['results'])){
-			$record->results = $workout['results'];
+		if(!empty($workout['amrap_rounds']) || !empty($workout['amrap_reps'])){
+			$workout_completed = TRUE;
+			$workout_summary .= "Finished: ";
+			if(isset($workout['amrap_rounds'])){
+				$record->amrap_rounds = $workout['amrap_rounds'];
+				$workout_summary .= $record->amrap_rounds . " rounds";
+			}
+			else{
+				$record->amrap_round = 0;
+			}
+
+			if(isset($workout['amrap_reps'])){
+				$record->amrap_reps = $workout['amrap_reps'];
+				$workout_summary .= " " . $record->amrap_reps . " reps";
+			}
+			else {
+				$record->amrap_reps = 0;
+			}
+		}
+		
+		if(!empty($workout['for_time']) || !empty($workout['for_time_rounds']) || !empty($workout['for_time_reps'])){
+			$workout_completed = TRUE;
+			$workout_summary .= "Finished ";
+			if(!empty($workout['for_time_rounds']) || !empty($workout['for_time_reps'])){
+				if(!empty($workout['for_time_rounds'])){
+ 					$record->amrap_rounds = $workout['for_time_rounds'];
+					$workout_summary .= $workout['for_time_rounds'] . " rounds ";
+				}
+				else {
+					$record->amrap_rounds = 0;
+				}
+				if(!empty($workout['for_time_reps'])){
+					$record->amrap_reps = $workout['for_time_reps'];
+					$workout_summary .= $workout['for_time_reps'] . " reps ";
+				}
+				else{
+					$record->amrap_reps = 0;
+				}
+			}
+			else{
+				$record->time = $workout['for_time'];
+				(strpos($record->time, ":") !== FALSE || strpos($record->time, "+") !== FALSE) ? $workout_summary .= "Finished in " . $record->time . " minutes" : $workout_summary .= "Finished in " . $record->time . ":00 minutes";
+			}
+		}
+		
+		if(isset($workout['intervals'])){
+			$results = '';
+			for($interval = 1; $interval <= $form_state['interval_rounds']; $interval++){
+				if(!empty($workout['intervals'][$interval]['split'])){
+					$workout_completed = TRUE;
+					(strpos(":", $workout['intervals'][$interval]['split']) !== FALSE) ? $results .= $workout['intervals'][$interval]['split'] : $results .= $workout['intervals'][$interval]['split'] . ":00";
+					if(strpos($workout['intervals'][$interval]['split'], ":") !== FALSE){
+						$workout_summary .= "Round #" . $interval . ": " . $workout['intervals'][$interval]['split'] . " minutes\n";
+					}
+					else {
+						$workout_summary .= "Round #" . $interval . ": " . $workout['intervals'][$interval]['split'] . ":00 minutes\n";
+					}
+				}
+				else {
+					$workout_summary .= "Round #" . $interval . ":";
+					for($move = 1; $move <= $form_state['interval_num_moves']; $move++){		
+						if(!empty($workout['intervals'][$interval][$move])){
+							$workout_completed = TRUE;
+							($move > 1) ? $results .= ',' . $workout['intervals'][$interval][$move] : $results .= $workout['intervals'][$interval][$move];
+							$workout_summary .= " " . $workout['intervals'][$interval][$move];
+						}
+					}
+					$workout_summary .= "\n";
+				}
+				if($interval < $form_state['interval_rounds']){
+					$results .= '-';
+				}
+			}
+			$record->interval_reps = $results;
+	//		drupal_set_message('<pre>' . print_r($record->interval_reps, TRUE) . '</pre>');
+		}
+
+		if($workout_completed == TRUE){
+			//drupal_set_message('<pre>' . print_r($record, TRUE) . '</pre>');
 			drupal_write_record($conditioning_table, $record);
-			$form_state['conditioning_summary'][$i] = $workout['results'];
+			$form_state['conditioning_summary'][$i] = $workout_summary;
 		}
 	}
 	//drupal_set_message('<pre>' . print_r($form_state['conditioning_summary'], TRUE) . '</pre>');

@@ -536,6 +536,7 @@ function assemble_conditioning_headers($wid){
 
 	$headers = array();
 	foreach($workouts as $w){
+//		drupal_set_message('<pre>' . print_r($w, TRUE) . '</pre>');
 		$headers[$w->conditioning_id] = $w->workout;
 	}
 	return $headers;

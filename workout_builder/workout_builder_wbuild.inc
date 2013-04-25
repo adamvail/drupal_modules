@@ -451,161 +451,16 @@ function workout_builder_wbuild_page_two($form, &$form_state){
       '#collapsed' => TRUE,
     );
 
-    $form['cond_workout'][$k]['condition_exercises']['style'] = array(
-      '#type' => 'radios',
-      '#options' => array(
-				'amrap' => t('AMRAP'),
-				'for_time' => t('For Time'),
-				'intervals' => t('Intervals'),
-				'rest' => t('Rest'),
-      ),
-      '#title' => t('Choose the style of conditioning workout'),
-    );
-	
-		$form['cond_workout'][$k]['condition_exercises']['rest'] = array(
-			'#type' => 'textfield',
-      '#title' => t('Duration'),
-      '#description' => t('Enter rest time (2:30 or :30 for seconds)'),
-      '#size' => 5,
-      '#maxlength' => 10,
-      '#states' => array(
-				'visible' => array(
-	    		':input[name="cond_workout[' . $k . '][condition_exercises][style]"]' => array('value' => 'rest'),
-				),
-      ),
-		);
-
-    $form['cond_workout'][$k]['condition_exercises']['duration'] = array(
-      '#type' => 'textfield',
-      '#title' => t('Duration'),
-      '#description' => t('Enter timing in minutes'),
-      '#size' => 5,
-      '#maxlength' => 10,
-      '#states' => array(
-				'visible' => array(
-	    		':input[name="cond_workout[' . $k . '][condition_exercises][style]"]' => array('value' => 'amrap'),
-				),
-      ),
-    );
-
-    $form['cond_workout'][$k]['condition_exercises']['rounds'] = array(
-      '#type' => 'textfield',
-      '#title' => t('Rounds'),
-      '#description' => t('Number of rounds<br>e.g. 5 or 21-15-9'),
-      '#size' => 10,
-      '#maxlength' => 30,
-      '#states' => array(
-				'visible' => array(
-	    		':input[name="cond_workout[' . $k . '][condition_exercises][style]"]' => array(
-	    			array('value' => 'for_time'),
-	    			array('value' => 'intervals'),
-	  			),
-				),
-      ),
-    );
-
-		$form['cond_workout'][$k]['condition_exercises']['interval_on_clock'] = array(
-			'#type' => 'checkbox',
-			'#title' => t('Start rounds on a clock?'),
-      '#states' => array(
-				'visible' => array(
-	    		':input[name="cond_workout[' . $k . '][condition_exercises][style]"]' => array('value' => 'intervals'),
-				),
-      ),
-		);
-
-		$form['cond_workout'][$k]['condition_exercises']['interval_style'] = array(
-			'#type' => 'select',
-			'#options' => array(t('For Time'), t('For Work')),
-			'#description' => t('Is the interval meant to be completed for amount of work done or <br>for how quickly the work is done?'),
-      '#states' => array(
-				'visible' => array(
-	    		':input[name="cond_workout[' . $k . '][condition_exercises][interval_on_clock]"]' => array('checked' => TRUE),
-				),
-      ),
-		);
-
-		$form['cond_workout'][$k]['condition_exercises']['interval_clock'] = array(
-      '#type' => 'textfield',
-      '#title' => t('Clock'),
-      '#description' => t('Enter timing in minutes'),
-      '#size' => 5,
-      '#maxlength' => 10,
-      '#states' => array(
-				'visible' => array(
-	    		':input[name="cond_workout[' . $k . '][condition_exercises][interval_on_clock]"]' => array('checked' => TRUE),
-				),
-      ),
-		);
-
-    $form['cond_workout'][$k]['condition_exercises']['cutoff'] = array(
-      '#type' => 'textfield',
-      '#title' => t('Time Cutoff'),
-      '#description' => t('Enter time cutoff in minutes'),
-      '#size' => 5,
-      '#maxlength' => 10,
-      '#states' => array(
-				'visible' => array(
-	  			':input[name="cond_workout[' . $k . '][condition_exercises][style]"]' => array('value' => 'for_time'),
-				),
-      ),
-    );
-
 		$form['cond_workout'][$k]['condition_exercises']['workout'] = array(
 			'#type' => 'textarea',
 			'#title' => t('Workout'),
 			'#description' => t('One movement per line'),
-			'#states' => array(
-				'visible' => array(
-	    		':input[name="cond_workout[' . $k . '][condition_exercises][style]"]' => array(
-						array('value' => 'amrap'),
-	    			array('value' => 'for_time'),
-	    			array('value' => 'intervals'),
-	  			),
-				),
-      ),
 		);
 
 		$form['cond_workout'][$k]['condition_exercises']['notes'] = array(
 			'#type' => 'textarea',
 			'#title' => t('Notes'),
-			'#states' => array(
-				'visible' => array(
-	    		':input[name="cond_workout[' . $k . '][condition_exercises][style]"]' => array(
-						array('value' => 'amrap'),
-	    			array('value' => 'for_time'),
-	    			array('value' => 'intervals'),
-	  			),
-				),
-      ),
 		);
-/*
-    $form['cond_workout'][$k]['add_cond_movement'] = array(
-      '#type' => 'submit',
-      '#name' => $k,
-      '#value' => t('Add another movement'),
-      '#submit' => array('workout_builder_wbuild_add_condition'),
-			'#states' => array(
-	  			'visible' => array(
-	    			':input[name="cond_workout[' . $k . '][condition_exercises][style]"]'=> array(
-	      			array('value' => 'amrap'), 
-	      			array('value' => 'for_time'), 
-	      			array('value' => 'intervals'), 
-	    			),
-	  			),
-				),
-    );
-
-    if($form_state['num_condition'][$k] > 1){
-      $form['cond_workout'][$k]['remove_cond_movement'] = array(
-				'#type' => 'submit',
-				'#name' => $k,
-				'#value' => t('Remove last movement'),
-				'#submit' => array('workout_builder_wbuild_remove_condition'),
-				'#limit_validate_errors' => array(),
-      );
-    }
-*/
   }
 
   $form['back'] = array(
@@ -959,8 +814,6 @@ function _populate_conditioning_table(&$form_state, $wid){
 		$note->wid = $wid;
 		$note->conditioning_id = $i;
 
-//		for($k = 1; isset($workout[$k]); $k++){	
-			//$movement = $workout[$k];
 			$record = new stdClass();
 			$record->wid = $wid;
 			$record->date = strtotime($form_state['page_values'][1]['date']['workout_date']);
@@ -972,49 +825,16 @@ function _populate_conditioning_table(&$form_state, $wid){
 			}
 
 			$note->notes = $workout['notes'];
-
-			if($workout['style'] == 'amrap'){
-				$record->style = 'amrap';
-				$record->duration = $workout['duration'];
-				// replace newlines with pipes to make it easier to read in the DB
-				$record->workout = str_replace("\n", "<br>", $workout['workout']);
-				$exists = TRUE;
-			}	
-			elseif($workout['style'] == 'for_time'){
-				$record->style = 'for_time';
-				$record->rounds = $workout['rounds'];
-				$record->cutoff = $workout['cutoff'];
-				$record->workout = str_replace("\n", "<br>", $workout['workout']);
-			}
-			elseif($workout['style'] == 'intervals'){
-				$record->style = 'intervals';
-				$record->rounds = $workout['rounds'];
-			//	$record->interval_time = $movement['interval_time'];
-				$record->workout = strtolower(str_replace("\n", "<br>", $workout['workout']));
-				if(isset($workout['interval_clock']) && !empty($workout['interval_clock'])){
-					$record->interval_time = $workout['interval_clock'];
-					$record->interval_style = $workout['interval_style'];
-				}
-			}
-			elseif($workout['style'] == 'rest'){
-				$record->style = 'rest';
-				$record->duration = $workout['rest'];
-			}
-			else{
-				// None of the radios were selected so there must not
-				// be a conditioning portion to this workout
-				$workout_exists = FALSE;
-				break;
-			}
-
+			$record->workout = str_replace("\n", "<br>", $workout['workout']);
 			//drupal_set_message('<pre>' . print_r($record, TRUE) . '</pre>');
-			drupal_write_record($table, $record);
+			if(!empty($record->workout)){
+				drupal_write_record($table, $record);
+			}
 		}
 		if(!empty($note->notes)){
 			//drupal_set_message('<pre>' . print_r($note, TRUE) . '</pre>');
 			drupal_write_record($table_notes, $note);
 		}
-//	}
 }
 
 
