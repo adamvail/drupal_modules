@@ -66,7 +66,7 @@ function workout_builder_wbuilder($form, &$form_state){
 			'#type' => 'fieldset',
 			'#title' => t('Workout #@num', array('@num' => $k)),
 			'#collapsible' => TRUE,
-			'#collapsed' => TRUE,
+			'#collapsed' => FALSE,
 		);
 
 		// don't use the #name field in any of these
@@ -448,7 +448,7 @@ function workout_builder_wbuild_page_two($form, &$form_state){
       '#type' => 'fieldset',
       '#title' => t('Workout #@num', array('@num' => $k)),
       '#collapsible' => TRUE,
-      '#collapsed' => TRUE,
+      '#collapsed' => FALSE,
     );
 
 		$form['cond_workout'][$k]['condition_exercises']['workout'] = array(
