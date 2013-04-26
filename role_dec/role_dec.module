@@ -86,7 +86,14 @@ function role_dec_form_alter(&$form, &$form_state, $form_id) {
 	);
 	
 	//grab all the unique gym names to populate the select dropdown
-	$result = db_query('SELECT DISTINCT gym FROM {workout_gym_affiliation}');
+	//$result = db_query('SELECT DISTINCT gym FROM {workout_gym_affiliation}');
+	$result = db_select('workout_gym_affiliation', 'a')
+		->fields('a', array('gym'))
+		->condition('gym', '', '!=')
+		->distinct()
+		->execute()
+		->fetchAll();
+
 	$options = array();
 	$i = 0;
 	foreach($result as $row){
@@ -126,7 +133,7 @@ function role_dec_user_insert(&$edit, $account, $category){
 	$record = new stdClass();
 	
 	//drupal_set_message('<pre>' . print_r($edit, TRUE) . '</pre>');
-	drupal_set_message('<pre>' . print_r($account, TRUE) . '</pre>');
+	//drupal_set_message('<pre>' . print_r($account, TRUE) . '</pre>');
 	//drupal_set_message('<pre>' . print_r($category, TRUE) . '</pre>');
 	
 	//write to the gym affilitation table
