@@ -88,7 +88,8 @@ function role_dec_form_alter(&$form, &$form_state, $form_id) {
 	//grab all the unique gym names to populate the select dropdown
 	$result = db_query('SELECT DISTINCT gym FROM {workout_gym_affiliation}');
 	$options = array();
-	$i = 0;
+	$i = 1;
+	$options[0] = "<Select Gym>";
 	foreach($result as $row){
 		$options[$i] = $row->gym;
 		$i++;
@@ -169,7 +170,7 @@ function role_dec_user_insert(&$edit, $account, $category){
 	
 	//grab all the unique gym names
 	$result = db_query('SELECT DISTINCT gym FROM {workout_gym_affiliation}');
-	$i = 0;
+	$i = 1;
 	$gym = NULL;
 	foreach($result as $row){
 		if($i == $account->choose_gym){
@@ -237,7 +238,7 @@ function role_dec_user_update(&$edit, $account, $category) {
 
 	//grab all the unique gym names
 	$result = db_query('SELECT DISTINCT gym FROM {workout_gym_affiliation}');
-	$i = 0;
+	$i = 1;
 	$gym = NULL;
 	foreach($result as $row){
 		if($i == $account->choose_gym){
