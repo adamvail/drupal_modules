@@ -20,7 +20,7 @@
 <body>
 
 <style>
-/* max_reps style sheet */
+/* home_athlete style sheet */
 
 #title {
 	text-align:center;
@@ -71,9 +71,6 @@
 #stats {
 	float:left;
 	width:40%;
-}
-td{
-	text-align:center;
 }
 .left-cell {
 	text-align: left;
