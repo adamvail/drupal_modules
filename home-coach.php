@@ -49,7 +49,7 @@
 <body>
 
 <style>
-/* max_reps style sheet */
+/* home-coach style sheet */
 
 #title {
 	text-align:center;
@@ -106,9 +106,6 @@
 #stats {
 	float:left;
 	width:40%;
-}
-td{
-	text-align:center;
 }
 .centered-cell {
   text-align: center;
