@@ -235,14 +235,14 @@
 						
 						$wid = $cwida;
 						print '2 Member id: ' . $members[$i] . ' wid: ' . $wid . '<br>';
-						$conditioning_str = create_conditioning_string($wid, 1);
+						$conditioning_str = create_conditioning_string($wid, 1, $members[$i]);
 					}
 					elseif($swida == $cwida && $swida != 0) {
 						
 						$wid = $swida;
 						print '3 Member id: ' . $members[$i] . ' wid: ' . $wid . '<br>';
 						$strength_str = create_strength_string($wid, 1, $members[$i]);
-						$conditioning_str = create_conditioning_string($wid, 1);
+						$conditioning_str = create_conditioning_string($wid, 1, $members[$i]);
 					}
 					
 					if(!empty($strength_str) || !empty($conditioning_str)) {
@@ -275,7 +275,7 @@
 			return date($format, $timestamp);
 		}
 		
-		function create_conditioning_string($wid, $num_performed){
+		function create_conditioning_string($wid, $num_performed, $uid){
 
 			$workouts = db_select('workout_builder_conditioning', 'b')
 				->fields('b')
@@ -292,6 +292,7 @@
 			$logs = db_select('workout_tracker_conditioning', 'c')
 				->fields('c')
 				->condition('wid', $wid, '=')
+				->condition('athlete_uid', $uid, '=')
 				->condition('num_performed', $num_performed, '=')
 				->execute()
 				->fetchAll();
