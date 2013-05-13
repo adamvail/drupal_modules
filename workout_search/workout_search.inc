@@ -90,8 +90,8 @@ function workout_search_find_workouts($form, &$form_state){
 	// figure out which portions need to be printed
 
 	foreach($workouts_strength as $workout){
+		//drupal_set_message('<pre>' . print_r($workout, TRUE) . '</pre>');
 		workout_search_print_results($form, $form_state, $workout->wid, $workout->strength_id, 'strength');
-		//drupal_set_message('<pre>' . print_r($s, TRUE) . '</pre>');
 	}
 
 	foreach($workouts_conditioning as $workout){
@@ -103,6 +103,7 @@ function workout_search_find_workouts($form, &$form_state){
 function workout_search_print_results(&$form, &$form_state, $wid, $sub_id, $which){
 	global $user;
 	$form_state['wid'] = $wid;
+	$count = 1;
 
 	if($which != 'strength' && $which != 'conditioning'){
 		return;
@@ -114,22 +115,24 @@ function workout_search_print_results(&$form, &$form_state, $wid, $sub_id, $whic
 			$max_performed = db_query("SELECT MAX(num_performed) FROM {workout_tracker_conditioning} WHERE wid=:wid AND athlete_uid=:aid", array(':wid' => $wid, ':aid' => $user->uid))->fetchField();
 
 	(isset($form['workout'])) ? $initial_size = sizeof($form['workout']) : $initial_size = 0;
+		//drupal_set_message('<pre>' . print_r("max performed: " . $max_performed, TRUE) . '</pre>');
 	for($i = $initial_size + 1; $i <= $max_performed + $initial_size; $i++){
+		//drupal_set_message('<pre>' . print_r($i, TRUE) . '</pre>');
 
 		$strength_str = '';
 		$conditioning_str = '';
 
 		if($which == 'strength'){
-			$strength_str = create_strength_string($wid, $sub_id, $i);
+			$strength_str = create_strength_string($wid, $sub_id, $count);
 		}
 		elseif($which == 'conditioning'){
-			$conditioning_str = create_conditioning_string($wid, $sub_id, $i);
+			$conditioning_str = create_conditioning_string($wid, $sub_id, $count);
 		}
 
-		$date = db_query("SELECT DISTINCT(date) FROM {workout_tracker_strength} where wid=:wid AND athlete_uid=:aid AND num_performed=:np", array(':wid' => $wid, ':aid' => $user->uid, ':np' => $i))->fetchField();
+		$date = db_query("SELECT DISTINCT(date) FROM {workout_tracker_strength} where wid=:wid AND athlete_uid=:aid AND num_performed=:np", array(':wid' => $wid, ':aid' => $user->uid, ':np' => $count))->fetchField();
 
 		if(empty($date)){
-			$date = db_query("SELECT DISTINCT(date) FROM {workout_tracker_conditioning} where wid=:wid AND athlete_uid=:aid AND num_performed=:np", array(':wid' => $wid, ':aid' => $user->uid, ':np' => $i))->fetchField();
+			$date = db_query("SELECT DISTINCT(date) FROM {workout_tracker_conditioning} where wid=:wid AND athlete_uid=:aid AND num_performed=:np", array(':wid' => $wid, ':aid' => $user->uid, ':np' => $count))->fetchField();
 
 		}
 
@@ -163,6 +166,7 @@ function workout_search_print_results(&$form, &$form_state, $wid, $sub_id, $whic
 				'#markup' => $conditioning_str, 
 			);
 		}
+		$count ++;
 	}
 
 	return $form;
@@ -384,7 +388,7 @@ function assemble_strength_headers($wid, $sid){
 							}
 							// This means we found some that are the same
 							//drupal_set_message('<pre>' . print_r("p: " . $p . "\nk: " . $k, TRUE) . '</pre>');
-							if($k == sizeof($percentage_scheme)){	
+							if($k == sizeof($percentage_scheme) && $percentage_scheme[$p] == $percentage_scheme[$k] && $rep_scheme[$p] == $rep_scheme[$k]){	
 								$num_sets = $k + 1 - $p; 
 							}
 							else{
@@ -393,7 +397,7 @@ function assemble_strength_headers($wid, $sid){
 
 							$movement_str .= $num_sets . "x" . $rep_scheme[$p] . " @ " . $percentage_scheme[$p] . "%, ";
 
-							if($k == sizeof($percentage_scheme)){
+							if($k == sizeof($percentage_scheme) && $percentage_scheme[$p] == $percentage_scheme[$k] && $rep_scheme[$p] == $rep_scheme[$k]){
 								$p = $k;
 							}			
 							else{
